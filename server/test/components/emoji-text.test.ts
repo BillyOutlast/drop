@@ -15,7 +15,7 @@ describe("EmojiText", () => {
     const img = wrapper.find("img");
     expect(img.exists()).toBe(true);
     expect(img.attributes("alt")).toBe("🎮");
-    expect(img.attributes("src")).toContain("/api/v1/emoji/");
+    expect(img.attributes("src")).toBe("/api/v1/emoji/1f3ae");
   });
 
   it("uses correct classes for inline + emoji styling", () => {
@@ -25,6 +25,7 @@ describe("EmojiText", () => {
     const img = wrapper.find("img");
     expect(img.classes()).toContain("inline-block");
     expect(img.classes()).toContain("emoji");
+    expect(img.attributes("src")).toBe("/api/v1/emoji/1f600");
   });
 
   it("re-renders when emoji prop changes", async () => {

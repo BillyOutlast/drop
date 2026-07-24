@@ -30,11 +30,22 @@ export async function withTestTransaction<T>(
   const prisma = new (
     PrismaClient as unknown as new (o?: unknown) => PrismaClient
   )(options);
+  let result: T;
   try {
-    return await prisma.$transaction(async (tx) => body(tx));
+    await prisma.$transaction(async (tx) => {
+      result = await body(tx);
+      // Force rollback by throwing after capturing the result
+      throw new Error("ROLLBACK");
+    });
+  } catch (e: unknown) {
+    // Suppress only our deliberate rollback marker
+    if (!(e instanceof Error && e.message === "ROLLBACK")) {
+      throw e;
+    }
   } finally {
     await prisma.$disconnect();
   }
+  return result!;
 }
 
 export function teardownPrisma(prisma: PrismaClient) {

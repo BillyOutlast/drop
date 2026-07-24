@@ -69,6 +69,8 @@ fn downloadable_metadata_new_sets_all_fields() {
     );
     assert_eq!(m.id, "game-001");
     assert_eq!(m.version, "1.0.0");
+    assert_eq!(m.platform, Platform::Windows);
+    assert_eq!(m.download_type, DownloadType::Game);
 }
 
 #[test]

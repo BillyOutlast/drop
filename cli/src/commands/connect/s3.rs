@@ -21,11 +21,31 @@ pub struct S3ConfigCli {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct S3Config {
     pub key_id: String,
-    pub secret_key: String,
+    secret_key: String,
     pub endpoint: String,
     pub region: String,
     pub bucket_name: String,
     pub root: Option<String>,
+}
+
+impl S3Config {
+    pub fn new(
+        key_id: String,
+        secret_key: String,
+        endpoint: String,
+        region: String,
+        bucket_name: String,
+        root: Option<String>,
+    ) -> Self {
+        Self {
+            key_id,
+            secret_key,
+            endpoint,
+            region,
+            bucket_name,
+            root,
+        }
+    }
 }
 
 impl Configure for S3ConfigCli {
@@ -38,14 +58,14 @@ impl Configure for S3ConfigCli {
         if let None = name {
             *name = Some(endpoint.clone());
         }
-        Ok(ConfigOption::S3(S3Config {
-            secret_key,
+        Ok(ConfigOption::S3(S3Config::new(
             key_id,
+            secret_key,
+            endpoint,
             region,
             bucket_name,
-            endpoint,
-            root: self.root,
-        }))
+            self.root,
+        )))
     }
 }
 

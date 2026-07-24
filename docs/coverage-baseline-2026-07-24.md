@@ -6,20 +6,20 @@ coverage dashboarding — **no gates, no thresholds**, just a snapshot.
 
 ## Summary
 
-| Metric | Value |
-|---|---|
+| Metric     | Value           |
+| ---------- | --------------- |
 | Statements | 1.11% (58/5222) |
-| Branches | 0.62% (15/2413) |
-| Functions | 2.09% (18/858) |
-| Lines | 1.17% (57/4854) |
+| Branches   | 0.62% (15/2413) |
+| Functions  | 2.09% (18/858)  |
+| Lines      | 1.17% (57/4854) |
 
 ## Highest-covered files
 
-| File | % Lines | Covered by |
-|---|---|---|
-| `prioritylist.ts` | 35.48% | property-based test (Tier 1 #5) |
-| `health.get.ts` | (high) | smoke test (pre-existing) |
-| ... | ... | ... |
+| File              | % Lines | Covered by                      |
+| ----------------- | ------- | ------------------------------- |
+| `prioritylist.ts` | 35.48%  | property-based test (Tier 1 #5) |
+| `health.get.ts`   | (high)  | smoke test (pre-existing)       |
+| ...               | ...     | ...                             |
 
 ## Notes
 
@@ -38,4 +38,5 @@ pnpm --filter drop coverage
 ```
 
 Output lands in `server/coverage/lcov.info`. CI integration (Tier 2
-#14) is the next step: upload to Codecov or similar, no thresholds.
+item 14) uploads `server/coverage` to Codecov for measurement only, no
+thresholds.
