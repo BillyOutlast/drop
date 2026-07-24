@@ -14,10 +14,15 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare && prisma generate && buf generate",
     "typecheck": "nuxt typecheck",
-    "lint": "pnpm run lint:eslint && pnpm run lint:prettier",
+    "format:check": "prettier --check .",
+    "lint": "pnpm run format:check && pnpm run lint:eslint",
     "lint:eslint": "eslint .",
     "lint:prettier": "prettier . --check",
-    "lint:fix": "eslint . --fix && prettier --write --list-different ."
+    "lint:fix": "eslint . --fix && prettier --write --list-different .",
+    "test:e2e": "playwright test",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.11.0",
