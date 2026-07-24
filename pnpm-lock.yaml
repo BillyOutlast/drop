@@ -55,7 +55,14 @@ overrides:
 
 importers:
 
-  .: {}
+  .:
+    devDependencies:
+      husky:
+        specifier: ^9.1.7
+        version: 9.1.7
+      lint-staged:
+        specifier: ^17.2.0
+        version: 17.2.0
 
   desktop:
     dependencies:
@@ -320,6 +327,12 @@ importers:
       happy-dom:
         specifier: ^20.11.1
         version: 20.11.1
+      husky:
+        specifier: ^9.1.7
+        version: 9.1.7
+      lint-staged:
+        specifier: ^17.2.0
+        version: 17.2.0
       msw:
         specifier: ^2.15.0
         version: 2.15.0(@types/node@22.19.17)(typescript@5.9.3)
@@ -7140,6 +7153,11 @@ packages:
     resolution: {integrity: sha512-AXcZb6vzzrFAUE61HnN4mpLqd/cSIwNQjtNWR0euPm6y0iqx3G4gOXaIDdtdDwZmhwe82LA6+zinmW4UBWVePQ==}
     engines: {node: '>=16.17.0'}
 
+  husky@9.1.7:
+    resolution: {integrity: sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==}
+    engines: {node: '>=18'}
+    hasBin: true
+
   i18next@26.3.1:
     resolution: {integrity: sha512-txQqd5EULsqEh9OJqRH15aCaOuy/nLJyhw5EHCSKLKJE1aBbb3Zve2+uQIxgWhPm1QqUQoWyQBm2kfmmIrzkcQ==}
     peerDependencies:
@@ -7869,6 +7887,11 @@ packages:
   lilconfig@3.1.3:
     resolution: {integrity: sha512-/vlFKAoH5Cgt3Ie+JLhRbwOsCQePABiU3tJ1egGvyQ+33R/vcwM2Zl2QR/LzjsBeItPt3oSVXapn+m4nQDvpzw==}
     engines: {node: '>=14'}
+
+  lint-staged@17.2.0:
+    resolution: {integrity: sha512-FchGnFe4i4B1C/a35SPU9bNGPEHSC1+1iV0plLjzBmKVe9klZrlRfSgK6Cw4VeHyqOXbJUXP0vON61uRftNQ0A==}
+    engines: {node: '>=22.22.1'}
+    hasBin: true
 
   listhen@1.10.0:
     resolution: {integrity: sha512-kfz4C0OrC6IpaVMtYDJtf6PFjurxe9NBBoDAh/o2p587INryFOO4DQ9OetbCdDrWFt1m1CJKvYrzkGsuPHw8nQ==}
@@ -10259,6 +10282,10 @@ packages:
   strict-event-emitter@0.5.1:
     resolution: {integrity: sha512-vMgjE/GGEPEFnhFub6pa4FmJBRBVOLpIII2hvCZ8Kzb7K0hlHo7mQv6xYrBvCL2LtAIBwFUK8wvuJgTVSQ5MFQ==}
 
+  string-argv@0.3.2:
+    resolution: {integrity: sha512-aqD2Q0144Z+/RqG52NeHEkZauTAUWJO8c6yTftGJKO3Tja5tUgIfmIl6kExvhtxSDP7fXB6DvzkfMpCd/F3G+Q==}
+    engines: {node: '>=0.6.19'}
+
   string-width@4.2.3:
     resolution: {integrity: sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==}
     engines: {node: '>=8'}
@@ -10565,6 +10592,10 @@ packages:
 
   tinyexec@1.1.2:
     resolution: {integrity: sha512-dAqSqE/RabpBKI8+h26GfLq6Vb3JVXs30XYQjdMjaj/c2tS8IYYMbIzP599KtRj7c57/wYApb3QjgRgXmrCukA==}
+    engines: {node: '>=18'}
+
+  tinyexec@1.2.4:
+    resolution: {integrity: sha512-SHf/r48b7vOrjve9PxJo3MN5v5yuyjHvdUcrQffT3WXMUfnGmHDVbC4k3sHJaJTgZCwpUplIaAo5ANtMyp3YHg==}
     engines: {node: '>=18'}
 
   tinyglobby@0.2.16:
@@ -18065,7 +18096,7 @@ snapshots:
       '@typescript-eslint/parser': 8.58.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
       eslint: 9.39.4(jiti@2.7.0)
       eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import-x@4.16.2(@typescript-eslint/utils@8.65.0(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint@9.39.4(jiti@2.7.0)))(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.7.0))
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import-x@4.16.2(@typescript-eslint/utils@8.65.0(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint@9.39.4(jiti@2.7.0)))(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0)))(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-react: 7.37.5(eslint@9.39.4(jiti@2.7.0))
@@ -18106,7 +18137,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import-x@4.16.2(@typescript-eslint/utils@8.65.0(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint@9.39.4(jiti@2.7.0)))(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.7.0)):
+  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import-x@4.16.2(@typescript-eslint/utils@8.65.0(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint@9.39.4(jiti@2.7.0)))(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0)))(eslint@9.39.4(jiti@2.7.0)):
     dependencies:
       '@nolyfill/is-core-module': 1.0.39
       debug: 4.4.3
@@ -18133,7 +18164,7 @@ snapshots:
       '@typescript-eslint/parser': 8.58.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
       eslint: 9.39.4(jiti@2.7.0)
       eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import-x@4.16.2(@typescript-eslint/utils@8.65.0(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint@9.39.4(jiti@2.7.0)))(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.7.0))
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import-x@4.16.2(@typescript-eslint/utils@8.65.0(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint@9.39.4(jiti@2.7.0)))(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0)))(eslint@9.39.4(jiti@2.7.0))
     transitivePeerDependencies:
       - supports-color
 
@@ -19508,6 +19539,8 @@ snapshots:
 
   human-signals@5.0.0: {}
 
+  husky@9.1.7: {}
+
   i18next@26.3.1(typescript@5.9.3):
     optionalDependencies:
       typescript: 5.9.3
@@ -20251,6 +20284,14 @@ snapshots:
       lightningcss-win32-x64-msvc: 1.32.0
 
   lilconfig@3.1.3: {}
+
+  lint-staged@17.2.0:
+    dependencies:
+      picomatch: 4.0.5
+      string-argv: 0.3.2
+      tinyexec: 1.2.4
+    optionalDependencies:
+      yaml: 2.9.0
 
   listhen@1.10.0:
     dependencies:
@@ -23584,6 +23625,8 @@ snapshots:
 
   strict-event-emitter@0.5.1: {}
 
+  string-argv@0.3.2: {}
+
   string-width@4.2.3:
     dependencies:
       emoji-regex: 8.0.0
@@ -23975,6 +24018,8 @@ snapshots:
   tinyclip@0.1.12: {}
 
   tinyexec@1.1.2: {}
+
+  tinyexec@1.2.4: {}
 
   tinyglobby@0.2.16:
     dependencies:

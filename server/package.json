@@ -22,7 +22,9 @@
     "test:e2e": "playwright test",
     "test": "vitest run",
     "test:watch": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "prepare": "husky",
+    "lint-staged": "lint-staged"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.11.0",
@@ -100,6 +102,8 @@
     "golar": "^0.0.13",
     "h3": "^1.15.5",
     "happy-dom": "^20.11.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.2.0",
     "msw": "^2.15.0",
     "nitropack": "^2.13.4",
     "ofetch": "^1.4.1",
@@ -110,6 +114,15 @@
     "typescript": "^5.8.3",
     "vitest": "^4.1.10",
     "vue-tsc": "^3.0.1"
+  },
+  "lint-staged": {
+    "*.{ts,vue}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.json": [
+      "prettier --write"
+    ]
   },
   "overrides": {
     "vue3-carousel-nuxt": {
