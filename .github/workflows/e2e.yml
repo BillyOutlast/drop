@@ -55,6 +55,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
 
+      - name: Generate Nuxt and Prisma artifacts
+        run: pnpm --filter drop run postinstall
+
       # Playwright config sets webServer.command = "pnpm dev", so the
       # dev server is auto-spawned. No explicit start needed.
       - name: Install Playwright browsers

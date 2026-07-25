@@ -47,6 +47,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --ignore-scripts
 
+      - name: Generate Nuxt and Prisma artifacts
+        run: pnpm --filter drop run postinstall
+
       - name: Typecheck
         working-directory: server
         run: pnpm run typecheck
@@ -73,6 +76,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --ignore-scripts
+
+      - name: Generate Nuxt and Prisma artifacts
+        run: pnpm --filter drop run postinstall
 
       - name: Check formatting
         working-directory: server
@@ -104,6 +110,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --ignore-scripts
+
+      - name: Generate Nuxt and Prisma artifacts
+        run: pnpm --filter drop run postinstall
 
       - name: Test
         working-directory: server
