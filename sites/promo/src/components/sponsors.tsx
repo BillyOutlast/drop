@@ -17,6 +17,15 @@ import { Container } from "./container";
 import { Link } from "./link";
 import { Heading, Subheading } from "./text";
 
+/**
+ * Renders a sponsor card whose opacity reflects its visibility within the reference window.
+ *
+ * @param name - The sponsor's name
+ * @param from - The sponsor's affiliation or source
+ * @param img - The sponsor's image URL
+ * @param bounds - The reference window used to determine card visibility
+ * @param scrollX - The horizontal scroll position controlling opacity updates
+ */
 function SponsorCard({
   name,
   from,
@@ -113,6 +122,11 @@ type Sponsor = {
   from: string;
 };
 
+/**
+ * Displays sponsors in a horizontally scrollable carousel with navigation controls.
+ *
+ * @returns The rendered sponsor carousel.
+ */
 export function Sponsors() {
   let scrollRef = useRef<HTMLDivElement | null>(null);
   let { scrollX } = useScroll({ container: scrollRef });

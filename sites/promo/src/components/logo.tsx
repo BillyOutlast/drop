@@ -1,3 +1,8 @@
+/**
+ * Renders the Drop OSS logo with an icon and text label.
+ *
+ * @param className - Optional CSS classes applied to the logo icon
+ */
 export function Logo({ className }: { readonly className?: string }) {
   return (
     <div className="mt-1 inline-flex items-center gap-x-1">
@@ -13,6 +18,11 @@ export function Logo({ className }: { readonly className?: string }) {
   );
 }
 
+/**
+ * Renders the Drop OSS mark as an SVG icon.
+ *
+ * @param className - Optional CSS class name applied to the SVG element.
+ */
 export function Mark({ className }: { readonly className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

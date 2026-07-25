@@ -2,6 +2,15 @@
 
 import { motion } from "framer-motion";
 
+/**
+ * Renders an animated map marker with an image and configurable position.
+ *
+ * @param src - The marker image URL
+ * @param top - The vertical position of the marker
+ * @param offset - The horizontal offset from the map center
+ * @param delay - The animation start delay
+ * @returns The rendered map marker
+ */
 function Marker({
   src,
   top,
@@ -38,6 +47,9 @@ function Marker({
   );
 }
 
+/**
+ * Renders an animated map with location markers.
+ */
 export function Map() {
   return (
     <div aria-hidden="true" className="relative size-full">

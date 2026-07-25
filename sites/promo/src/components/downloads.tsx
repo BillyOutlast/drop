@@ -21,6 +21,9 @@ const releasePages: { [key in Version]: string } = {
   "v0.3.4": "https://github.com/Drop-OSS/drop-app/releases/tag/v0.3.4",
 };
 
+/**
+ * Renders the Windows platform icon.
+ */
 function WindowsIcon() {
   return (
     <svg viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" className="size-12">
@@ -42,6 +45,9 @@ function WindowsIcon() {
   );
 }
 
+/**
+ * Renders the Linux platform icon.
+ */
 function LinuxIcon() {
   return (
     <svg
@@ -62,6 +68,9 @@ function LinuxIcon() {
   );
 }
 
+/**
+ * Renders the macOS logo as an SVG icon.
+ */
 function macOSIcon() {
   return (
     <svg
@@ -192,6 +201,13 @@ const downloads: {
   },
 };
 
+/**
+ * Renders a download card for a platform and application version.
+ *
+ * @param version - The application version whose downloads are displayed
+ * @param data - The platform name, description, icon, and download links
+ * @returns The rendered platform download card
+ */
 function DownloadCard({
   version,
   data,
@@ -226,6 +242,9 @@ function DownloadCard({
   );
 }
 
+/**
+ * Renders version selection controls and download cards for each supported platform.
+ */
 export default function DownloadCards() {
   const [currentVersion, setCurrentVersion] = useState<Version>(
     Object.keys(releasePages).at(-1)! as Version,

@@ -18,10 +18,22 @@ export type DownloadManifestDetails = {
   downloadSize: number;
 };
 
+/**
+ * Converts a string-keyed map into a plain object.
+ *
+ * @param map - The map to convert
+ * @returns An object containing the map's entries
+ */
 function convertMap<T>(map: Map<string, T>): { [key: string]: T } {
   return Object.fromEntries(map.entries().toArray());
 }
 
+/**
+ * Builds the effective file list for an ordered sequence of versions.
+ *
+ * @param versionOrder - Versions ordered from oldest to newest; later versions overwrite earlier file mappings and can remove files.
+ * @returns A map from each included filename to the version that provides it.
+ */
 function buildFileList(
   versionOrder: Array<{
     versionId: string;
@@ -41,6 +53,14 @@ function buildFileList(
   return fileList;
 }
 
+/**
+ * Builds manifests for the files selected from an ordered version chain.
+ *
+ * @param versionOrder - Versions and their droplet manifests, ordered for processing
+ * @param fileList - Mapping of filenames to the version that provides them
+ * @param existingChunks - Previously generated manifest details used to exclude existing files
+ * @returns Filtered manifests and the installation and download sizes
+ */
 function buildVersionManifests(
   versionOrder: Array<{
     versionId: string;
@@ -94,9 +114,13 @@ const manifestCache =
   cacheHandler.createCache<DownloadManifestDetails>("manifestCache");
 
 /**
+ * Builds download manifest details for a game version, optionally relative to a previous version.
  *
- * @param gameId Game ID
- * @param versionId Version ID
+ * @param versionId - The version whose manifest details should be built.
+ * @param previous - An optional previous version identifier used to exclude already available files and chunks.
+ * @param refresh - Whether to rebuild the details instead of using cached data.
+ * @returns The file list, manifests, installation size, and download size for the requested version.
+ * @throws If the requested version does not exist or its delta chain is incomplete.
  */
 export async function createDownloadManifestDetails(
   versionId: string,

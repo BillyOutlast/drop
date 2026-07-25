@@ -1,6 +1,11 @@
 import { clsx } from "clsx";
 import { Mark } from "./logo";
 
+/**
+ * Renders a timeline row with horizontal divider lines around its content.
+ *
+ * @param children - Content displayed within the row
+ */
 function Row({ children }: { readonly children: React.ReactNode }) {
   return (
     <div className="group relative">
@@ -11,6 +16,14 @@ function Row({ children }: { readonly children: React.ReactNode }) {
   );
 }
 
+/**
+ * Renders an animated logo badge with an icon and label.
+ *
+ * @param label - The text displayed beside the logo
+ * @param src - The image source for the logo
+ * @param className - Additional classes applied to the badge
+ * @returns The logo badge element
+ */
 function Logo({
   label,
   src,
@@ -35,6 +48,9 @@ function Logo({
   );
 }
 
+/**
+ * Renders an animated timeline of integration logos around the primary brand mark.
+ */
 export function LogoTimeline() {
   return (
     <div aria-hidden="true" className="relative h-full overflow-hidden">

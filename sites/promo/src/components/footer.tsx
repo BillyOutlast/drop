@@ -7,6 +7,9 @@ import { Link } from "./link";
 import { Logo } from "./logo";
 import { Subheading } from "./text";
 
+/**
+ * Renders a call-to-action section linking to the Drop quickstart guide.
+ */
 function CallToAction() {
   return (
     <div className="relative pt-20 pb-16 text-center sm:py-24">
@@ -29,10 +32,20 @@ function CallToAction() {
   );
 }
 
+/**
+ * Renders a heading for a sitemap section.
+ *
+ * @param children - The content displayed as the section heading
+ */
 function SitemapHeading({ children }: { readonly children: React.ReactNode }) {
   return <h3 className="text-sm/6 font-medium text-zinc-100/50">{children}</h3>;
 }
 
+/**
+ * Renders a list container for sitemap links.
+ *
+ * @param children - The sitemap links to display
+ */
 function SitemapLinks({ children }: { readonly children: React.ReactNode }) {
   return <ul className="mt-6 space-y-4 text-sm/6">{children}</ul>;
 }

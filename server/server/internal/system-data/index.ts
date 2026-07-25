@@ -7,7 +7,11 @@ export type SystemData = {
   cpuCores: number;
 };
 
-// See https://github.com/oscmejia/os-utils/blob/master/lib/osutils.js
+/**
+ * Aggregates CPU idle and total time counters across all CPU cores.
+ *
+ * @returns The aggregated idle and total CPU times.
+ */
 function getCPUInfo() {
   const cpus = os.cpus();
 

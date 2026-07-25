@@ -4,6 +4,13 @@ import { clsx } from "clsx";
 import { motion } from "framer-motion";
 import { Subheading } from "./text";
 
+/**
+ * Renders a styled card with a graphic, heading content, description, and optional fade overlays.
+ *
+ * @param dark - Whether to render the card using dark styling.
+ * @param fade - The edges of the graphic to overlay with gradients.
+ * @returns A styled card element.
+ */
 export function BentoCard({
   dark = false,
   className = "",

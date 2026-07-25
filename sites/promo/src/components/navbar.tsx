@@ -16,6 +16,9 @@ const links = [
   { href: "/download", label: "Download" },
 ];
 
+/**
+ * Renders the desktop navigation links.
+ */
 function DesktopNav() {
   return (
     <nav className="relative hidden lg:flex">
@@ -44,6 +47,9 @@ function MobileNavButton() {
   );
 }
 
+/**
+ * Renders the collapsible mobile navigation menu.
+ */
 function MobileNav() {
   return (
     <DisclosurePanel className="lg:hidden">
@@ -73,6 +79,11 @@ function MobileNav() {
   );
 }
 
+/**
+ * Renders the site navigation with responsive desktop and mobile layouts.
+ *
+ * @param banner - Optional content displayed alongside the logo on large screens.
+ */
 export function Navbar({ banner }: { readonly banner?: React.ReactNode }) {
   return (
     <Disclosure as="header" className="pt-12 sm:pt-16">

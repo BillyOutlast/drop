@@ -23,12 +23,26 @@ import { castManifest } from "./manifest/utils";
 import { Shescape } from "shescape";
 import type { Prisma } from "~/prisma/client/client";
 
+/**
+ * Creates a deterministic task identifier for importing a game.
+ *
+ * @param libraryId - The identifier of the library containing the game
+ * @param libraryPath - The game's path within the library
+ * @returns A SHA-256 hexadecimal task identifier
+ */
 export function createGameImportTaskId(libraryId: string, libraryPath: string) {
   return createHash("sha256")
     .update(`import:${libraryId}:${libraryPath}`)
     .digest("hex");
 }
 
+/**
+ * Creates a deterministic task key for importing a game version.
+ *
+ * @param gameId - The identifier of the game
+ * @param versionName - The name of the version
+ * @returns A SHA-256 hexadecimal hash derived from the game and version identifiers
+ */
 export function createVersionImportTaskKey(
   gameId: string,
   versionName: string,

@@ -6,6 +6,14 @@ import { Button } from "./button";
 import { Container } from "./container";
 import { Heading, Lead, Subheading } from "./text";
 
+/**
+ * Renders a team member with a GitHub profile link, avatar, description, and contribution count.
+ *
+ * @param name - The team member's GitHub username
+ * @param description - A description of the team member
+ * @param img - The team member's avatar URL
+ * @param contributions - The number of contributions made by the team member
+ */
 function Person({
   name,
   description,
@@ -47,6 +55,9 @@ const descriptionOverride: { [key: string]: string } = {
   quexeky: "Maintainer",
 };
 
+/**
+ * Displays project contributors and provides information about contributing to Drop OSS.
+ */
 export function Team() {
   const [team, setTeam] = useState<Array<TeamObject> | null>(null);
 

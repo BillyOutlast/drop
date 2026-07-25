@@ -20,6 +20,12 @@ export const generateMetadata = async ({ params }: { params: Promise<{ slug: str
   return { title: post.title, description: post.excerpt };
 };
 
+/**
+ * Renders a news article page for the requested slug.
+ *
+ * @param params - Route parameters containing the article slug
+ * @returns The rendered news article page
+ */
 export default async function BlogPost({ params }: { readonly params: Promise<{ slug: string }> }) {
   const aParams = await params;
   const post = allPosts.find((post) => post._meta.path === aParams.slug);

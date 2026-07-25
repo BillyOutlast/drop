@@ -1,5 +1,14 @@
 import { clsx } from "clsx";
 
+/**
+ * Renders an image in a styled frame with a fixed aspect ratio and screenshot disclaimer.
+ *
+ * @param width - The image width used to determine the frame's aspect ratio
+ * @param height - The image height used to determine the frame's aspect ratio
+ * @param src - The image source
+ * @param className - Additional classes applied to the frame
+ * @returns The rendered screenshot frame
+ */
 export function Screenshot({
   width,
   height,

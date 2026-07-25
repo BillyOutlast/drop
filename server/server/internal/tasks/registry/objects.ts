@@ -83,10 +83,11 @@ function buildRefMap(): FieldReferenceMap {
 }
 
 /**
- * Searches all models for a given id in their fields
- * @param id
- * @param fieldRefMap
- * @returns
+ * Determines whether an object ID is referenced by any configured model field.
+ *
+ * @param id - The object ID to search for
+ * @param fieldRefMap - The models and fields to inspect
+ * @returns `true` if the ID is referenced, `false` otherwise
  */
 async function isReferencedInModelFields(
   id: string,

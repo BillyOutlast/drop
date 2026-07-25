@@ -4,6 +4,13 @@ import { clsx } from "clsx";
 import { motion } from "framer-motion";
 import { Mark } from "./logo";
 
+/**
+ * Renders an animated circular background element.
+ *
+ * @param size - The circle's base diameter in pixels.
+ * @param delay - The animation delay in seconds.
+ * @param opacity - The gradient color opacity.
+ */
 function Circle({
   size,
   delay,
@@ -39,6 +46,9 @@ function Circle({
   );
 }
 
+/**
+ * Renders the animated concentric circles and gradient overlay used as the logo cluster background.
+ */
 function Circles() {
   return (
     <div className="absolute inset-0">
@@ -51,6 +61,9 @@ function Circles() {
   );
 }
 
+/**
+ * Renders the centered main logo within a circular container.
+ */
 function MainLogo() {
   return (
     <div className="absolute top-32 left-44 flex size-16 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5">
@@ -59,6 +72,15 @@ function MainLogo() {
   );
 }
 
+/**
+ * Renders an animated logo image at the specified position.
+ *
+ * @param src - The logo image source
+ * @param left - The horizontal position
+ * @param top - The vertical position
+ * @param hover - The animation offsets, rotation, and delay
+ * @returns The rendered logo image
+ */
 function Logo({
   src,
   left,
@@ -95,6 +117,9 @@ function Logo({
   );
 }
 
+/**
+ * Renders an animated cluster of platform logos around the main logo.
+ */
 export function LogoCluster() {
   return (
     <div aria-hidden="true" className="relative h-full overflow-hidden">

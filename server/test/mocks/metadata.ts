@@ -338,8 +338,10 @@ export function pcgamingwikiHandlers(overrides?: {
 // ---------------------------------------------------------------------------
 
 /**
- * Create ALL metadata provider mock handlers.
- * Convenience for tests that need every external metadata source mocked.
+ * Creates mock HTTP handlers for all supported metadata providers.
+ *
+ * @param overrides - Optional provider-specific response overrides
+ * @returns The combined metadata provider mock handlers
  */
 export function allMetadataHandlers(overrides?: {
   igdb?: NonNullable<Parameters<typeof igdbHandlers>[0]>;

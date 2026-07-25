@@ -13,6 +13,15 @@ const b32pad = Array.from(
   (_, i) => Math.trunc(8 - (i * 8) / 5) % 8,
 );
 
+/**
+ * Encodes up to five byte values as eight Base32 characters.
+ * @param {number} u1 - The first byte value.
+ * @param {number} [u2=0] - The second byte value.
+ * @param {number} [u3=0] - The third byte value.
+ * @param {number} [u4=0] - The fourth byte value.
+ * @param {number} [u5=0] - The fifth byte value.
+ * @return {string[]} The eight Base32 characters.
+ */
 function b32e5(u1, u2 = 0, u3 = 0, u4 = 0, u5 = 0) {
   const u40 = u1 * 2 ** 32 + u2 * 2 ** 24 + u3 * 2 ** 16 + u4 * 2 ** 8 + u5;
   return [
@@ -26,6 +35,11 @@ function b32e5(u1, u2 = 0, u3 = 0, u4 = 0, u5 = 0) {
     b32[u40 & 0x1f],
   ];
 }
+/**
+ * Decode eight Base32 characters into five bytes.
+ * @param {string[]} chars - The eight Base32 characters to decode.
+ * @return {number[]} The five decoded byte values.
+ */
 function b32d8(chars) {
   const u40 =
     b32r.get(chars[0]) * 2 ** 35 +
@@ -45,7 +59,11 @@ function b32d8(chars) {
   ];
 }
 
-// base32 encode/decode: Uint8Array <=> string
+/**
+ * Encodes a byte array as a padded RFC 4648 Base32 string.
+ * @param {Uint8Array} u8a - The bytes to encode.
+ * @return {string} The Base32-encoded string with `=` padding.
+ */
 export function b32e(u8a) {
   console.assert(u8a instanceof Uint8Array, u8a.constructor);
   const len = u8a.length,
@@ -60,6 +78,11 @@ export function b32e(u8a) {
     .concat(br, "=".repeat(pad))
     .join("");
 }
+/**
+ * Decode a padded Base32 string into bytes.
+ * @param {string} bs - The Base32-encoded string.
+ * @return {Uint8Array} The decoded bytes.
+ */
 export function b32d(bs) {
   const len = bs.length;
   if (len === 0) return new Uint8Array([]);

@@ -3,6 +3,12 @@
 import { motion, useInView, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { useEffect, useRef } from "react";
 
+/**
+ * Animates a number from its starting value to its target value when it enters the viewport.
+ *
+ * @param decimals - Number of decimal places to display.
+ * @returns A motion element containing the animated, formatted number.
+ */
 export function AnimatedNumber({
   start,
   end,

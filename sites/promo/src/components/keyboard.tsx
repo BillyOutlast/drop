@@ -8,10 +8,23 @@ const KeyboardContext = createContext<{ highlighted: string[] }>({
   highlighted: [],
 });
 
+/**
+ * Groups keyboard keys into a horizontal row.
+ *
+ * @param props - The row content to render.
+ */
 function Row(props: { readonly children: React.ReactNode }) {
   return <div {...props} className="group flex h-9 gap-2" />;
 }
 
+/**
+ * Renders a keyboard key that can be highlighted with an animated visual effect.
+ *
+ * @param name - The key name used to determine whether it is highlighted
+ * @param width - The key width in pixels
+ * @param className - Additional CSS classes for the key
+ * @param children - Content rendered inside the key
+ */
 function Key({
   name,
   width = 36,
@@ -66,6 +79,11 @@ function Key({
   );
 }
 
+/**
+ * Groups keyboard keys in a compact grid container.
+ *
+ * @param props - The content to render inside the key group.
+ */
 function KeyGroup(props: { readonly children: React.ReactNode }) {
   return (
     <div {...props} className="grid gap-px rounded-sm bg-black/10 ring-1 ring-black/10 *:ring-0" />
@@ -82,6 +100,9 @@ function EscapeKey() {
   );
 }
 
+/**
+ * Renders the F1 keyboard key.
+ */
 function F1Key() {
   return (
     <Key name="F1">
@@ -147,6 +168,9 @@ function F5Key() {
   );
 }
 
+/**
+ * Renders the F6 keyboard key.
+ */
 function F6Key() {
   return (
     <Key name="F6">
@@ -160,6 +184,9 @@ function F6Key() {
   );
 }
 
+/**
+ * Renders the F7 keyboard key with its icon.
+ */
 function F7Key() {
   return (
     <Key name="F7">
@@ -173,6 +200,9 @@ function F7Key() {
   );
 }
 
+/**
+ * Renders the F8 keyboard key.
+ */
 function F8Key() {
   return (
     <Key name="F8">
@@ -186,6 +216,9 @@ function F8Key() {
   );
 }
 
+/**
+ * Renders the F9 keyboard key.
+ */
 function F9Key() {
   return (
     <Key name="F9">
@@ -287,6 +320,9 @@ function TwoKey() {
   );
 }
 
+/**
+ * Renders the keyboard's `3` key with its numeric and symbol glyphs.
+ */
 function ThreeKey() {
   return (
     <Key name="Three">
@@ -326,6 +362,11 @@ function FiveKey() {
   );
 }
 
+/**
+ * Renders the keyboard key labeled with the number six and its associated symbol.
+ *
+ * @returns The rendered six key.
+ */
 function SixKey() {
   return (
     <Key name="Six">
@@ -339,6 +380,9 @@ function SixKey() {
   );
 }
 
+/**
+ * Renders the number seven key with its numeral and secondary symbol.
+ */
 function SevenKey() {
   return (
     <Key name="Seven">
@@ -352,6 +396,9 @@ function SevenKey() {
   );
 }
 
+/**
+ * Renders the eight key with its numeric glyph.
+ */
 function EightKey() {
   return (
     <Key name="Eight">
@@ -365,6 +412,9 @@ function EightKey() {
   );
 }
 
+/**
+ * Renders the `9` keyboard key.
+ */
 function NineKey() {
   return (
     <Key name="Nine">
@@ -378,6 +428,9 @@ function NineKey() {
   );
 }
 
+/**
+ * Renders the zero key with its glyph.
+ */
 function ZeroKey() {
   return (
     <Key name="Zero">
@@ -391,6 +444,9 @@ function ZeroKey() {
   );
 }
 
+/**
+ * Renders the dash key with its glyph.
+ */
 function DashKey() {
   return (
     <Key name="Dash">
@@ -417,6 +473,9 @@ function EqualsKey() {
   );
 }
 
+/**
+ * Renders a keyboard Delete key with its label.
+ */
 function DeleteKey() {
   return (
     <Key name="Delete" width={64}>
@@ -487,6 +546,9 @@ function TKey() {
   );
 }
 
+/**
+ * Renders the Y key.
+ */
 function YKey() {
   return (
     <Key name="Y">
@@ -497,6 +559,9 @@ function YKey() {
   );
 }
 
+/**
+ * Renders the `U` keyboard key.
+ */
 function UKey() {
   return (
     <Key name="U">
@@ -550,6 +615,9 @@ function LeftSquareBracketKey() {
   );
 }
 
+/**
+ * Renders the right square bracket key.
+ */
 function RightSquareBracketKey() {
   return (
     <Key name="RightSquareBracket">
@@ -576,6 +644,9 @@ function BackSlashKey() {
   );
 }
 
+/**
+ * Renders the Caps Lock key.
+ */
 function CapsLockKey() {
   return (
     <Key name="CapsLock" width={72}>
@@ -649,6 +720,11 @@ function HKey() {
   );
 }
 
+/**
+ * Renders the J keyboard key.
+ *
+ * @returns The rendered J key.
+ */
 function JKey() {
   return (
     <Key name="J">
@@ -679,6 +755,9 @@ function LKey() {
   );
 }
 
+/**
+ * Renders a semicolon key with its corresponding glyphs.
+ */
 function SemicolonKey() {
   return (
     <Key name="Semicolon">
@@ -705,6 +784,9 @@ function SingleQuoteKey() {
   );
 }
 
+/**
+ * Renders the Return key with its label glyph.
+ */
 function ReturnKey() {
   return (
     <Key name="Return" width={72}>
@@ -715,6 +797,11 @@ function ReturnKey() {
   );
 }
 
+/**
+ * Renders a shift key positioned on the left or right side of the keyboard.
+ *
+ * @param position - The side of the keyboard where the key is placed.
+ */
 function ShiftKey({ position }: { readonly position: "Left" | "Right" }) {
   return (
     <Key name={`${position}Shift`} width={94}>
@@ -778,6 +865,9 @@ function BKey() {
   );
 }
 
+/**
+ * Renders the N key with its glyph.
+ */
 function NKey() {
   return (
     <Key name="N">
@@ -824,6 +914,9 @@ function PeriodKey() {
   );
 }
 
+/**
+ * Renders the forward slash keyboard key.
+ */
 function ForwardSlashKey() {
   return (
     <Key name="ForwardSlash">
@@ -837,6 +930,9 @@ function ForwardSlashKey() {
   );
 }
 
+/**
+ * Renders the Function key with its function and globe symbols.
+ */
 function FunctionKey() {
   return (
     <Key name="Function" className="rounded-bl-xl">
@@ -850,6 +946,9 @@ function FunctionKey() {
   );
 }
 
+/**
+ * Renders a Control key with its shortcut glyph.
+ */
 function ControlKey() {
   return (
     <Key name="Control">
@@ -863,6 +962,11 @@ function ControlKey() {
   );
 }
 
+/**
+ * Renders an Option key with glyph alignment based on its position.
+ *
+ * @param position - The side of the keyboard where the key appears
+ */
 function OptionKey({ position }: { readonly position: "Left" | "Right" }) {
   return (
     <Key name={`${position}Option`}>
@@ -882,6 +986,11 @@ function OptionKey({ position }: { readonly position: "Left" | "Right" }) {
   );
 }
 
+/**
+ * Renders a Command key for the specified keyboard position.
+ *
+ * @param position - The keyboard position of the key
+ */
 function CommandKey({ position }: { readonly position: "Left" | "Right" }) {
   return (
     <Key name={`${position}Command`} width={50}>
@@ -915,6 +1024,9 @@ function LeftKey() {
   );
 }
 
+/**
+ * Renders the keyboard's up-arrow key.
+ */
 function UpKey() {
   return (
     <Key name="Up" className="rounded-b-[1px]">
@@ -945,6 +1057,11 @@ function RightKey() {
   );
 }
 
+/**
+ * Renders a keyboard layout with optional animated key highlighting.
+ *
+ * @param highlighted - Names of keys to highlight.
+ */
 export function Keyboard({ highlighted = [] }: { readonly highlighted?: string[] }) {
   return (
     <KeyboardContext.Provider value={{ highlighted }}>

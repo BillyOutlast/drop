@@ -1,5 +1,11 @@
 import { clsx } from "clsx";
 
+/**
+ * Wraps content in a grid container.
+ *
+ * @param className - Additional CSS classes for the container
+ * @param children - Content to render inside the container
+ */
 export function PlusGrid({
   className = "",
   children,
@@ -10,6 +16,12 @@ export function PlusGrid({
   return <div className={className}>{children}</div>;
 }
 
+/**
+ * Renders a grid row with decorative border lines and spacing around its content.
+ *
+ * @param className - Additional CSS classes for the row container
+ * @param children - Content rendered inside the row
+ */
 export function PlusGridRow({
   className = "",
   children,
@@ -38,6 +50,11 @@ export function PlusGridRow({
   );
 }
 
+/**
+ * Renders an item container with decorative plus icons at its row boundaries.
+ *
+ * @param children - The content to render inside the item
+ */
 export function PlusGridItem({
   className = "",
   children,
@@ -59,6 +76,12 @@ export function PlusGridItem({
   );
 }
 
+/**
+ * Renders a decorative plus-shaped icon at the specified position.
+ *
+ * @param placement - The icon position, such as `top left` or `bottom right`
+ * @returns The positioned plus-shaped SVG icon
+ */
 export function PlusGridIcon({
   className = "",
   placement,

@@ -16,6 +16,9 @@ import { notFound, useSearchParams } from "next/navigation";
 
 const postsPerPage = 5;
 
+/**
+ * Renders the first three posts in a featured section.
+ */
 function FeaturedPosts() {
   const featuredPosts = allPosts.slice(0, 3);
 
@@ -74,6 +77,12 @@ function FeaturedPosts() {
   );
 }
 
+/**
+ * Renders the posts for the requested page.
+ *
+ * @param page - The one-based page number to display
+ * @param category - Optional category used when determining whether an empty result is invalid
+ */
 function Posts({ page, category }: { readonly page: number; readonly category?: string }) {
   let posts = allPosts.slice((page - 1) * postsPerPage, page * postsPerPage);
 
@@ -128,6 +137,11 @@ function Posts({ page, category }: { readonly page: number; readonly category?: 
   );
 }
 
+/**
+ * Renders navigation controls for the news post pages.
+ *
+ * @param category - Optional category included in pagination links
+ */
 function Pagination({ page, category }: { readonly page: number; readonly category?: string }) {
   function url(page: number) {
     let params = new URLSearchParams();

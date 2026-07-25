@@ -23,6 +23,12 @@ export type AdminLibraryGame = SerializeObject<
   Awaited<ReturnType<typeof libraryManager.fetchGamesWithStatus>>[number]
 >;
 
+/**
+ * Builds Prisma filtering arguments from library search and filter criteria.
+ *
+ * @param query - Validated query parameters containing optional search text and filter tokens
+ * @returns Combined Prisma filtering arguments, or `undefined` when no criteria are provided
+ */
 function buildFilters(
   query: typeof Query.infer,
 ): Prisma.GameFindManyArgs | undefined {

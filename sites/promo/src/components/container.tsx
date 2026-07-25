@@ -1,5 +1,10 @@
 import { clsx } from "clsx";
 
+/**
+ * Wraps content in a responsive container with optional styling and element ID.
+ *
+ * @returns The rendered container element.
+ */
 export function Container({
   className,
   children,
