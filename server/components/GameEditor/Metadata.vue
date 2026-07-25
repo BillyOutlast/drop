@@ -129,7 +129,11 @@
               >
                 <PencilIcon class="animate-pulse size-5 text-zinc-100" />
               </div>
-              <div v-else-if="descriptionSaving == DescriptionSavingState.Loading" role="status" aria-live="polite">
+              <div
+                v-else-if="descriptionSaving == DescriptionSavingState.Loading"
+                role="status"
+                aria-live="polite"
+              >
                 <svg
                   aria-hidden="true"
                   class="w-5 h-5 text-transparent animate-spin fill-white"
@@ -332,9 +336,8 @@
         <div
           v-if="validAddCarouselImages.length == 0"
           class="text-zinc-400 col-span-2"
-          >
-            {{ $t("library.admin.game.addCarouselNoImages") }}
-          </div>
+        >
+          {{ $t("library.admin.game.addCarouselNoImages") }}
         </div>
       </template>
       <template #buttons>
@@ -373,9 +376,8 @@
         <div
           v-if="game.mImageLibraryObjectIds.length == 0"
           class="text-zinc-400 col-span-2"
-          >
-            {{ $t("library.admin.game.addDescriptionNoImages") }}
-          </div>
+        >
+          {{ $t("library.admin.game.addDescriptionNoImages") }}
         </div>
       </template>
       <template #buttons>
@@ -394,7 +396,11 @@
         <div class="flex flex-col lg:flex-row gap-6">
           <!-- icon upload div -->
           <div class="flex flex-col items-center gap-4">
-            <img :src="coreMetadataIconUrl" class="size-24 aspect-square" alt="" />
+            <img
+              :src="coreMetadataIconUrl"
+              class="size-24 aspect-square"
+              alt=""
+            />
             <label for="file-upload">
               <span
                 type="button"

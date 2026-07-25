@@ -65,6 +65,7 @@ export class TorrentialService extends Service<unknown> {
                 `could not locate cargo via which: ${(e as Error).message}`,
               );
             }
+            // sonarcloud-disable-next-line typescript:S4036
             return spawn(
               cargoPath,
               [
