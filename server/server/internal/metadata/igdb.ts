@@ -398,6 +398,27 @@ export class IGDBProvider implements MetadataProvider {
     return res;
   }
 
+  private async processInvolvedCompanyEntry(
+    foundInvolved: IGDBInvolvedCompany,
+    company: (name: string) => Promise<CompanyModel | undefined>,
+    context?: TaskRunContext,
+  ): Promise<{ developers: CompanyModel[]; publishers: CompanyModel[] }> {
+    const developers: CompanyModel[] = [];
+    const publishers: CompanyModel[] = [];
+    const companies = await this.request<
+      { name: string } & IGDBItem
+    >("companies", `where id = ${foundInvolved.company}; fields name;`);
+
+    for (const companyData of companies) {
+      const res = await this.processCompanyData(companyData, company, foundInvolved, context);
+      if (!res) continue;
+      if (foundInvolved.developer) developers.push(res);
+      if (foundInvolved.publisher) publishers.push(res);
+    }
+
+    return { developers, publishers };
+  }
+
   private async processInvolvedCompanies(
     currentGame: IGDBGameFull,
     company: (name: string) => Promise<CompanyModel | undefined>,
@@ -412,16 +433,10 @@ export class IGDBProvider implements MetadataProvider {
         `where id = ${involvedCompany}; fields *;`,
       );
       for (const foundInvolved of involved) {
-        const companies = await this.request<
-          { name: string } & IGDBItem
-        >("companies", `where id = ${foundInvolved.company}; fields name;`);
-
-        for (const companyData of companies) {
-          const res = await this.processCompanyData(companyData, company, foundInvolved, context);
-          if (!res) continue;
-          if (foundInvolved.developer) developers.push(res);
-          if (foundInvolved.publisher) publishers.push(res);
-        }
+        const { developers: devs, publishers: pubs } =
+          await this.processInvolvedCompanyEntry(foundInvolved, company, context);
+        developers.push(...devs);
+        publishers.push(...pubs);
       }
     }
 

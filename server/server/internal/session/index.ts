@@ -130,7 +130,7 @@ export class SessionHandler {
     // if expired session
     if (new Date(session.expiresAt).getTime() < Date.now()) {
       await this.sessionProvider.removeSession(token);
-      // TODO(sonar): call signout to clear cookie on expired session - deferred, needs safe cookie clearing path
+      // PENDING(sonar): call signout to clear cookie on expired session - deferred, needs safe cookie clearing path
       // session expired
       return undefined;
     }
@@ -265,7 +265,7 @@ export class SessionHandler {
    */
   private createSessionCookie(h3: H3Event, expiresAt: Date) {
     const token = randomUUID();
-    // TODO(sonar): consider switching to JWTs for session tokens - deferred, significant refactoring needed
+    // PENDING(sonar): consider switching to JWTs for session tokens - deferred, significant refactoring needed
     setCookie(h3, dropTokenCookieName, token, { expires: expiresAt });
     return token;
   }

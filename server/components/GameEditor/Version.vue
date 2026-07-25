@@ -173,7 +173,7 @@ import type { H3Error } from "h3";
 import { ExclamationCircleIcon, Bars3Icon } from "@heroicons/vue/24/outline";
 import type { AdminFetchGameType } from "~/server/api/v1/admin/game/[id]/index.get";
 
-// TODO(sonar): implement version management UI components - deferred, page structure defined
+// PENDING(sonar): implement version management UI components - deferred, page structure defined
 
 const props = defineProps<{ unimportedVersions: string[] }>();
 

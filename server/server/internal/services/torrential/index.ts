@@ -69,7 +69,12 @@ export class TorrentialService extends Service<unknown> {
                 `${torrentialDir}/Cargo.toml`,
                 "--release",
               ],
-              { env: { ...process.env, PATH: "/usr/local/bin:/usr/bin:/bin" } },
+              {
+                env: {
+                  ...process.env,
+                  PATH: "/usr/local/bin:/usr/bin:/bin",
+                },
+              },
             );
           }
         }

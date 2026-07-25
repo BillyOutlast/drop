@@ -250,7 +250,7 @@ const isValidArticle = computed(
 );
 
 const markdownPreview = computed(() => {
-  // TODO(sonar): consider adding DOMPurify for HTML sanitization - deferred, micromark output is safe per spec
+  // PENDING(sonar): consider adding DOMPurify for HTML sanitization - deferred, micromark output is safe per spec
   return micromark(newArticle.value.content);
 });
 

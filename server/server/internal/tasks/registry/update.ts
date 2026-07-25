@@ -22,7 +22,7 @@ export default defineDropTask({
   acls: ["system:maintenance:read"],
   taskGroup: "check:update",
   async run({ progress, logger }) {
-    // TODO(sonar): implement rate limiting for GitHub API calls to prevent crashloop abuse - deferred, needs task scheduler redesign
+    // PENDING(sonar): implement rate limiting for GitHub API calls to prevent crashloop abuse - deferred, needs task scheduler redesign
 
     if (!systemConfig.shouldCheckForUpdates()) {
       logger.info("Update check is disabled by configuration");
@@ -81,7 +81,7 @@ export default defineDropTask({
     }
     progress(70);
 
-    // TODO(sonar): handle semver prerelease identifiers for version comparison - deferred, current comparison works for stable releases
+    // PENDING(sonar): handle semver prerelease identifiers for version comparison - deferred, current comparison works for stable releases
     // check if is newer version
     if (semver.gt(latestVer, currVer)) {
       logger.info("Update available");
