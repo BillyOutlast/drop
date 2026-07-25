@@ -11,7 +11,7 @@ describe("createMockH3Event", () => {
     expect(event.getRequestURL().toString()).toBe("http://localhost/");
   });
 
-  it("accepts overrides", () => {
+  it("accepts overrides", async () => {
     const event = createMockH3Event({
       method: "POST",
       body: { id: 1 },
