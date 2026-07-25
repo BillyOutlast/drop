@@ -2,7 +2,7 @@
 
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 
 const KeyboardContext = createContext<{ highlighted: string[] }>({
   highlighted: [],
@@ -1063,8 +1063,9 @@ function RightKey() {
  * @param highlighted - Names of keys to highlight.
  */
 export function Keyboard({ highlighted = [] }: { readonly highlighted?: string[] }) {
+  const contextValue = useMemo(() => ({ highlighted }), [highlighted]);
   return (
-    <KeyboardContext.Provider value={{ highlighted }}>
+    <KeyboardContext.Provider value={contextValue}>
       <div aria-hidden="true" className="flex flex-col gap-2">
         <Row>
           <EscapeKey />
