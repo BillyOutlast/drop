@@ -418,8 +418,7 @@ export class OIDCManager {
       userinfo.groups.includes(this.adminGroup);
 
     const isUser = this.userGroup
-      ? userinfo.groups !== undefined &&
-        userinfo.groups.includes(this.userGroup)
+      ? userinfo.groups?.includes(this.userGroup)
       : true;
 
     if (!(isAdmin || isUser))

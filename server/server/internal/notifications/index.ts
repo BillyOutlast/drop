@@ -20,7 +20,7 @@ export type NotificationCreateArgs = Pick<
 
 class NotificationSystem {
   // userId to acl to listenerId
-  private listeners = new Map<
+  private readonly listeners = new Map<
     string,
     Map<
       string,

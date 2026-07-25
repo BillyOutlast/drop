@@ -55,9 +55,9 @@ export abstract class MetadataProvider {
 
 export class MetadataHandler {
   // Ordered by priority
-  private providers: PriorityListIndexed<MetadataProvider> =
+  private readonly providers: PriorityListIndexed<MetadataProvider> =
     new PriorityListIndexed("source");
-  private objectHandler: ObjectTransactionalHandler =
+  private readonly objectHandler: ObjectTransactionalHandler =
     new ObjectTransactionalHandler();
 
   addProvider(provider: MetadataProvider, priority: number = 0) {

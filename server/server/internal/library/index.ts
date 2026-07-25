@@ -264,7 +264,7 @@ class LibraryManager {
       where: { id: gameId },
       select: { libraryPath: true, libraryId: true, mName: true },
     });
-    if (!game || !game.libraryId) return undefined;
+    if (!game?.libraryId) return undefined;
 
     const library = this.libraries.get(game.libraryId);
     if (!library) return undefined;
@@ -456,7 +456,7 @@ class LibraryManager {
       where: { id: gameId },
       select: { mName: true, libraryId: true, libraryPath: true, type: true },
     });
-    if (!game || !game.libraryId) return undefined;
+    if (!game?.libraryId) return undefined;
 
     if (game.type === GameType.Dependency && !metadata.onlySetup)
       throw createError({

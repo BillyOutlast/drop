@@ -74,7 +74,7 @@ function FeaturedPosts() {
   );
 }
 
-function Posts({ page, category }: { page: number; category?: string }) {
+function Posts({ page, category }: { readonly page: number; readonly category?: string }) {
   let posts = allPosts.slice((page - 1) * postsPerPage, page * postsPerPage);
 
   if (posts.length === 0 && (page > 1 || category)) {
@@ -128,7 +128,7 @@ function Posts({ page, category }: { page: number; category?: string }) {
   );
 }
 
-function Pagination({ page, category }: { page: number; category?: string }) {
+function Pagination({ page, category }: { readonly page: number; readonly category?: string }) {
   function url(page: number) {
     let params = new URLSearchParams();
 

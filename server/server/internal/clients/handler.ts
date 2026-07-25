@@ -23,7 +23,7 @@ export interface ClientMetadata {
 }
 
 export class ClientHandler {
-  private temporaryClientTable = new Map<
+  private readonly temporaryClientTable = new Map<
     string,
     {
       timeout: NodeJS.Timeout;
@@ -33,7 +33,7 @@ export class ClientHandler {
       peer?: PeerImpl;
     }
   >();
-  private codeClientMap = new Map<string, string>();
+  private readonly codeClientMap = new Map<string, string>();
 
   async initiate(metadata: ClientMetadata) {
     const clientId = randomUUID();

@@ -29,11 +29,11 @@ function CallToAction() {
   );
 }
 
-function SitemapHeading({ children }: { children: React.ReactNode }) {
+function SitemapHeading({ children }: { readonly children: React.ReactNode }) {
   return <h3 className="text-sm/6 font-medium text-zinc-100/50">{children}</h3>;
 }
 
-function SitemapLinks({ children }: { children: React.ReactNode }) {
+function SitemapLinks({ children }: { readonly children: React.ReactNode }) {
   return <ul className="mt-6 space-y-4 text-sm/6">{children}</ul>;
 }
 

@@ -1,17 +1,17 @@
-'use client'
+"use client";
 
-import { clsx } from 'clsx'
-import { motion } from 'framer-motion'
-import { Mark } from './logo'
+import { clsx } from "clsx";
+import { motion } from "framer-motion";
+import { Mark } from "./logo";
 
 function Circle({
   size,
   delay,
   opacity,
 }: {
-  size: number
-  delay: number
-  opacity: string
+  readonly size: number;
+  readonly delay: number;
+  readonly opacity: string;
 }) {
   return (
     <motion.div
@@ -24,19 +24,19 @@ function Circle({
             duration: 0.75,
             repeat: Infinity,
             repeatDelay: 1.25,
-            ease: 'easeInOut',
+            ease: "easeInOut",
             delay,
           },
         },
       }}
-      style={{ '--opacity': opacity } as React.CSSProperties}
+      style={{ "--opacity": opacity } as React.CSSProperties}
       className={clsx(
-        'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full',
-        'bg-[radial-gradient(circle,transparent_25%,color-mix(in_srgb,var(--color-blue-500)_var(--opacity),transparent)_100%)]',
-        'ring-1 ring-blue-500/8 ring-inset',
+        "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full",
+        "bg-[radial-gradient(circle,transparent_25%,color-mix(in_srgb,var(--color-blue-500)_var(--opacity),transparent)_100%)]",
+        "ring-1 ring-blue-500/8 ring-inset",
       )}
     />
-  )
+  );
 }
 
 function Circles() {
@@ -48,7 +48,7 @@ function Circles() {
       <Circle size={144} opacity="10%" delay={0} />
       <div className="absolute inset-0 bg-linear-to-t from-zinc-900 to-35%" />
     </div>
-  )
+  );
 }
 
 function MainLogo() {
@@ -56,7 +56,7 @@ function MainLogo() {
     <div className="absolute top-32 left-44 flex size-16 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5">
       <Mark className="h-9" />
     </div>
-  )
+  );
 }
 
 function Logo({
@@ -65,10 +65,10 @@ function Logo({
   top,
   hover,
 }: {
-  src: string
-  left: number
-  top: number
-  hover: { x: number; y: number; rotate: number; delay: number }
+  readonly src: string;
+  readonly left: number;
+  readonly top: number;
+  readonly hover: { x: number; y: number; rotate: number; delay: number };
 }) {
   return (
     <motion.img
@@ -82,7 +82,7 @@ function Logo({
             duration: 0.75,
             repeat: Infinity,
             repeatDelay: 1.25,
-            ease: 'easeInOut',
+            ease: "easeInOut",
             delay: hover.delay,
           },
         },
@@ -92,7 +92,7 @@ function Logo({
       style={{ left, top } as React.CSSProperties}
       className="absolute size-16 rounded-full bg-white shadow-sm ring-1 ring-black/5"
     />
-  )
+  );
 }
 
 export function LogoCluster() {
@@ -139,5 +139,5 @@ export function LogoCluster() {
         /> */}
       </div>
     </div>
-  )
+  );
 }

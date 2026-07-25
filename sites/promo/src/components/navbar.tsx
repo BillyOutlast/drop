@@ -1,24 +1,20 @@
-'use client'
+"use client";
 
-import {
-  Disclosure,
-  DisclosureButton,
-  DisclosurePanel,
-} from '@headlessui/react'
-import { Bars2Icon } from '@heroicons/react/24/solid'
-import { motion } from 'framer-motion'
-import { Link } from './link'
-import { Logo } from './logo'
-import { PlusGrid, PlusGridItem, PlusGridRow } from './plus-grid'
+import { Disclosure, DisclosureButton, DisclosurePanel } from "@headlessui/react";
+import { Bars2Icon } from "@heroicons/react/24/solid";
+import { motion } from "framer-motion";
+import { Link } from "./link";
+import { Logo } from "./logo";
+import { PlusGrid, PlusGridItem, PlusGridRow } from "./plus-grid";
 
 const links = [
-  { href: '/about', label: 'About' },
-  { href: '/gallery', label: 'Gallery' },
-  { href: '/comparison', label: 'Comparison' },
-  { href: '/news', label: 'News' },
-  { href: '/sponsors', label: 'Sponsors' },
-  { href: '/download', label: 'Download' },
-]
+  { href: "/about", label: "About" },
+  { href: "/gallery", label: "Gallery" },
+  { href: "/comparison", label: "Comparison" },
+  { href: "/news", label: "News" },
+  { href: "/sponsors", label: "Sponsors" },
+  { href: "/download", label: "Download" },
+];
 
 function DesktopNav() {
   return (
@@ -34,7 +30,7 @@ function DesktopNav() {
         </PlusGridItem>
       ))}
     </nav>
-  )
+  );
 }
 
 function MobileNavButton() {
@@ -45,7 +41,7 @@ function MobileNavButton() {
     >
       <Bars2Icon className="size-6" />
     </DisclosureButton>
-  )
+  );
 }
 
 function MobileNav() {
@@ -58,7 +54,7 @@ function MobileNav() {
             animate={{ opacity: 1, rotateX: 0 }}
             transition={{
               duration: 0.15,
-              ease: 'easeInOut',
+              ease: "easeInOut",
               rotateX: { duration: 0.3, delay: linkIndex * 0.1 },
             }}
             key={href}
@@ -74,10 +70,10 @@ function MobileNav() {
         <div className="absolute inset-x-0 top-2 border-t border-white/5" />
       </div>
     </DisclosurePanel>
-  )
+  );
 }
 
-export function Navbar({ banner }: { banner?: React.ReactNode }) {
+export function Navbar({ banner }: { readonly banner?: React.ReactNode }) {
   return (
     <Disclosure as="header" className="pt-12 sm:pt-16">
       <PlusGrid>
@@ -88,11 +84,7 @@ export function Navbar({ banner }: { banner?: React.ReactNode }) {
                 <Logo className="h-9" />
               </Link>
             </PlusGridItem>
-            {banner && (
-              <div className="relative hidden items-center py-3 lg:flex">
-                {banner}
-              </div>
-            )}
+            {banner && <div className="relative hidden items-center py-3 lg:flex">{banner}</div>}
           </div>
           <DesktopNav />
           <MobileNavButton />
@@ -100,5 +92,5 @@ export function Navbar({ banner }: { banner?: React.ReactNode }) {
       </PlusGrid>
       <MobileNav />
     </Disclosure>
-  )
+  );
 }

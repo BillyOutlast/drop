@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { motion } from 'framer-motion'
+import { motion } from "framer-motion";
 
 function Marker({
   src,
@@ -8,10 +8,10 @@ function Marker({
   offset,
   delay,
 }: {
-  src: string
-  top: number
-  offset: number
-  delay: number
+  readonly src: string;
+  readonly top: number;
+  readonly offset: number;
+  readonly delay: number;
 }) {
   return (
     <motion.div
@@ -19,8 +19,8 @@ function Marker({
         idle: { scale: 0, opacity: 0, rotateX: 0, rotate: 0, y: 0 },
         active: { y: [-20, 0, 4, 0], scale: [0.75, 1], opacity: [0, 1] },
       }}
-      transition={{ duration: 0.25, delay, ease: 'easeOut' }}
-      style={{ '--offset': `${offset}px`, top } as React.CSSProperties}
+      transition={{ duration: 0.25, delay, ease: "easeOut" }}
+      style={{ "--offset": `${offset}px`, top } as React.CSSProperties}
       className="absolute left-[calc(50%+var(--offset))] size-[38px] drop-shadow-[0_3px_1px_rgba(0,0,0,.15)]"
     >
       <svg fill="none" viewBox="0 0 38 38" className="absolute size-full">
@@ -33,13 +33,9 @@ function Marker({
           className="fill-white"
         />
       </svg>
-      <img
-        alt=""
-        src={src}
-        className="absolute top-[4px] left-[7px] size-6 rounded-full"
-      />
+      <img alt="" src={src} className="absolute top-[4px] left-[7px] size-6 rounded-full" />
     </motion.div>
-  )
+  );
 }
 
 export function Map() {
@@ -54,5 +50,5 @@ export function Map() {
         <Marker src="/map/5.jpg" top={224} offset={-32} delay={0.8} />
       </div>
     </div>
-  )
+  );
 }

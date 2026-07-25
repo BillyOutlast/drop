@@ -101,7 +101,13 @@ export function Gallery() {
   );
 }
 
-export default function GalleryModal({ img, close }: { img?: string; close: () => void }) {
+export default function GalleryModal({
+  img,
+  close,
+}: {
+  readonly img?: string;
+  readonly close: () => void;
+}) {
   return (
     <Dialog open={!!img} onClose={close} className="relative z-10">
       <DialogBackdrop

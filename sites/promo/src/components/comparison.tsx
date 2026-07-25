@@ -283,7 +283,7 @@ function ProjectCards() {
   );
 }
 
-function ProjectCard({ tier }: { tier: (typeof projects)[number] }) {
+function ProjectCard({ tier }: { readonly tier: (typeof projects)[number] }) {
   return (
     <div className="-m-2 grid grid-cols-1 rounded-4xl shadow-[inset_0_0_2px_1px_#ffffff4d] ring-1 ring-white/5 max-lg:mx-auto max-lg:w-full max-lg:max-w-md">
       <div className="grid grid-cols-1 rounded-4xl p-2 shadow-md shadow-black/5">
@@ -309,7 +309,11 @@ function ProjectCard({ tier }: { tier: (typeof projects)[number] }) {
   );
 }
 
-function ProjectTable({ selectedProject }: { selectedProject: (typeof projects)[number] }) {
+function ProjectTable({
+  selectedProject,
+}: {
+  readonly selectedProject: (typeof projects)[number];
+}) {
   function onlyUnique<T>(value: T, index: number, array: Array<T>) {
     return array.indexOf(value) === index;
   }
@@ -470,9 +474,9 @@ function FeatureItem({
   disabled = false,
   paid = false,
 }: {
-  description: string;
-  disabled?: boolean;
-  paid?: boolean;
+  readonly description: string;
+  readonly disabled?: boolean;
+  readonly paid?: boolean;
 }) {
   return (
     <li
