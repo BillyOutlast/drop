@@ -137,7 +137,7 @@ const authenticationMechanisms: Array<{
   icon: Component;
   route?: string;
   enabled: boolean;
-  settings?: { [key: string]: string | undefined } | undefined | boolean;
+  settings?: { [key: string]: string | undefined } | boolean;
 }> = [
   {
     name: t("users.admin.authentication.simple"),

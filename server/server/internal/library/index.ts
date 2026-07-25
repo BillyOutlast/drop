@@ -181,7 +181,7 @@ class LibraryManager {
       const unimportedVersions = versions
         .filter(
           (e) =>
-            params.versions.findIndex((v) => v == e) == -1 &&
+            !params.versions.some((v) => v == e) &&
             !taskHandler.hasTaskKey(
               createVersionImportTaskKey(params.gameId, e),
             ),

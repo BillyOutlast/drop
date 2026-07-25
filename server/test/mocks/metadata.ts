@@ -342,10 +342,10 @@ export function pcgamingwikiHandlers(overrides?: {
  * Convenience for tests that need every external metadata source mocked.
  */
 export function allMetadataHandlers(overrides?: {
-  igdb?: Parameters<typeof igdbHandlers>[0];
-  steam?: Parameters<typeof steamHandlers>[0];
-  giantbomb?: Parameters<typeof giantbombHandlers>[0];
-  pcgamingwiki?: Parameters<typeof pcgamingwikiHandlers>[0];
+  igdb?: NonNullable<Parameters<typeof igdbHandlers>[0]>;
+  steam?: NonNullable<Parameters<typeof steamHandlers>[0]>;
+  giantbomb?: NonNullable<Parameters<typeof giantbombHandlers>[0]>;
+  pcgamingwiki?: NonNullable<Parameters<typeof pcgamingwikiHandlers>[0]>;
 }): HttpHandler[] {
   return [
     ...igdbHandlers(overrides?.igdb),

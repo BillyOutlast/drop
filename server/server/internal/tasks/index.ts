@@ -346,8 +346,7 @@ class TaskHandler {
     const allClientIds = this.taskPool
       .values()
       .toArray()
-      .map((e) => e.clients.keys().toArray())
-      .flat();
+      .flatMap((e) => e.clients.keys().toArray());
 
     if (!allClientIds.includes(id)) {
       this.clientRegistry.delete(id);

@@ -305,10 +305,7 @@ const massImport = ref(
 );
 
 const hasSelected = computed(() =>
-  massImport.value
-    .map((v) => v.versions)
-    .flat()
-    .some((e) => e.enabled),
+  massImport.value.flatMap((v) => v.versions).some((e) => e.enabled),
 );
 
 const globalState = computed({
@@ -340,21 +337,19 @@ async function triggerImport() {
   const { taskId } = await $dropFetch("/api/v1/admin/import/massversion", {
     method: "POST",
     body: {
-      versions: massImport.value
-        .map((game) =>
-          game.versions
-            .filter((version) => version.enabled)
-            .map((version) => ({
-              id: game.id,
-              version: {
-                type: version.type,
-                identifier: version.identifier,
-                name: version.name,
-              },
-              ...version.settings,
-            })),
-        )
-        .flat(),
+      versions: massImport.value.flatMap((game) =>
+        game.versions
+          .filter((version) => version.enabled)
+          .map((version) => ({
+            id: game.id,
+            version: {
+              type: version.type,
+              identifier: version.identifier,
+              name: version.name,
+            },
+            ...version.settings,
+          })),
+      ),
     },
   });
   router.push(`/admin/task/${taskId}`);
