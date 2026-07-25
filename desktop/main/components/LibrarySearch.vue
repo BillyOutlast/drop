@@ -123,7 +123,7 @@ import { invoke } from "@tauri-apps/api/core";
 import {
   type EmptyGameStatusEnum,
   InstalledType,
-  type Collection as Collection,
+  type Collection,
   type Game,
   type GameStatus,
 } from "~/types";

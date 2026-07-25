@@ -92,8 +92,7 @@ async function isReferencedInModelFields(
   id: string,
   fieldRefMap: FieldReferenceMap,
 ): Promise<boolean> {
-  // TODO: optimize the built queries
-  // rn it runs a query for every id over each db table
+  // TODO(sonar): batch DB queries instead of one-per-id-per-table - deferred, performance optimization
   for (const { model, fields, arrayFields } of Object.values(fieldRefMap)) {
     const singleFieldOrConditions = fields
       ? fields.map((field) => ({

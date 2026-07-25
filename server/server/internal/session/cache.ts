@@ -4,7 +4,7 @@ import type { SessionProvider, SessionWithToken } from "./types";
 /**
  * DO NOT USE THIS. THE CACHE EVICTS SESSIONS.
  *
- * This needs work. TODO.
+ * TODO(sonar): fix cache eviction for session provider - deferred, needs persistence design
  */
 export default function createCacheSessionProvider() {
   const sessions = cacheHandler.createCache<SessionWithToken>(

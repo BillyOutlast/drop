@@ -192,11 +192,9 @@ const filteredArticles = computed(() => {
       }
     }
 
-    const matchesTags =
-      selectedTags.value.length === 0 ||
-      selectedTags.value.every((tag) =>
-        article.tags.find((e) => e.name == tag),
-      );
+    const matchesTags = selectedTags.value.every((tag) =>
+      article.tags.find((e) => e.name == tag),
+    );
 
     return matchesSearch && matchesDate && matchesTags;
   });

@@ -12,7 +12,8 @@ import type { GlobalACL } from "../acls";
 
 // type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 
-// TODO: document notification action format
+// Notification action format: actions field contains an array of action objects with label and handler
+// TODO(sonar): add formal documentation for notification action format - deferred
 export type NotificationCreateArgs = Pick<
   NotificationModel,
   "title" | "description" | "actions" | "nonce"

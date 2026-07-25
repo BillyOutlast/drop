@@ -21,7 +21,6 @@ function recursiveFindFiles(root: string): string[] {
     const stat = fs.statSync(absPath);
     if (stat.isDirectory()) {
       results.push(...recursiveFindFiles(absPath));
-      continue;
     }
   }
   return [...results, ...constPaths];

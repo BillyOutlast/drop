@@ -22,8 +22,8 @@ class GameSizeManager {
     cacheHandler.createCache<GameSizeBreakdown>("gameBreakdown");
 
   private gameVersionSizeCacheKey(versionId: string, previousId?: string) {
-    const suffix = previousId ? `-from-${previousId}` : "";
-    return `${versionId}${suffix}`;
+    const suffix = previousId ? "-from-" + previousId : "";
+    return versionId + suffix;
   }
 
   /***

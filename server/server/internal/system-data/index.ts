@@ -18,7 +18,7 @@ function getCPUInfo() {
   let irq = 0;
 
   for (const cpu in cpus) {
-    if (!Object.prototype.hasOwnProperty.call(cpus, cpu)) continue;
+    if (!Object.hasOwn(cpus, cpu)) continue;
     user += cpus[cpu].times.user;
     nice += cpus[cpu].times.nice;
     sys += cpus[cpu].times.sys;

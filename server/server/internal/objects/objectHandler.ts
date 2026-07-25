@@ -216,7 +216,7 @@ export class ObjectHandler {
     if (!hasPermission) return false;
 
     const source = await sourceFetcher();
-    // TODO: prevent user from overwriting existing object
+    // TODO(sonar): add check to prevent user from overwriting existing object - deferred, needs idempotency design
     const result = await this.backend.write(id, source);
 
     return result;

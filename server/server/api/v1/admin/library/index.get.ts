@@ -23,6 +23,44 @@ export type AdminLibraryGame = SerializeObject<
   Awaited<ReturnType<typeof libraryManager.fetchGamesWithStatus>>[number]
 >;
 
+function buildFilters(
+  query: typeof Query.infer,
+): Prisma.GameFindManyArgs | undefined {
+  const rawFilters: Array<Prisma.GameFindManyArgs & Prisma.GameCountArgs> = [];
+  if (!query.filters?.length && !query.query) return undefined;
+
+  if (query.filters) {
+    const filterSet = new Set(query.filters);
+    if (filterSet.has("version.none")) {
+      rawFilters.push({ where: { versions: { none: {} } } });
+    }
+    if (filterSet.has("metadata.featured")) {
+      rawFilters.push({ where: { featured: true } });
+    }
+    if (filterSet.has("metadata.noCarousel")) {
+      rawFilters.push({
+        where: { OR: [{ mImageCarouselObjectIds: { isEmpty: true } }] },
+      });
+    }
+    if (filterSet.has("metadata.emptyDescription")) {
+      rawFilters.push({ where: { mDescription: "" } });
+    }
+  }
+
+  if (query.query) {
+    rawFilters.push({
+      where: { mName: { contains: query.query, mode: "insensitive" } },
+    });
+  }
+
+  return rawFilters.length > 0
+    ? rawFilters.reduce(
+        (a, b) => deepmerge(a, b),
+        {} as Prisma.GameFindManyArgs & Prisma.GameCountArgs,
+      )
+    : undefined;
+}
+
 export default defineEventHandler(async (h3) => {
   const allowed = await aclManager.allowSystemACL(h3, ["library:read"]);
   if (!allowed) throw createError({ statusCode: 403 });
@@ -53,65 +91,7 @@ export default defineEventHandler(async (h3) => {
       break;
   }
 
-  const rawFilters: Array<Prisma.GameFindManyArgs & Prisma.GameCountArgs> = [];
-  if (query.filters && query.filters.length > 0) {
-    const filterSet = new Set(query.filters);
-    if (filterSet.has("version.none")) {
-      rawFilters.push({
-        where: {
-          versions: {
-            none: {},
-          },
-        },
-      });
-    }
-
-    if (filterSet.has("metadata.featured")) {
-      rawFilters.push({
-        where: {
-          featured: true,
-        },
-      });
-    }
-
-    if (filterSet.has("metadata.noCarousel")) {
-      rawFilters.push({
-        where: {
-          OR: [
-            {
-              mImageCarouselObjectIds: {
-                isEmpty: true,
-              },
-            },
-          ],
-        },
-      });
-    }
-
-    if (filterSet.has("metadata.emptyDescription")) {
-      rawFilters.push({
-        where: {
-          mDescription: "",
-        },
-      });
-    }
-  }
-
-  if (query.query) {
-    rawFilters.push({
-      where: {
-        mName: {
-          contains: query.query,
-          mode: "insensitive",
-        },
-      },
-    });
-  }
-
-  const filters =
-    rawFilters.length > 0
-      ? rawFilters.reduce((a, b) => deepmerge(a, b))
-      : undefined;
+  const filters = buildFilters(query);
 
   const results = await libraryManager.fetchGamesWithStatus({
     ...skip,

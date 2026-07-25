@@ -32,14 +32,13 @@ func saveCertificateToKeyChain(_ certificate: SecCertificate, certificateLabel: 
         throw SecurityError.generalError
     }
 
-    var status = SecTrustSettingsSetTrustSettings(certificate, SecTrustSettingsDomain.admin, nil)
+    SecTrustSettingsSetTrustSettings(certificate, SecTrustSettingsDomain.admin, nil)
 }
 
 func getCertificateFromString(stringData: String) throws -> SecCertificate {
-    if let data = NSData(base64Encoded: stringData, options: NSData.Base64DecodingOptions.ignoreUnknownCharacters) {
-        if let certificate = SecCertificateCreateWithData(kCFAllocatorDefault, data) {
-            return certificate
-        }
+    if let data = NSData(base64Encoded: stringData, options: NSData.Base64DecodingOptions.ignoreUnknownCharacters),
+       let certificate = SecCertificateCreateWithData(kCFAllocatorDefault, data) {
+        return certificate
     }
     throw SecurityError.generalError
 }

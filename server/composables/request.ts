@@ -6,28 +6,23 @@ import type {
 } from "nitropack/types";
 import type { FetchError } from "ofetch";
 
-interface DropFetch<
-  DefaultT = unknown,
-  DefaultR extends NitroFetchRequest = NitroFetchRequest,
-> {
-  <
-    T = DefaultT,
-    R extends NitroFetchRequest = DefaultR,
-    O extends NitroFetchOptions<R> = NitroFetchOptions<R>,
-  >(
-    request: R,
-    opts?: O & { failTitle?: string; params?: { [key: string]: string } },
-  ): Promise<
-    // sometimes there is an error, other times there isn't
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    TypedInternalResponse<
-      R,
-      T,
-      NitroFetchOptions<R> extends O ? "get" : ExtractedRouteMethod<R, O>
-    >
-  >;
-}
+type DropFetch = <
+  T = unknown,
+  R extends NitroFetchRequest = NitroFetchRequest,
+  O extends NitroFetchOptions<R> = NitroFetchOptions<R>,
+>(
+  request: R,
+  opts?: O & { failTitle?: string; params?: { [key: string]: string } },
+) => Promise<
+  // sometimes there is an error, other times there isn't
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  TypedInternalResponse<
+    R,
+    T,
+    NitroFetchOptions<R> extends O ? "get" : ExtractedRouteMethod<R, O>
+  >
+>;
 
 export const $dropFetch: DropFetch = async (rawRequest, opts) => {
   const requestParts = rawRequest.toString().split("/");
@@ -75,7 +70,7 @@ export const $dropFetch: DropFetch = async (rawRequest, opts) => {
   const state = useState(id);
   if (state.value) {
     // Deep copy
-    const object = JSON.parse(JSON.stringify(state.value));
+    const object = structuredClone(state.value);
     // Never use again on client
     if (import.meta.client) state.value = undefined;
     return object;

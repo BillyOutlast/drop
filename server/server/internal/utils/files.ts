@@ -31,7 +31,7 @@ export function getFolderSize(folderPath: string): number {
 }
 
 export function formatBytes(bytes: number): string {
-  // TODO: use i18n formatting https://vue-i18n.intlify.dev/guide/essentials/number.html
+  // TODO(sonar): use i18n number formatting for bytes display - deferred, needs vue-i18n integration
 
   if (bytes < 1024) {
     return `${bytes} B`;

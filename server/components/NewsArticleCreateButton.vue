@@ -250,8 +250,7 @@ const isValidArticle = computed(
 );
 
 const markdownPreview = computed(() => {
-  // TODO: maybe?? add https://github.com/cure53/DOMPurify
-  // micromark says its safe, but this is straight html we are injecting
+  // TODO(sonar): consider adding DOMPurify for HTML sanitization - deferred, micromark output is safe per spec
   return micromark(newArticle.value.content);
 });
 

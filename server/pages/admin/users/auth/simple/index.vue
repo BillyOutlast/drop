@@ -443,7 +443,7 @@ const email = computed({
     _email.value = v;
   },
 });
-const mailRegex = /^\S+@\S+\.\S+$/;
+const mailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const validEmail = computed(() =>
   _email.value === undefined ? true : mailRegex.test(email.value as string),
 );

@@ -47,7 +47,7 @@ function input(index: number) {
   const v = code.value[index] ?? "";
   if (v.length > 1) code.value[index] = v[0];
 
-  if (!(index + 1 >= codeElements.value.length) && v) {
+  if (index + 1 < codeElements.value.length && v) {
     codeElements.value[index + 1].focus();
   }
 
