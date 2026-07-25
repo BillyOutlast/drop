@@ -22,7 +22,7 @@ describe("createMockH3Event", () => {
       getRouterParam: (n: string) => string | undefined;
     };
     expect(event.method).toBe("POST");
-    expect(event.readBody()).resolves.toEqual({ id: 1 });
+    await expect(event.readBody()).resolves.toEqual({ id: 1 });
     expect(event.getRouterParam("slug")).toBe("abc");
   });
 });

@@ -19,7 +19,10 @@ import { setupAllMocks, teardownTestMocks } from "./mocks";
 (globalThis as Record<string, unknown>).getRequestURL = () =>
   new URL("http://localhost");
 (globalThis as Record<string, unknown>).getRequestIP = () =>
-  ({ ip: "127.0.0.1", ipv6: undefined }) as { ip: string; ipv6: string | undefined };
+  ({ ip: "127.0.0.1", ipv6: undefined }) as {
+    ip: string;
+    ipv6: string | undefined;
+  };
 
 // Response mutators
 (globalThis as Record<string, unknown>).setHeader = () => undefined;
@@ -53,9 +56,7 @@ import { setupAllMocks, teardownTestMocks } from "./mocks";
 (globalThis as Record<string, unknown>).createError = (err: unknown) => err;
 (globalThis as Record<string, unknown>).defineNitroPlugin = <T>(plugin: T): T =>
   plugin;
-(globalThis as Record<string, unknown>).defineNitroErrorHandler = <
-  T,
->(
+(globalThis as Record<string, unknown>).defineNitroErrorHandler = <T>(
   handler: T,
 ): T => handler;
 
