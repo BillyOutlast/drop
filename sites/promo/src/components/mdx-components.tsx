@@ -57,6 +57,11 @@ const components: MDXComponents = {
   },
 };
 
+/**
+ * Provides the component mappings used to render MDX elements.
+ *
+ * @returns The configured MDX component map
+ */
 export function useMDXComponents(): MDXComponents {
   return components;
 }

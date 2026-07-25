@@ -28,6 +28,20 @@ impl DepotManifest {
             content: HashMap::new(),
         }
     }
+    /// Adds version and compression data for a game, replacing any existing entry with the same ID.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut manifest = DepotManifest::new();
+    /// manifest.append(
+    ///     "game-1".to_owned(),
+    ///     "version-1".to_owned(),
+    ///     CompressionOption::None,
+    /// );
+    ///
+    /// assert_eq!(manifest.len(), 1);
+    /// ```
     pub fn append(&mut self, game_id: String, version_id: String, compression: CompressionOption) {
         self.content.insert(
             game_id,
@@ -37,9 +51,26 @@ impl DepotManifest {
             },
         );
     }
+    /// Determines whether the manifest contains no entries.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let manifest = DepotManifest::new();
+    /// assert!(manifest.is_empty());
+    /// ```
     pub fn is_empty(&self) -> bool {
         self.content.is_empty()
     }
+    /// Gets the number of game entries in the manifest.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let manifest = DepotManifest::new();
+    /// assert_eq!(manifest.len(), 0);
+    /// ```
+    ///
     pub fn len(&self) -> usize {
         self.content.len()
     }

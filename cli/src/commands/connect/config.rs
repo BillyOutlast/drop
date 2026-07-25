@@ -29,15 +29,54 @@ impl Config {
             active: None,
         }
     }
+    /// Determines whether a configuration with the given name exists.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let config = Config::new();
+    /// assert!(!config.exists(&"default".to_string()));
+    /// ```
     pub fn exists(&self, name: &String) -> bool {
         self.configurations.contains_key(name)
     }
+    /// Indicates whether the configuration contains no entries.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let config = Config::new();
+    /// assert!(config.is_empty());
+    /// ```
+    ///
+    /// Returns `true` when no configuration entries are stored, or `false` otherwise.
     pub fn is_empty(&self) -> bool {
         self.configurations.is_empty()
     }
+    /// Counts the stored configuration entries.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let config = Config::new();
+    /// assert_eq!(config.len(), 0);
+    /// ```
     pub fn len(&self) -> usize {
         self.configurations.len()
     }
+    /// Serializes the configuration and saves it to the user's configuration directory.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if serialization or writing the configuration file fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let config = Config::new();
+    /// config.save()?;
+    /// # Ok::<(), anyhow::Error>(())
+    /// ```
     pub fn save(&self) -> anyhow::Result<()> {
         let json = serde_json::to_string(self)?;
         let save_path = dirs::config_dir()

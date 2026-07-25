@@ -16,6 +16,9 @@ import { notFound, useSearchParams } from "next/navigation";
 
 const postsPerPage = 5;
 
+/**
+ * Renders the featured posts section using up to three posts.
+ */
 function FeaturedPosts() {
   const featuredPosts = allPosts.slice(0, 3);
 
@@ -74,6 +77,13 @@ function FeaturedPosts() {
   );
 }
 
+/**
+ * Renders a paginated list of news posts.
+ *
+ * @param page - The one-based page number to display
+ * @param category - Optional category context for empty-result handling
+ * @returns The post list or an empty-state message
+ */
 function Posts({ page, category }: { page: number; category?: string }) {
   let posts = allPosts.slice((page - 1) * postsPerPage, page * postsPerPage);
 
@@ -128,6 +138,12 @@ function Posts({ page, category }: { page: number; category?: string }) {
   );
 }
 
+/**
+ * Renders pagination controls for the news posts.
+ *
+ * @param page - The current page number
+ * @param category - An optional category included in pagination URLs
+ */
 function Pagination({ page, category }: { page: number; category?: string }) {
   function url(page: number) {
     let params = new URLSearchParams();
@@ -180,6 +196,11 @@ function Pagination({ page, category }: { page: number; category?: string }) {
   );
 }
 
+/**
+ * Renders the news page with featured posts, a paginated post list, and navigation controls.
+ *
+ * @returns The rendered news page.
+ */
 export default function News() {
   const paramsPage = useSearchParams().get("page");
   let page = paramsPage

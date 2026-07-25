@@ -2,6 +2,12 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { AppStatus } from "~/types";
 
+/**
+ * Registers handlers for authentication, download, and game launch events.
+ *
+ * Event handlers navigate to the appropriate routes, update application state,
+ * and display error modals when necessary.
+ */
 export function setupHooks() {
   const router = useRouter();
   const state = useAppState();

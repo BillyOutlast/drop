@@ -6,7 +6,20 @@ use downpour::{
     commands::connect::config::Config,
 };
 
-#[tokio::main]
+/// Runs the Downpour command-line interface.
+///
+/// # Returns
+///
+/// `Ok(())` when the selected command completes successfully.
+///
+/// # Examples
+///
+/// ```
+/// # fn main() {
+/// // The command-line executable invokes this entry point automatically.
+/// # assert!(true);
+/// # }
+/// ```
 async fn main() -> anyhow::Result<()> {
     downpour::logging::configure_logging()?;
 

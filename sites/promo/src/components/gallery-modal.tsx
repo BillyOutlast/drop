@@ -56,6 +56,9 @@ const files: Array<{
   },
 ];
 
+/**
+ * Renders a responsive gallery of selectable images with a modal preview.
+ */
 export function Gallery() {
   const [currentModal, setCurrentModal] = useState<string | undefined>();
   function resetModal() {
@@ -101,6 +104,13 @@ export function Gallery() {
   );
 }
 
+/**
+ * Displays an image in a dismissible modal dialog.
+ *
+ * @param img - URL of the image to display
+ * @param close - Callback invoked when the modal is dismissed
+ * @returns The modal dialog containing the image
+ */
 export default function GalleryModal({ img, close }: { img?: string; close: () => void }) {
   return (
     <Dialog open={!!img} onClose={close} className="relative z-10">

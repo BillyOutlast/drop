@@ -7,6 +7,9 @@ import { Link } from "./link";
 import { Logo } from "./logo";
 import { Subheading } from "./text";
 
+/**
+ * Renders a call-to-action section linking to the Drop quickstart guide.
+ */
 function CallToAction() {
   return (
     <div className="relative pt-20 pb-16 text-center sm:py-24">
@@ -29,14 +32,29 @@ function CallToAction() {
   );
 }
 
+/**
+ * Renders a styled heading for a sitemap section.
+ *
+ * @param children - The content displayed as the heading
+ */
 function SitemapHeading({ children }: { children: React.ReactNode }) {
   return <h3 className="text-sm/6 font-medium text-zinc-100/50">{children}</h3>;
 }
 
+/**
+ * Renders a vertical list of sitemap links.
+ *
+ * @param children - The sitemap link elements to render.
+ */
 function SitemapLinks({ children }: { children: React.ReactNode }) {
   return <ul className="mt-6 space-y-4 text-sm/6">{children}</ul>;
 }
 
+/**
+ * Renders a styled sitemap navigation link.
+ *
+ * @param props - Properties forwarded to the link.
+ */
 function SitemapLink(props: React.ComponentPropsWithoutRef<typeof Link>) {
   return (
     <li>
@@ -45,6 +63,11 @@ function SitemapLink(props: React.ComponentPropsWithoutRef<typeof Link>) {
   );
 }
 
+/**
+ * Renders grouped navigation links for project, documentation, support, and news pages.
+ *
+ * @returns The sitemap navigation markup, including links for up to three posts
+ */
 function Sitemap() {
   const posts = allPosts.slice(0, 3);
   return (
@@ -88,6 +111,12 @@ function Sitemap() {
   );
 }
 
+/**
+ * Renders a GitHub logo icon.
+ *
+ * @param props - SVG properties applied to the icon
+ * @returns The GitHub logo SVG element
+ */
 function SocialGithub(props: React.ComponentPropsWithoutRef<"svg">) {
   return (
     <svg {...props} viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg">
@@ -102,6 +131,12 @@ function SocialGithub(props: React.ComponentPropsWithoutRef<"svg">) {
   );
 }
 
+/**
+ * Renders a Discord brand icon.
+ *
+ * @param props - Properties applied to the SVG element.
+ * @returns An SVG element containing the Discord icon.
+ */
 function SocialDiscord(props: React.ComponentPropsWithoutRef<"svg">) {
   return (
     <svg
@@ -116,6 +151,9 @@ function SocialDiscord(props: React.ComponentPropsWithoutRef<"svg">) {
   );
 }
 
+/**
+ * Renders links to the project's GitHub repository and Discord server.
+ */
 function SocialLinks() {
   return (
     <>
@@ -148,6 +186,9 @@ function Copyright() {
   );
 }
 
+/**
+ * Renders the site footer with calls to action, navigation links, copyright information, and social links.
+ */
 export function Footer() {
   return (
     <footer className="relative m-2 overflow-hidden rounded-4xl">

@@ -12,6 +12,9 @@ import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon, MinusIcon } from "@heroicons/react/16/solid";
 import { useSearchParams } from "next/navigation";
 import type React from "react";
+/**
+ * Renders the Drop logo with its mark and wordmark.
+ */
 function DropLogo() {
   return (
     <div className="relative -mb-1 inline-flex items-center justify-center gap-x-1">
@@ -29,6 +32,9 @@ function DropLogo() {
   );
 }
 
+/**
+ * Renders the GameVault logo with its wordmark and decorative underline.
+ */
 function GameVaultLogo() {
   return (
     <div className="inline-flex items-center gap-x-2 text-xl font-bold">
@@ -48,6 +54,9 @@ function GameVaultLogo() {
   );
 }
 
+/**
+ * Renders a badge identifying features available through GameVault+.
+ */
 function GameVaultPlus() {
   return (
     <div className="inline-flex items-center gap-x-1 rounded-full bg-zinc-800 px-2 py-1 text-xs">
@@ -57,6 +66,9 @@ function GameVaultPlus() {
   );
 }
 
+/**
+ * Renders a badge indicating that a feature is coming soon.
+ */
 function ComingSoon() {
   return (
     <div className="inline-flex items-center gap-x-1 rounded-full bg-zinc-900 px-2 py-1 text-xs">
@@ -249,6 +261,9 @@ const projects: Array<{
   },
 ];
 
+/**
+ * Renders the comparison page header and its update date.
+ */
 function Header() {
   return (
     <Container className="mt-16">
@@ -268,6 +283,9 @@ function Header() {
   );
 }
 
+/**
+ * Renders the responsive grid of project cards.
+ */
 function ProjectCards() {
   return (
     <div className="relative py-24">
@@ -283,6 +301,11 @@ function ProjectCards() {
   );
 }
 
+/**
+ * Renders a project card with its branding, description, link, and key features.
+ *
+ * @param tier - The project whose details and highlights are displayed.
+ */
 function ProjectCard({ tier }: { tier: (typeof projects)[number] }) {
   return (
     <div className="-m-2 grid grid-cols-1 rounded-4xl shadow-[inset_0_0_2px_1px_#ffffff4d] ring-1 ring-white/5 max-lg:mx-auto max-lg:w-full max-lg:max-w-md">
@@ -309,6 +332,11 @@ function ProjectCard({ tier }: { tier: (typeof projects)[number] }) {
   );
 }
 
+/**
+ * Renders a responsive comparison table for the available projects and their features.
+ *
+ * @param selectedProject - The project whose column is highlighted and displayed on mobile
+ */
 function ProjectTable({ selectedProject }: { selectedProject: (typeof projects)[number] }) {
   function onlyUnique<T>(value: T, index: number, array: Array<T>) {
     return array.indexOf(value) === index;
@@ -465,6 +493,14 @@ function ProjectTable({ selectedProject }: { selectedProject: (typeof projects)[
   );
 }
 
+/**
+ * Renders a project feature item with optional coming-soon and paid-service indicators.
+ *
+ * @param description - The feature description to display.
+ * @param disabled - Whether to mark the feature as coming soon.
+ * @param paid - Whether to indicate that the feature requires GameVault+.
+ * @returns A feature list item.
+ */
 function FeatureItem({
   description,
   disabled = false,
@@ -498,6 +534,9 @@ function PlusIcon(props: React.ComponentPropsWithoutRef<"svg">) {
   );
 }
 
+/**
+ * Renders the project comparison page and selects a project from the `tier` query parameter.
+ */
 export default function Pricing() {
   let params = useSearchParams();
   let tier =
