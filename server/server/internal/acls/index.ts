@@ -217,7 +217,7 @@ class ACLManager {
     });
     if (!token) return false;
     if (token.mode != APITokenMode.System) return false;
-    if (acls.length == 0) return true;
+    if (acls.length == 0) return false;
 
     for (const acl of acls) {
       if (token.acls.some((e) => e == acl)) return true;

@@ -37,7 +37,11 @@ func saveCertificateToKeyChain(_ certificate: SecCertificate, certificateLabel: 
         throw SecurityError.generalError
     }
 
-    SecTrustSettingsSetTrustSettings(certificate, SecTrustSettingsDomain.admin, nil)
+    let trustStatus: OSStatus = SecTrustSettingsSetTrustSettings(certificate, SecTrustSettingsDomain.admin, nil)
+
+    guard trustStatus == errSecSuccess else {
+        throw SecurityError.generalError
+    }
 }
 
 /// Creates a security certificate from a Base64-encoded string.
