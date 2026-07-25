@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "coverageAnalysis": "perTest",
+  "inPlace": true,
+  "mutate": ["server/internal/metadata/**/*.ts"],
+  "packageManager": "pnpm",
+  "plugins": ["@stryker-mutator/vitest-runner"],
+  "testRunner": "vitest",
+  "thresholds": {
+    "break": null,
+    "high": 80,
+    "low": 10
+  },
+  "vitest": {
+    "configFile": "vitest.config.ts",
+    "dir": "test/unit/metadata",
+    "related": false
+  }
+}
