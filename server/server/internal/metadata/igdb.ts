@@ -389,9 +389,7 @@ export class IGDBProvider implements MetadataProvider {
 
     const res = await company(companyData.name);
     if (res === undefined) {
-      context?.logger.warn(
-        `Failed to import company "${companyData.name}"`,
-      );
+      context?.logger.warn(`Failed to import company "${companyData.name}"`);
       return undefined;
     }
 
@@ -405,12 +403,18 @@ export class IGDBProvider implements MetadataProvider {
   ): Promise<{ developers: CompanyModel[]; publishers: CompanyModel[] }> {
     const developers: CompanyModel[] = [];
     const publishers: CompanyModel[] = [];
-    const companies = await this.request<
-      { name: string } & IGDBItem
-    >("companies", `where id = ${foundInvolved.company}; fields name;`);
+    const companies = await this.request<{ name: string } & IGDBItem>(
+      "companies",
+      `where id = ${foundInvolved.company}; fields name;`,
+    );
 
     for (const companyData of companies) {
-      const res = await this.processCompanyData(companyData, company, foundInvolved, context);
+      const res = await this.processCompanyData(
+        companyData,
+        company,
+        foundInvolved,
+        context,
+      );
       if (!res) continue;
       if (foundInvolved.developer) developers.push(res);
       if (foundInvolved.publisher) publishers.push(res);
@@ -434,7 +438,11 @@ export class IGDBProvider implements MetadataProvider {
       );
       for (const foundInvolved of involved) {
         const { developers: devs, publishers: pubs } =
-          await this.processInvolvedCompanyEntry(foundInvolved, company, context);
+          await this.processInvolvedCompanyEntry(
+            foundInvolved,
+            company,
+            context,
+          );
         developers.push(...devs);
         publishers.push(...pubs);
       }

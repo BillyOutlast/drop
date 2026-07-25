@@ -318,7 +318,12 @@
         </div>
       </div>
     </div>
-    <div v-else-if="currentlySelectedVersion != -1" class="inline-flex text-zinc-100 font-display font-semibold items-center gap-x-4" role="status" aria-live="polite">
+    <div
+      v-else-if="currentlySelectedVersion != -1"
+      class="inline-flex text-zinc-100 font-display font-semibold items-center gap-x-4"
+      role="status"
+      aria-live="polite"
+    >
       {{ $t("library.admin.import.version.loadingVersion") }}
       <svg
         aria-hidden="true"
