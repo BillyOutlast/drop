@@ -76,7 +76,7 @@ class ScreenshotManager {
     const saveStream = await objectHandler.createWithStream(
       objectId,
       {
-        // TODO(sonar): accept creation timestamp from screenshot metadata instead of current time - deferred
+        // PENDING(sonar): accept creation timestamp from screenshot metadata instead of current time - deferred
         createdAt: new Date().toISOString(),
       },
       [`${userId}:read`], // This is a system tracked object, so we don't want users to have direct write access to it

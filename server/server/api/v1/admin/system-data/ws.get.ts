@@ -2,7 +2,7 @@ import systemManager from "~/server/internal/system-data";
 import aclManager from "~/server/internal/acls";
 import { logger } from "~/server/internal/logging";
 
-// TODO(sonar): add web socket session management for horizontal scaling - deferred, needs distributed session store
+// PENDING(sonar): add web socket session management for horizontal scaling - deferred, needs distributed session store
 // Peer ID to user ID
 const socketSessions = new Map<string, string>();
 

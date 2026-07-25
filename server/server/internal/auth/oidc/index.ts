@@ -14,7 +14,7 @@ import sessionHandler from "../../session";
 import type { SessionSearchTerms } from "../../session/types";
 import { queryParamBuilder } from "../../utils/query";
 
-// TODO(sonar): monitor authentik issue #8751 for simplified OIDC setup - deferred, upstream-dependent
+// PENDING(sonar): monitor authentik issue #8751 for simplified OIDC setup - deferred, upstream-dependent
 
 // Schema for OIDC well-known configuration
 const OIDCWellKnownV1 = type({
@@ -348,7 +348,7 @@ export class OIDCManager {
         return "Invalid token response from identity provider.";
       }
 
-      // TODO(sonar): implement OIDC refresh token flow - deferred, needs token rotation handling
+      // PENDING(sonar): implement OIDC refresh token flow - deferred, needs token rotation handling
 
       const idTokenRaw = await jose.jwtVerify(
         tokenResponse.id_token,

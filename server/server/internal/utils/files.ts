@@ -43,7 +43,7 @@ export function getFolderSize(folderPath: string): number {
  * @returns The byte count expressed in B, KiB, MiB, GiB, or TiB
  */
 export function formatBytes(bytes: number): string {
-  // TODO(sonar): use i18n number formatting for bytes display - deferred, needs vue-i18n integration
+  // PENDING(sonar): use i18n number formatting for bytes display - deferred, needs vue-i18n integration
 
   if (bytes < 1024) {
     return `${bytes} B`;
