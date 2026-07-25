@@ -66,7 +66,7 @@ class NotificationSystem {
   ) {
     for (const [_, listener] of this.listeners.get(userId) ?? []) {
       const hasSome = notification.acls.some((e) =>
-        listener.acls.some((v) => v === e),
+        listener.acls.includes(e as GlobalACL),
       );
       if (hasSome) listener.callback(notification);
     }

@@ -25,7 +25,7 @@ jobs:
           cache: pnpm
 
       - name: Install editorconfig-checker
-        run: npm install -g editorconfig-checker
+        run: npm install --ignore-scripts -g editorconfig-checker
 
       - name: Validate .editorconfig compliance
         run: |

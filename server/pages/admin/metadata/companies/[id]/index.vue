@@ -16,7 +16,7 @@
           :object-id="company.mLogoObjectId"
           :open-modal="() => (uploadLogoOpen = true)"
           :hover-text="$t('library.admin.metadata.companies.editor.uploadIcon')"
-          :image-alt="`${company.mName} logo`"
+          :alt-description="`${company.mName} logo`"
         />
         <div class="flex flex-col">
           <h1

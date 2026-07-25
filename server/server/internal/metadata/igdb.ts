@@ -220,10 +220,10 @@ export class IGDBProvider implements MetadataProvider {
         "content-type": "text/plain",
       },
     };
-    const response = await $fetch<T[] | IGDBErrorResponse[]>(
-      finalURL,
-      Object.assign({}, options, overlay),
-    );
+    const response = await $fetch<T[] | IGDBErrorResponse[]>(finalURL, {
+      ...options,
+      ...overlay,
+    });
 
     // should not have an error object if the status code is 200
     return <T[]>response;
@@ -314,21 +314,21 @@ export class IGDBProvider implements MetadataProvider {
     const response = await this.request<IGDBSearchStub>("games", body);
 
     const results: GameMetadataSearchResult[] = [];
-    for (let i = 0; i < response.length; i++) {
+    for (const item of response) {
       let icon: string;
-      const cover = response[i].cover;
+      const cover = item.cover;
       if (cover !== undefined) {
         icon = await this.getIconURL(cover);
       } else {
         icon = "";
       }
 
-      const firstReleaseDate = response[i].first_release_date;
+      const firstReleaseDate = item.first_release_date;
       results.push({
-        id: "" + response[i].id,
-        name: response[i].name,
+        id: "" + item.id,
+        name: item.name,
         icon,
-        description: response[i].summary,
+        description: item.summary,
         year:
           firstReleaseDate === undefined
             ? 0

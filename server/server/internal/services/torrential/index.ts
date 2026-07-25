@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawn, execSync } from "node:child_process";
 import { Service } from "..";
 import fs from "node:fs";
 import { logger } from "../../logging";
@@ -57,8 +57,12 @@ export class TorrentialService extends Service<unknown> {
             logger.info(
               "torrential detected in development mode - building from source",
             );
+            let cargoPath = "cargo";
+            try {
+              cargoPath = execSync("which cargo", { encoding: "utf-8" }).trim();
+            } catch {}
             return spawn(
-              "cargo",
+              cargoPath,
               [
                 "run",
                 "--manifest-path",

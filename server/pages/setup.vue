@@ -197,7 +197,7 @@ const actions = ref<
 
 const actionsComplete = ref(Array(actions.value.length).fill(false));
 
-const finished = computed(() => actionsComplete.value.every((e) => e));
+const finished = computed(() => actionsComplete.value.every(Boolean));
 
 const open = computed(() => currentAction.value != -1);
 definePageMeta({

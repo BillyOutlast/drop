@@ -444,13 +444,11 @@ class LibraryManager {
           statusCode: 400,
           message: 'Setup required in "setup mode".',
         });
-    } else {
-      if (metadata.launches.length == 0)
-        throw createError({
-          statusCode: 400,
-          message: "Launch executable is required.",
-        });
-    }
+    } else if (metadata.launches.length == 0)
+      throw createError({
+        statusCode: 400,
+        message: "Launch executable is required.",
+      });
 
     const game = await prisma.game.findUnique({
       where: { id: gameId },
