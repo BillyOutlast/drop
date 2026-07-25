@@ -15,9 +15,9 @@ describe("dropEncodeArrayBase64", () => {
 
   it("encodes a known multi-byte sequence (ASCII 'Hello')", () => {
     // 'Hello' = [0x48, 0x65, 0x6c, 0x6c, 0x6f] → 'SGVsbG8='
-    expect(dropEncodeArrayBase64(new Uint8Array([72, 101, 108, 108, 111]))).toBe(
-      "SGVsbG8=",
-    );
+    expect(
+      dropEncodeArrayBase64(new Uint8Array([72, 101, 108, 108, 111])),
+    ).toBe("SGVsbG8=");
   });
 
   it("encodes a binary sequence with non-ASCII bytes", () => {
