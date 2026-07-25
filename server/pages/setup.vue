@@ -86,9 +86,6 @@
         v-else-if="!useModal"
         class="bg-zinc-950/30 flex items-center justify-center"
       >
-        <!-- <p class="uppercase text-sm font-display text-zinc-700 font-bold">
-          {{ $t("setup.noPage") }}
-        </p> -->
         <img
           src="/wallpapers/signin.jpg"
           class="inset-0 h-full w-full object-cover"

@@ -38,6 +38,7 @@
                         v-model="globalState"
                         :indeterminate="globalState === 'indeterminate'"
                         type="checkbox"
+                        aria-label="Select all versions"
                         class="col-start-1 row-start-1 appearance-none rounded-sm border border-white/20 bg-zinc-800/50 checked:border-blue-500 checked:bg-blue-500 indeterminate:border-blue-500 indeterminate:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:border-white/10 disabled:bg-zinc-800 disabled:checked:bg-zinc-800 forced-colors:appearance-auto"
                       />
                       <svg
@@ -96,6 +97,7 @@
                         <img
                           :src="useObject(game.icon)"
                           class="size-6 rounded-sm"
+                          alt=""
                         />
                         {{ game.name }}
                       </div>
@@ -117,6 +119,7 @@
                         <input
                           v-model="version.enabled"
                           type="checkbox"
+                          aria-label="Select version"
                           class="col-start-1 row-start-1 appearance-none rounded-sm border border-white/20 bg-zinc-800/50 checked:border-blue-500 checked:bg-blue-500 indeterminate:border-blue-500 indeterminate:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:border-white/10 disabled:bg-zinc-800 disabled:checked:bg-zinc-800 forced-colors:appearance-auto"
                         />
                         <svg
@@ -156,6 +159,7 @@
                         id="display-name"
                         v-model="version.settings.displayName"
                         type="text"
+                        aria-label="Display name"
                         class="min-w-48 block w-full rounded-md border-radius-md bg-zinc-900 px-3 py-1.5 text-white outline-2 -outline-offset-1 outline-zinc-800 placeholder:text-zinc-500 focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 sm:text-sm/6"
                         placeholder="My New Version"
                       />

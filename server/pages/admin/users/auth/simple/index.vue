@@ -34,7 +34,7 @@
           </div>
         </div>
       </div>
-      <ul role="list" class="divide-y divide-zinc-800">
+      <ul class="divide-y divide-zinc-800">
         <li
           v-for="invitation in invitations"
           :key="invitation.id"

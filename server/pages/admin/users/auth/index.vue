@@ -12,10 +12,7 @@
         {{ $t("users.admin.authentication.description") }}
       </p>
     </div>
-    <ul
-      role="list"
-      class="mt-8 grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-4 xl:gap-x-8"
-    >
+    <ul class="mt-8 grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-4 xl:gap-x-8">
       <li
         v-for="authMech in authenticationMechanisms"
         :key="authMech.name"

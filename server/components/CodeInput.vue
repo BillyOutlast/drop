@@ -11,6 +11,7 @@
     type="text"
     pattern="\d*"
     :placeholder="placeholder[i - 1]"
+    :aria-label="`Code character ${i}`"
     @keydown="(v) => keydown(i - 1, v)"
     @input="() => input(i - 1)"
     @focusin="() => select(i - 1)"

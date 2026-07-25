@@ -131,14 +131,6 @@
                   <td
                     class="py-4 pr-4 pl-3 text-right text-sm font-medium whitespace-nowrap sm:pr-0 space-x-2"
                   >
-                    <!--
-                    <button type="button" class="text-blue-400 hover:text-blue-300">
-                      Edit<span class="sr-only"
-                        >,
-                        {{ version.displayName ?? version.versionPath }}</span
-                      >
-                    </button>
-                    -->
                     <button
                       type="button"
                       class="text-red-400 hover:text-red-300"

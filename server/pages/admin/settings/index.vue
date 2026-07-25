@@ -14,7 +14,7 @@
           >
           <div class="mt-2">
             <input
-              id="name"
+              id="serverName"
               v-model="settings.generalSettings.serverName"
               type="text"
               name="serverName"

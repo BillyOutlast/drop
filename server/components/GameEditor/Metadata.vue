@@ -8,7 +8,7 @@
         >
           <div class="inline-flex items-center gap-4">
             <!-- icon image -->
-            <img :src="coreMetadataIconUrl" class="size-20" />
+            <img :src="coreMetadataIconUrl" class="size-20" alt="" />
             <div>
               <h1
                 class="text-2xl xl:text-5xl font-bold font-display text-zinc-100"
@@ -94,7 +94,7 @@
           >
             <template #item="{ element }: { element: string }">
               <div class="relative group min-w-fit">
-                <img :src="useObject(element)" class="h-48 w-auto" />
+                <img :src="useObject(element)" class="h-48 w-auto" alt="" />
                 <div
                   class="transition-all lg:opacity-0 lg:group-hover:opacity-100 absolute inset-0 flex flex-col items-center justify-center gap-y-2 bg-zinc-950/50"
                 >
@@ -129,10 +129,7 @@
               >
                 <PencilIcon class="animate-pulse size-5 text-zinc-100" />
               </div>
-              <div
-                v-else-if="descriptionSaving == DescriptionSavingState.Loading"
-                role="status"
-              >
+              <div v-else-if="descriptionSaving == DescriptionSavingState.Loading" role="status" aria-live="polite">
                 <svg
                   aria-hidden="true"
                   class="w-5 h-5 text-transparent animate-spin fill-white"
@@ -191,6 +188,7 @@
               <textarea
                 ref="descriptionEditor"
                 v-model="game.mDescription"
+                aria-label="Game description"
                 class="grow h-full w-full bg-zinc-950/30 text-zinc-100 border-zinc-900 rounded"
               />
             </div>
@@ -241,7 +239,7 @@
               :key="imageIdx"
               class="group relative flex items-center bg-zinc-950/30"
             >
-              <img :src="useObject(image)" class="w-full h-auto" />
+              <img :src="useObject(image)" class="w-full h-auto" alt="" />
               <div
                 class="transition-all lg:opacity-0 lg:group-hover:opacity-100 absolute inset-0 flex flex-col items-center justify-center gap-y-2 bg-zinc-950/50"
               >
@@ -317,7 +315,7 @@
             :key="imageIdx"
             class="group relative flex items-center bg-zinc-950/30"
           >
-            <img :src="useObject(image)" class="w-full h-auto" />
+            <img :src="useObject(image)" class="w-full h-auto" alt="" />
             <div
               class="transition-all lg:opacity-0 lg:group-hover:opacity-100 absolute inset-0 flex flex-col items-center justify-center gap-y-2 bg-zinc-950/50"
             >
@@ -330,9 +328,10 @@
               </button>
             </div>
           </div>
-          <div
-            v-if="validAddCarouselImages.length == 0"
-            class="text-zinc-400 col-span-2"
+        </div>
+        <div
+          v-if="validAddCarouselImages.length == 0"
+          class="text-zinc-400 col-span-2"
           >
             {{ $t("library.admin.game.addCarouselNoImages") }}
           </div>
@@ -357,7 +356,7 @@
             :key="imageIdx"
             class="group relative flex items-center bg-zinc-950/30"
           >
-            <img :src="useObject(image)" class="w-full h-auto" />
+            <img :src="useObject(image)" class="w-full h-auto" alt="" />
             <div
               class="transition-all lg:opacity-0 lg:group-hover:opacity-100 absolute inset-0 flex flex-col items-center justify-center gap-y-2 bg-zinc-950/50"
             >
@@ -370,9 +369,10 @@
               </button>
             </div>
           </div>
-          <div
-            v-if="game.mImageLibraryObjectIds.length == 0"
-            class="text-zinc-400 col-span-2"
+        </div>
+        <div
+          v-if="game.mImageLibraryObjectIds.length == 0"
+          class="text-zinc-400 col-span-2"
           >
             {{ $t("library.admin.game.addDescriptionNoImages") }}
           </div>
@@ -394,7 +394,7 @@
         <div class="flex flex-col lg:flex-row gap-6">
           <!-- icon upload div -->
           <div class="flex flex-col items-center gap-4">
-            <img :src="coreMetadataIconUrl" class="size-24 aspect-square" />
+            <img :src="coreMetadataIconUrl" class="size-24 aspect-square" alt="" />
             <label for="file-upload">
               <span
                 type="button"
