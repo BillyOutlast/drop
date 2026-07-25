@@ -220,7 +220,7 @@ class ACLManager {
     if (acls.length == 0) return true;
 
     for (const acl of acls) {
-      if (token.acls.findIndex((e) => e == acl) != -1) return true;
+      if (token.acls.some((e) => e == acl)) return true;
     }
     return false;
   }

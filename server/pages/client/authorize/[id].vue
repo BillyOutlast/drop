@@ -71,7 +71,6 @@
             class="hidden"
             name="id"
             :value="clientId"
-            aria-hidden="true"
           />
           <button
             type="button"

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -15,15 +14,7 @@ func handler(res http.ResponseWriter, req *http.Request) {
 }
 func routingMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		u := *r.URL
-		u.Path = strings.TrimSuffix(u.Path, "/")
-		// Validate URL to prevent open redirect / SSRF (S5144)
-		if _, err := url.Parse(u.String()); err != nil {
-			http.Error(w, "Invalid URL", http.StatusBadRequest)
-			return
-		}
-		r.URL = &u
-
+		r.URL.Path = strings.TrimSuffix(r.URL.Path, "/")
 		h.ServeHTTP(w, r)
 	})
 }

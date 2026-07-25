@@ -377,6 +377,27 @@ export class IGDBProvider implements MetadataProvider {
     return { icon, coverID, banner, images };
   }
 
+  private async processCompanyData(
+    companyData: { name: string },
+    company: (name: string) => Promise<CompanyModel | undefined>,
+    foundInvolved: { developer: boolean; publisher: boolean },
+    context?: TaskRunContext,
+  ): Promise<CompanyModel | undefined> {
+    context?.logger.info(
+      `Found involved company "${companyData.name}" as: ${foundInvolved.developer ? "developer, " : ""}${foundInvolved.publisher ? "publisher" : ""}`,
+    );
+
+    const res = await company(companyData.name);
+    if (res === undefined) {
+      context?.logger.warn(
+        `Failed to import company "${companyData.name}"`,
+      );
+      return undefined;
+    }
+
+    return res;
+  }
+
   private async processInvolvedCompanies(
     currentGame: IGDBGameFull,
     company: (name: string) => Promise<CompanyModel | undefined>,
@@ -386,36 +407,20 @@ export class IGDBProvider implements MetadataProvider {
     const developers: CompanyModel[] = [];
 
     for (const involvedCompany of currentGame.involved_companies ?? []) {
-      const involved_company_response = await this.request<IGDBInvolvedCompany>(
+      const involved = await this.request<IGDBInvolvedCompany>(
         "involved_companies",
         `where id = ${involvedCompany}; fields *;`,
       );
-      for (const foundInvolved of involved_company_response) {
-        const findCompanyResponse = await this.request<
+      for (const foundInvolved of involved) {
+        const companies = await this.request<
           { name: string } & IGDBItem
         >("companies", `where id = ${foundInvolved.company}; fields name;`);
 
-        for (const companyData of findCompanyResponse) {
-          context?.logger.info(
-            `Found involved company "${company.name}" as: ${foundInvolved.developer ? "developer, " : ""}${foundInvolved.publisher ? "publisher" : ""}`,
-          );
-
-          const res = await company(companyData.name);
-          if (res === undefined) {
-            context?.logger.warn(
-              `Failed to import company "${companyData.name}"`,
-            );
-            continue;
-          }
-
-          if (foundInvolved.developer) {
-            context?.logger.info(`Imported developer "${companyData.name}"`);
-            developers.push(res);
-          }
-          if (foundInvolved.publisher) {
-            context?.logger.info(`Imported publisher "${companyData.name}"`);
-            publishers.push(res);
-          }
+        for (const companyData of companies) {
+          const res = await this.processCompanyData(companyData, company, foundInvolved, context);
+          if (!res) continue;
+          if (foundInvolved.developer) developers.push(res);
+          if (foundInvolved.publisher) publishers.push(res);
         }
       }
     }

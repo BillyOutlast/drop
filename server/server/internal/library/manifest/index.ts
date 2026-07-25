@@ -66,8 +66,7 @@ function buildVersionManifests(
         let flag = false;
         chunkData.files.forEach((fileEntry) => {
           if (
-            existingChunks &&
-            existingChunks.fileList[fileEntry.filename] == version.versionId
+            existingChunks?.fileList[fileEntry.filename] == version.versionId
           )
             return;
           if (fileNames[fileEntry.filename]) {
