@@ -180,22 +180,17 @@ export async function createDownloadManifestDetails(
 
   const fileList = buildFileList(versionOrder);
 
-  let installSize = 0;
-  let downloadSize = 0;
-
   const existingChunks = previous
     ? await createDownloadManifestDetails(previous)
     : undefined;
 
   const built = buildVersionManifests(versionOrder, fileList, existingChunks);
-  installSize = built.installSize;
-  downloadSize = built.downloadSize;
 
   const result: DownloadManifestDetails = {
     fileList: convertMap(fileList),
     manifests: convertMap(built.manifests),
-    installSize,
-    downloadSize,
+    installSize: built.installSize,
+    downloadSize: built.downloadSize,
   };
   await manifestCache.set(manifestKey, result);
 

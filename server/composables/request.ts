@@ -6,24 +6,30 @@ import type {
 } from "nitropack/types";
 import type { FetchError } from "ofetch";
 
-type DropFetch = <
-  T = unknown,
-  R extends NitroFetchRequest = NitroFetchRequest,
-  O extends NitroFetchOptions<R> = NitroFetchOptions<R>,
->(
-  request: R,
-  opts?: O & { failTitle?: string; params?: { [key: string]: string } },
-) => Promise<
-  // sometimes there is an error, other times there isn't
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  TypedInternalResponse<
-    R,
-    T,
-    NitroFetchOptions<R> extends O ? "get" : ExtractedRouteMethod<R, O>
-  >
->;
+interface DropFetch<
+  DefaultT = unknown,
+  DefaultR extends NitroFetchRequest = NitroFetchRequest,
+> {
+  <
+    T = DefaultT,
+    R extends NitroFetchRequest = DefaultR,
+    O extends NitroFetchOptions<R> = NitroFetchOptions<R>,
+  >(
+    request: R,
+    opts?: O & { failTitle?: string; params?: { [key: string]: string } },
+  ): Promise<
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    TypedInternalResponse<
+      R,
+      T,
+      NitroFetchOptions<R> extends O ? "get" : ExtractedRouteMethod<R, O>
+    >
+  >;
+}
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 export const $dropFetch: DropFetch = async (rawRequest, opts) => {
   const requestParts = rawRequest.toString().split("/");
   requestParts.forEach((part, index) => {

@@ -60,7 +60,11 @@ export class TorrentialService extends Service<unknown> {
             let cargoPath = "cargo";
             try {
               cargoPath = execSync("which cargo", { encoding: "utf-8" }).trim();
-            } catch {}
+            } catch (e) {
+              logger.warn(
+                `could not locate cargo via which: ${(e as Error).message}`,
+              );
+            }
             return spawn(
               cargoPath,
               [
