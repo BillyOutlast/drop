@@ -61,10 +61,10 @@ runs:
   steps:
     # ── Setup ──────────────────────────────────────────────────────
     - name: Install Rust toolchain
-      # pinned to nightly
+      # pinned to nightly-2025-07-26
       uses: dtolnay/rust-toolchain@4fd1da8b0805d2d2e936788875a7d65dbd677dc2
       with:
-        toolchain: nightly
+        toolchain: nightly-2025-07-26
         components: ${{ inputs.components }}
 
     - name: Rust cache
@@ -123,7 +123,6 @@ runs:
       uses: taiki-e/install-action@cargo-audit
 
     - name: Audit dependencies
-      continue-on-error: true
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: cargo audit

@@ -94,23 +94,23 @@ jobs:
       # ℹ️ Command-line programs to run using the OS shell.
       # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
       - name: Setup Node.js
-        if: matrix.build-mode == 'manual'
+        if: matrix.language == 'javascript-typescript' && matrix.build-mode == 'manual'
         uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
         with:
           node-version: 22
 
       - name: Setup pnpm
-        if: matrix.build-mode == 'manual'
+        if: matrix.language == 'javascript-typescript' && matrix.build-mode == 'manual'
         shell: bash
         run: corepack enable
 
       - name: Install dependencies
-        if: matrix.build-mode == 'manual'
+        if: matrix.language == 'javascript-typescript' && matrix.build-mode == 'manual'
         shell: bash
         run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Build project
-        if: matrix.build-mode == 'manual'
+        if: matrix.language == 'javascript-typescript' && matrix.build-mode == 'manual'
         shell: bash
         run: pnpm run build
 
