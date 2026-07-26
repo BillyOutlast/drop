@@ -180,7 +180,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - name: SonarCloud Scan
-        uses: sonarcloud/github-action@v3
+        uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d # v5.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
