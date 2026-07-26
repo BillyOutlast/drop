@@ -59,7 +59,10 @@ impl DropServer {
         let message = TorrentialBound::parse_from_bytes(&buffer)
             .expect("response didn't deserialize correctly");
 
-        match message.type_.unwrap() {
+        match message
+            .type_
+            .ok_or_else(|| anyhow!("torrential: missing message type"))?
+        {
             TorrentialBoundType::GENERATE_MANIFEST => {
                 spawn_rpc!(myself, message, generate_manifest_rpc);
             }
@@ -150,7 +153,11 @@ impl DropServer {
 
         let message = message.value();
 
-        if message.type_.ok_or_else(|| anyhow!("torrential: missing message type"))? == crate::proto::core::TorrentialBoundType::ERROR {
+        if message
+            .type_
+            .ok_or_else(|| anyhow!("torrential: missing message type"))?
+            == crate::proto::core::TorrentialBoundType::ERROR
+        {
             Err(anyhow!(
                 "torrential error: {}",
                 String::from_utf8_lossy(&message.data)
