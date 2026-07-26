@@ -56,6 +56,7 @@ vi.mock("../../../../server/server/internal/db/database", () => ({
 // SUT import
 // ---------------------------------------------------------------------------
 
+// eslint-disable-next-line import/first -- vi.mock() calls above are hoisted by vitest
 import { SessionHandler } from "../../../../server/server/internal/session/index";
 
 // ---------------------------------------------------------------------------

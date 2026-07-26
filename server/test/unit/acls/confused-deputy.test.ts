@@ -8,6 +8,7 @@
 
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { MinimumRequestObject } from "../../../../server/server/h3";
+import type { SystemACL } from "../../../../server/server/internal/acls/index";
 
 // Mock the enums that ACL module imports via ~ alias
 const mockGetSession = vi.hoisted(() => vi.fn());
@@ -29,7 +30,9 @@ vi.mock("../../../../server/server/internal/db/database", () => ({
   },
 }));
 
+// eslint-disable-next-line import/first -- vi.mock() calls above are hoisted by vitest
 import { aclManager } from "../../../../server/server/internal/acls/index";
+// eslint-disable-next-line import/first -- vi.mock() calls above are hoisted by vitest
 import dbModule from "../../../../server/server/internal/db/database";
 
 function makeRequest(headers?: Record<string, string>): MinimumRequestObject {
@@ -38,7 +41,7 @@ function makeRequest(headers?: Record<string, string>): MinimumRequestObject {
 
 const adminUser = { id: "admin-1", admin: true };
 const nonAdminUser = { id: "user-1", admin: false };
-const systemACLs = ["setup"] as any;
+const systemACLs: SystemACL = ["setup"];
 
 const authenticatedSession = (userId: string) => ({
   authenticated: {
