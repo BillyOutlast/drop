@@ -11,7 +11,8 @@
     "typecheck": "nuxt typecheck",
     "format:check": "prettier --check .",
     "format:fix": "prettier --write .",
-    "lint": "prettier --check ."
+    "lint": "prettier --check .",
+    "test": "vitest run"
   },
   "dependencies": {
     "@headlessui/vue": "^1.7.23",
@@ -39,6 +40,8 @@
     "sass-embedded": "^1.79.4",
     "tailwindcss": "^3.4.13",
     "typescript": "^5.8.3",
+    "vitest": "^4.1.10",
+    "vue": "3.5.17",
     "vue-tsc": "^2.2.10"
   }
 }
