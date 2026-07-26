@@ -488,9 +488,10 @@ mod tests {
             "set_control_url",
             MockExpectation::Success(MockResponse::Unit),
         );
-        assert!(mock
-            .set_control_url("https://headscale.example.com")
-            .is_ok());
+        assert!(
+            mock.set_control_url("https://headscale.example.com")
+                .is_ok()
+        );
     }
 
     #[test]
@@ -553,9 +554,10 @@ mod tests {
             "enable_funnel_to_localhost_plaintext_http1",
             MockExpectation::Success(MockResponse::Unit),
         );
-        assert!(mock
-            .enable_funnel_to_localhost_plaintext_http1(8080)
-            .is_ok());
+        assert!(
+            mock.enable_funnel_to_localhost_plaintext_http1(8080)
+                .is_ok()
+        );
     }
 
     #[test]
