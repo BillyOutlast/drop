@@ -1,8 +1,4 @@
-[audit]
-gate = "new-only"
-
-[ignore]
-patterns = [
+ignorePatterns = [
   ".nuxt/**",
   "dist/**",
   "node_modules/**",
@@ -11,3 +7,6 @@ patterns = [
   "server/prisma/client/**",
   "server/server/internal/__generated__/**",
 ]
+
+[audit]
+gate = "new-only"

@@ -74,8 +74,7 @@ fn directory_to_manifest_pipeline() {
     let total_expected_size = b"Hello, World!".len() as u64
         + 4096u64
         + b"# Nested\n\nThis is a nested file.".len() as u64
-        + b"deeply nested file content here".len() as u64
-        + 0u64;
+        + b"deeply nested file content here".len() as u64;
 
     // ---- 2. generate manifest --------------------------------------------
     let rt = tokio::runtime::Builder::new_current_thread()
@@ -205,8 +204,8 @@ fn multi_chunk_manifest_pipeline() {
 
     // Create enough small files to force at least a couple of chunks
     // CHUNK_SIZE = 64 MiB, so we need ~128 MiB of files ≈ 8 files × 16 MiB each
-    let file_size = 16 * 1024 * 1024; // 16 MiB — fits 4 per chunk
-    let file_count = 9; // 9 × 16 MiB = 144 MiB → at least 2 full chunks
+    let file_size: u64 = 16 * 1024 * 1024; // 16 MiB — fits 4 per chunk
+    let file_count: u64 = 9; // 9 × 16 MiB = 144 MiB → at least 2 full chunks
 
     // Use deterministic content — large enough to matter, fast to generate
     let content_block = b"The quick brown fox jumps over the lazy dog. ";
@@ -221,7 +220,7 @@ fn multi_chunk_manifest_pipeline() {
         write_file(&dir.join(format!("file_{}.bin", i)), &content);
     }
 
-    let total_expected = file_count as u64 * file_size as u64;
+    let total_expected = file_count * file_size;
 
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -254,7 +253,7 @@ fn multi_chunk_manifest_pipeline() {
     let all_files: Vec<_> = manifest.chunks.values().flat_map(|c| &c.files).collect();
 
     assert_eq!(
-        all_files.len(),
+        all_files.len() as u64,
         file_count,
         "all {} files should appear in manifest",
         file_count

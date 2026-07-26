@@ -76,7 +76,6 @@ export default defineDropTask({
       );
 
       // SAFETY: this is requested from the database
-      // eslint-disable-next-line drop/no-prisma-delete
       await prisma.gameVersion.update({
         where: {
           versionId: version.versionId,

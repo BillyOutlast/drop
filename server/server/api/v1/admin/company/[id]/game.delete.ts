@@ -23,7 +23,6 @@ export default defineEventHandler(async (h3) => {
     throw createError({ statusCode: 404, message: "Game not found" });
 
   // SAFETY: above check
-  // eslint-disable-next-line drop/no-prisma-delete
   await prisma.game.update({
     where: {
       id: body.id,

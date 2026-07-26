@@ -30,7 +30,6 @@ export default defineEventHandler(async (h3) => {
     .toArray();
 
   // SAFETY: Okay to disable due to check above
-  // eslint-disable-next-line drop/no-prisma-delete
   await prisma.game.update({
     where: {
       id,

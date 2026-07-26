@@ -1,6 +1,6 @@
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const blacklistedFunctions = ["delete", "update"];
+const blacklistedFunctions = ["delete"];
 
 // Models where hard-delete is correct (join tables, auth tokens, ephemeral data)
 const allowedModels = new Set([
@@ -18,11 +18,12 @@ export default {
   meta: {
     type: "problem",
     docs: {
-      description: "Don't use Prisma error-prone .delete or .update function",
+      description:
+        "Don't use Prisma .delete — soft-delete is enforced via .update with deletedAt",
     },
     messages: {
       noPrismaDelete:
-        "Prisma .delete(...) or .update(...) function is used. Use .deleteMany(..) or .updateMany(...) and check count instead.",
+        "Prisma .delete(...) is used. Soft-delete via .update(..., { deletedAt: new Date() }) instead.",
     },
     schema: [],
   },
