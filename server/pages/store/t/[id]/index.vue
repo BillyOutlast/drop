@@ -5,7 +5,7 @@
       <!-- Decorative background image and gradient -->
       <div aria-hidden="true" class="absolute inset-0">
         <div class="absolute inset-0 overflow-hidden">
-          <img alt="" class="size-full object-cover" />
+          <img alt="" class="size-full object-cover" src="" />
         </div>
         <div class="absolute inset-0 bg-zinc-900/75" />
         <div class="absolute inset-0 bg-linear-to-t from-zinc-900" />

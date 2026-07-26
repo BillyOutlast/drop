@@ -35,7 +35,7 @@
                   ? useObject(article.imageObjectId)
                   : '/wallpapers/news-placeholder.jpg'
               "
-              alt=""
+              :alt="article.title"
               class="h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-110 scale-105"
             />
             <div class="absolute top-4 left-4 flex gap-2">

@@ -221,9 +221,8 @@
               >
                 <PencilIcon class="animate-pulse size-5 text-zinc-100" />
               </div>
-              <div
+              <output
                 v-else-if="descriptionSaving == DescriptionSavingState.Loading"
-                role="status"
                 aria-live="polite"
               >
                 <svg
@@ -243,7 +242,7 @@
                   />
                 </svg>
                 <span class="sr-only">{{ $t("common.srLoading") }}</span>
-              </div>
+              </output>
             </div>
 
             <button
@@ -411,7 +410,11 @@
             :key="imageIdx"
             class="group relative flex items-center bg-zinc-950/30"
           >
-            <img :src="useObject(image)" class="w-full h-auto" alt="" />
+            <img
+              :src="useObject(image)"
+              class="w-full h-auto"
+              alt="Game image"
+            />
             <div
               class="transition-all lg:opacity-0 lg:group-hover:opacity-100 absolute inset-0 flex flex-col items-center justify-center gap-y-2 bg-zinc-950/50"
             >
@@ -451,7 +454,11 @@
             :key="imageIdx"
             class="group relative flex items-center bg-zinc-950/30"
           >
-            <img :src="useObject(image)" class="w-full h-auto" alt="" />
+            <img
+              :src="useObject(image)"
+              class="w-full h-auto"
+              alt="Game image"
+            />
             <div
               class="transition-all lg:opacity-0 lg:group-hover:opacity-100 absolute inset-0 flex flex-col items-center justify-center gap-y-2 bg-zinc-950/50"
             >

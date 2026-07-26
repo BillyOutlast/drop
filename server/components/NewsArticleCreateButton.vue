@@ -44,6 +44,7 @@
             id="excerpt"
             v-model="newArticle.description"
             type="text"
+            autocomplete="off"
             class="mt-1 block w-full rounded-md bg-zinc-900 border-zinc-700 text-zinc-100 shadow-sm focus:border-primary-500 focus:ring-primary-500"
             required
           />

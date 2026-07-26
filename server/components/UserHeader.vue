@@ -4,7 +4,7 @@
       <NuxtLink :to="homepageURL">
         <DropWordmark class="h-8" />
       </NuxtLink>
-      <nav class="inline-flex items-center">
+      <nav aria-label="Main navigation" class="inline-flex items-center">
         <ol class="inline-flex items-center gap-x-12">
           <NuxtLink
             v-for="(nav, navIdx) in navigation"
@@ -143,7 +143,10 @@
 
                 <UserHeaderUserWidget />
               </div>
-              <nav class="flex flex-1 flex-col gap-y-8">
+              <nav
+                aria-label="Main navigation"
+                class="flex flex-1 flex-col gap-y-8"
+              >
                 <ol class="flex flex-col gap-y-3">
                   <NuxtLink
                     v-for="(nav, navIdx) in navigation"

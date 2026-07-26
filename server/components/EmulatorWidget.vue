@@ -4,7 +4,11 @@
     class="flex space-x-4 rounded-md bg-zinc-900/50 px-6 outline -outline-offset-1 outline-white/10 w-fit text-xs font-bold text-zinc-100"
   >
     <div class="inline-flex gap-x-2 items-center">
-      <img :src="useObject(emulator.gameIcon)" class="size-6" alt="" />
+      <img
+        :src="useObject(emulator.gameIcon)"
+        class="size-6"
+        :alt="emulator.gameName"
+      />
       <span>{{ emulator.gameName }}</span>
     </div>
     <div class="flex items-center">

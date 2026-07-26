@@ -318,10 +318,9 @@
         </div>
       </div>
     </div>
-    <div
+    <output
       v-else-if="currentlySelectedVersion != -1"
       class="inline-flex text-zinc-100 font-display font-semibold items-center gap-x-4"
-      role="status"
       aria-live="polite"
     >
       {{ $t("library.admin.import.version.loadingVersion") }}
@@ -341,7 +340,7 @@
           fill="currentFill"
         />
       </svg>
-    </div>
+    </output>
   </div>
 </template>
 

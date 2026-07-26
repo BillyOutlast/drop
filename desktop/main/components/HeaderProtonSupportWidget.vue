@@ -1,7 +1,7 @@
 <template>
   <NuxtLink v-if="onLinux" to="/settings/compat">
     <HeaderWidget :problem="protonError">
-      <img src="/proton-logo.png" class="relative z-50 size-5 brightness-[30%]" alt="" />
+      <img src="/proton-logo.png" class="relative z-50 size-5 brightness-[30%]" alt="Proton" />
     </HeaderWidget>
   </NuxtLink>
 </template>

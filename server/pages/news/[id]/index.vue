@@ -11,7 +11,7 @@
                 ? useObject(article.imageObjectId)
                 : '/wallpapers/news-placeholder.jpg'
             "
-            alt=""
+            :alt="article.title"
             class="w-full h-full object-cover blur-sm scale-110"
           />
           <div
