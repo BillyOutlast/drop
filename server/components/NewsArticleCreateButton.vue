@@ -3,8 +3,8 @@
   <div class="w-full">
     <!-- Create article button - only show for admin users -->
     <button
-      type="button"
       v-if="user?.admin"
+      type="button"
       class="transition inline-flex w-full items-center px-4 gap-x-2 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold text-sm shadow-sm"
       @click="modalOpen = !modalOpen"
     >

@@ -3,6 +3,8 @@ import {
   dropDecodeArrayBase64,
   dropEncodeArrayBase64,
 } from "../../../server/server/internal/auth/totp";
+import { SecretKey, totp, generateKey } from "otp-io";
+import { hmac, randomBytes } from "otp-io/crypto";
 
 describe("dropEncodeArrayBase64", () => {
   it("encodes an empty Uint8Array to empty string", () => {
@@ -55,9 +57,6 @@ describe("dropDecodeArrayBase64", () => {
     expect(decoded).toEqual(original);
   });
 });
-
-import { SecretKey, totp, generateKey } from "otp-io";
-import { hmac, randomBytes } from "otp-io/crypto";
 
 describe("TOTP code generation and verification", () => {
   it("generates a 6-digit code that round-trips with the same secret", async () => {

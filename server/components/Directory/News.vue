@@ -52,9 +52,9 @@
         </span>
         <div class="flex flex-wrap gap-2">
           <button
-            type="button"
             v-for="tag in availableTags"
             :key="tag"
+            type="button"
             class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors duration-200"
             :class="[
               selectedTags.includes(tag)

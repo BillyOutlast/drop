@@ -521,32 +521,12 @@ export const TaskLog = type({
   prefix: "string?",
 });
 
-// /**
-//  * Create a log message with a timestamp in the format YYYY-MM-DD HH:mm:ss.SSS UTC
-//  * @param message
-//  * @returns
-//  */
-// function msgWithTimestamp(message: string): string {
-//   const now = new Date();
-
-//   const pad = (n: number, width = 2) => n.toString().padStart(width, "0");
-
-//   const year = now.getUTCFullYear();
-//   const month = pad(now.getUTCMonth() + 1);
-//   const day = pad(now.getUTCDate());
-
-//   const hours = pad(now.getUTCHours());
-//   const minutes = pad(now.getUTCMinutes());
-//   const seconds = pad(now.getUTCSeconds());
-//   const milliseconds = pad(now.getUTCMilliseconds(), 3);
-
-//   const log: typeof TaskLog.infer = {
-//     timestamp: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds} UTC`,
-//     message,
-//   };
-//   return JSON.stringify(log);
-// }
-
+/**
+ * Creates a task-group definition from a task builder.
+ *
+ * @param buildTask - The task definition used to construct task instances
+ * @returns A drop task that builds configured task instances
+ */
 export function defineDropTask(buildTask: BuildTask): DropTask {
   return {
     taskGroup: buildTask.taskGroup,

@@ -44,7 +44,7 @@ export default defineEventHandler(async (h3) => {
     throw createError({ statusCode: 400, message: "Invalid TOTP code." });
 
   // Safe because we're updating something we just queried
-  // eslint-disable-next-line drop/no-prisma-delete
+
   await prisma.linkedMFAMec.update({
     where: {
       userId_mec: {

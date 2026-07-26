@@ -1,0 +1,13 @@
+[audit]
+gate = "new-only"
+
+[ignore]
+patterns = [
+  ".nuxt/**",
+  "dist/**",
+  "node_modules/**",
+  "**/.next/**",
+  "**/target/**",
+  "server/prisma/client/**",
+  "server/server/internal/__generated__/**",
+]

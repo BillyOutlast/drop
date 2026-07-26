@@ -89,7 +89,7 @@ export default defineEventHandler(async (h3) => {
   (mfaMec.credentials as unknown as WebAuthNv1Credentials).passkeys = passkeys;
 
   // Safe because we query it before
-  // eslint-disable-next-line drop/no-prisma-delete
+
   await prisma.linkedMFAMec.update({
     where: {
       userId_mec: {

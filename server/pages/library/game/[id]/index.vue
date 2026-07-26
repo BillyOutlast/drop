@@ -140,21 +140,6 @@ const game = computed(() => {
 const descriptionHTML = computed(() =>
   micromark(game.value.mDescription ?? ""),
 );
-
-// const currentImageIndex = ref(0);
-
-// function nextImage() {
-//   if (!game.value?.mImageCarousel) return;
-//   currentImageIndex.value =
-//     (currentImageIndex.value + 1) % game.value.mImageCarousel.length;
-// }
-
-// function previousImage() {
-//   if (!game.value?.mImageCarousel) return;
-//   currentImageIndex.value =
-//     (currentImageIndex.value - 1 + game.value.mImageCarousel.length) %
-//     game.value.mImageCarousel.length;
-// }
 </script>
 
 <style scoped>

@@ -374,7 +374,7 @@ export class IGDBProvider implements MetadataProvider {
   }
 
   private async getAgeRatings(
-    ageRatingIds: IGDBID[] | undefined,
+    ageRatingIds: number[] | undefined,
   ): Promise<GameMetadataAgeRating[]> {
     if (!ageRatingIds?.length) return [];
 
@@ -393,7 +393,9 @@ export class IGDBProvider implements MetadataProvider {
         results.push({
           organization,
           rating,
-          ratingCoverUrl: ar.rating_cover_url,
+          ...(ar.rating_cover_url
+            ? { ratingCoverUrl: ar.rating_cover_url }
+            : {}),
         });
       }
     }

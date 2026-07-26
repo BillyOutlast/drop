@@ -153,7 +153,7 @@ export class OIDCManager {
 
   static async create() {
     if (!systemConfig.shouldOidcRequireHttps()) {
-      console.warn(
+      logger.warn(
         "Disabling HTTPS requirement for OIDC provider, not recommened in production enviroments",
       );
     }
@@ -508,16 +508,19 @@ export class OIDCManager {
         issuer: this.oidcConfiguration.issuer.toString(),
       });
     } catch (e) {
-      console.error("Failed to verify OIDC logout token:", e);
+      logger.error({ err: e }, "Failed to verify OIDC logout token");
       return false;
     }
 
     const token = OIDCLogoutTokenV1(jwt.payload);
     if (token instanceof type.errors) {
-      console.error("Invalid OIDC logout token structure:", token.summary);
+      logger.error(
+        { summary: token.summary },
+        "Invalid OIDC logout token structure",
+      );
       return false;
     } else if (!token.sid && !token.sub) {
-      console.error(
+      logger.error(
         "Invalid OIDC logout token: missing both 'sid' and 'sub' claims",
       );
       return false;

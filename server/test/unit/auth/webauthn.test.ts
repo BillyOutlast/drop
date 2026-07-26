@@ -17,8 +17,11 @@ vi.mock("../../../server/internal/config/sys-conf", () => ({
   },
 }));
 
+// eslint-disable-next-line import/first -- vi.mock() above is hoisted by vitest
 import { createHash } from "node:crypto";
+// eslint-disable-next-line import/first -- vi.mock() above is hoisted by vitest
 import { encode } from "cbor2";
+// eslint-disable-next-line import/first -- vi.mock() above is hoisted by vitest
 import { dropEncodeArrayBase64 } from "../../../server/internal/auth/totp";
 
 // ---------------------------------------------------------------------------
@@ -27,6 +30,7 @@ import { dropEncodeArrayBase64 } from "../../../server/internal/auth/totp";
 // validate the attestation signature (fmt field unenforced, no verificationData
 // or signature checked).  These tests demonstrate the gap.
 // ---------------------------------------------------------------------------
+// eslint-disable-next-line import/first -- vi.mock() above is hoisted by vitest
 import {
   parseAndValidatePasskeyCreation,
   getRpId,

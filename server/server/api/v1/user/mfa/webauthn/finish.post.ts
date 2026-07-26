@@ -8,6 +8,7 @@ import sessionHandler from "~/server/internal/session";
 import type { PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/server";
 import { verifyRegistrationResponse } from "@simplewebauthn/server";
 import { systemConfig } from "~/server/internal/config/sys-conf";
+import { logger } from "~/server/internal/logging";
 
 export default defineEventHandler(async (h3) => {
   const userId = await aclManager.allowUserSuperlevel(h3); // No ACLs only allows session authentication
@@ -45,7 +46,7 @@ export default defineEventHandler(async (h3) => {
       expectedRPID: rpID,
     });
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "WebAuthn registration verification failed");
     throw createError({
       statusCode: 400,
       message: (error as string)?.toString(),
@@ -93,7 +94,7 @@ export default defineEventHandler(async (h3) => {
   });
 
   // Safe because we're updating something we just queried
-  // eslint-disable-next-line drop/no-prisma-delete
+
   await prisma.linkedMFAMec.update({
     where: {
       userId_mec: {

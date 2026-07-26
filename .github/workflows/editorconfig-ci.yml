@@ -27,4 +27,4 @@ jobs:
       - name: Validate .editorconfig compliance
         run: |
           pnpm dlx editorconfig-checker@6.1.1 --exclude \
-            '(node_modules|\.git|\.nuxt|\.output|coverage|dist|target|\.omo|\.dockerignore|README\.md|LICENSE|server/prisma/migrations|sites/docs|sites/promo/public|desktop/libs|backend|desktop/main/(components|pages|layouts|assets|plugins|public))'
+            '(node_modules|\.git|\.nuxt|\.output|coverage|dist|target|\.omo|\.claude|\.opencode|\.dockerignore|README\.md|LICENSE|server/prisma/migrations|server/test-results|sites/docs|sites/promo/public|desktop/libs|backend|desktop/main/(components|pages|layouts|assets|plugins|public))'

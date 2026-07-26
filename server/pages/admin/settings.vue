@@ -73,10 +73,5 @@ const navigation: Array<NavigationItem & { icon: Component }> = [
   },
 ];
 
-// const notifications = useNotifications();
-// const unreadNotifications = computed(() =>
-//   notifications.value.filter((e) => !e.read)
-// );
-
 const currentNavigationIndex = useCurrentNavigationIndex(navigation);
 </script>

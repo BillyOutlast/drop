@@ -7,7 +7,6 @@ const gameRegistry: { [key: string]: { game: Game; version: Ref<GameVersion | un
 const gameStatusRegistry: { [key: string]: Ref<GameStatus> } = {};
 
 export const parseStatus = (status: RawGameStatus): GameStatus => {
-  console.log(status[0]);
   if (status[0]) {
     return status[0];
   }

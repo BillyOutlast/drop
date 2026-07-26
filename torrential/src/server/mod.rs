@@ -59,7 +59,10 @@ impl DropServer {
         let message = TorrentialBound::parse_from_bytes(&buffer)
             .expect("response didn't deserialize correctly");
 
-        match message.type_.unwrap() {
+        match message
+            .type_
+            .ok_or_else(|| anyhow!("torrential: missing message type"))?
+        {
             TorrentialBoundType::GENERATE_MANIFEST => {
                 spawn_rpc!(myself, message, generate_manifest_rpc);
             }
@@ -118,6 +121,26 @@ impl DropServer {
     /**
     Uses the waitmap to wait for a response from a query
     */
+    /// Waits for a response associated with a message ID and parses its payload.
+    ///
+    /// # Parameters
+    ///
+    /// * `message_id`: Identifier of the request whose response should be retrieved.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if no response is received, if the response reports a Torrential error, or if its payload cannot be parsed as `T`.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # async fn example(server: &DropServer) -> Result<(), anyhow::Error> {
+    /// let response: crate::proto::core::TorrentialBound =
+    ///     server.wait_for_message_id("request-id").await?;
+    /// # let _ = response;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn wait_for_message_id<T>(&self, message_id: &str) -> Result<T, anyhow::Error>
     where
         T: protobuf::Message,
@@ -130,8 +153,15 @@ impl DropServer {
 
         let message = message.value();
 
-        if message.type_.unwrap() == crate::proto::core::TorrentialBoundType::ERROR {
-            Err(anyhow!(String::from_utf8(message.data.clone()).unwrap()))
+        if message
+            .type_
+            .ok_or_else(|| anyhow!("torrential: missing message type"))?
+            == crate::proto::core::TorrentialBoundType::ERROR
+        {
+            Err(anyhow!(
+                "torrential error: {}",
+                String::from_utf8_lossy(&message.data)
+            ))
         } else {
             let response = T::parse_from_bytes(&message.data)?;
             Ok(response)

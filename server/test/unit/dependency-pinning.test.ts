@@ -25,6 +25,17 @@ function readPackageJson(relativePath: string): PackageJson {
 
 const FLOATING_VERSIONS = new Set(["latest", "*"]);
 
+function isFloatingVersion(version: string): boolean {
+  return FLOATING_VERSIONS.has(version);
+}
+
+function isNonExactVersion(version: string): boolean {
+  if (isFloatingVersion(version)) return true;
+  return /^[\^~>=<]/.test(version);
+}
+
+const PINNED_PACKAGES = ["vue", "vue-router"];
+
 const workspaces: Array<{ name: string; path: string }> = [
   { name: "server", path: "server/package.json" },
   { name: "desktop/main", path: "desktop/main/package.json" },
@@ -33,16 +44,16 @@ const workspaces: Array<{ name: string; path: string }> = [
 
 describe("dependency version pinning", () => {
   it.each(workspaces)(
-    "$name/package.json pins vue and vue-router (no 'latest')",
+    "$name/package.json pins vue and vue-router (exact versions only)",
     ({ path }) => {
       const pkg = readPackageJson(path);
       const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
 
-      for (const name of ["vue", "vue-router"] as const) {
+      for (const name of PINNED_PACKAGES) {
         const version = allDeps[name];
-        if (version === undefined) continue; // not every workspace depends on both
+        if (version === undefined) continue;
         expect(
-          FLOATING_VERSIONS.has(version),
+          isNonExactVersion(version),
           `${path}: expected "${name}" to be pinned, but found "${version}"`,
         ).toBe(false);
       }
@@ -56,7 +67,7 @@ describe("dependency version pinning", () => {
       const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
 
       const floating = Object.entries(allDeps)
-        .filter(([, version]) => FLOATING_VERSIONS.has(version))
+        .filter(([, version]) => isFloatingVersion(version))
         .map(([name, version]) => `${name}@${version}`);
 
       expect(floating).toEqual([]);

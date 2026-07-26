@@ -84,6 +84,7 @@ vi.mock("../../../../server/server/internal/logging", () => ({
 // SUT import
 // ---------------------------------------------------------------------------
 
+// eslint-disable-next-line import/first -- vi.mock() calls above are hoisted by vitest
 import { OIDCManager } from "../../../../server/server/internal/auth/oidc/index";
 
 // OIDCUserInfo is not exported from the source module – define local type
