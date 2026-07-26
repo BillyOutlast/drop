@@ -165,3 +165,62 @@ describe("Session Fixation (T3)", () => {
     expect(result).toBe("signin");
   });
 });
+
+describe("Session signout (await fix)", () => {
+  let deleteCookieSpy: ReturnType<typeof vi.fn>;
+  let originalDeleteCookie: unknown;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLinkedMFACount.mockResolvedValue(0);
+    mockSessionFindUnique.mockResolvedValue(null);
+
+    originalDeleteCookie = (globalThis as Record<string, unknown>).deleteCookie;
+    deleteCookieSpy = vi.fn();
+    (globalThis as Record<string, unknown>).deleteCookie = deleteCookieSpy;
+  });
+
+  afterEach(() => {
+    (globalThis as Record<string, unknown>).deleteCookie = originalDeleteCookie;
+  });
+
+  it("returns false when no token cookie is present", async () => {
+    const handler = new SessionHandler();
+    const event = createEventWithCookie(undefined);
+
+    const result = await handler.signout(event as never);
+
+    expect(result).toBe(false);
+    expect(deleteCookieSpy).not.toHaveBeenCalled();
+  });
+
+  it("returns true and clears cookie when signout succeeds", async () => {
+    const handler = new SessionHandler();
+    const token = "valid-session-token";
+    const event = createEventWithCookie(`drop-token=${token}`);
+
+    mockSessionDeleteMany.mockResolvedValueOnce({ count: 1 });
+
+    const result = await handler.signout(event as never);
+
+    expect(result).toBe(true);
+    expect(deleteCookieSpy).toHaveBeenCalledWith(expect.any(Object), "drop-token");
+  });
+
+  it("awaits signoutByToken before clearing cookie", async () => {
+    const handler = new SessionHandler();
+    const token = "valid-session-token";
+    const event = createEventWithCookie(`drop-token=${token}`);
+
+    const callOrder: string[] = [];
+    mockSessionDeleteMany.mockImplementationOnce(async () => {
+      callOrder.push("removeSession");
+      return { count: 1 };
+    });
+
+    const result = await handler.signout(event as never);
+
+    expect(result).toBe(true);
+    expect(callOrder).toContain("removeSession");
+  });
+});
