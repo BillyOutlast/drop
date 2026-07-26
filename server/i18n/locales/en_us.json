@@ -386,6 +386,7 @@
         "addDescriptionNoImages": "No images to add.",
         "addImageCarousel": "Add from image library",
         "ageRatingLabel": "{organization}: {rating}",
+        "ageRatingValue": "Age rating value",
         "ageRatings": "Age Ratings",
         "ageRatingsEmpty": "No age ratings set",
         "currentBanner": "banner",

@@ -34,6 +34,7 @@ jobs:
             -r
             --skip-git
             ./
+            --format=sarif
             --output=osv-scanner-results.sarif
 
       - name: Upload SARIF
