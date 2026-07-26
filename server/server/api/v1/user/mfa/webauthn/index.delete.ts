@@ -32,7 +32,7 @@ export default defineEventHandler(async (h3) => {
   credentials.passkeys.splice(index, 1);
 
   // SAFETY: we request the object further up
-  // eslint-disable-next-line drop/no-prisma-delete
+
   await prisma.linkedMFAMec.update({
     where: {
       userId_mec: {

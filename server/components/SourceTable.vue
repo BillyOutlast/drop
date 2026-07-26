@@ -113,8 +113,8 @@
               class="relative whitespace-nowrap py-4 pl-3 pr-3 text-right text-sm font-medium space-x-2"
             >
               <button
-                type="button"
                 v-if="editSource"
+                type="button"
                 class="text-blue-500 hover:text-blue-400"
                 @click="() => editSource(sourceIdx)"
               >
@@ -125,8 +125,8 @@
               </button>
 
               <button
-                type="button"
                 v-if="deleteSource"
+                type="button"
                 class="text-red-500 hover:text-red-400"
                 @click="() => deleteSource(sourceIdx)"
               >

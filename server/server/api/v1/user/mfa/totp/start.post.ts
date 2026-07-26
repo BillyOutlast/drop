@@ -27,7 +27,7 @@ export default defineEventHandler(async (h3) => {
   if (existing) {
     if (!existing.enabled) {
       // Safe because we're updating something we just queried
-      // eslint-disable-next-line drop/no-prisma-delete
+
       await prisma.linkedMFAMec.delete({
         where: { userId_mec: { userId: existing.userId, mec: existing.mec } },
       });

@@ -500,9 +500,9 @@
       </div>
       <div class="hidden md:-mt-px md:flex">
         <button
-          type="button"
           v-for="page in maxPages"
           :key="page"
+          type="button"
           :class="[
             currentIndex == page - 1
               ? 'border-blue-400 text-blue-400'

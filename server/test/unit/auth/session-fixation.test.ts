@@ -204,7 +204,10 @@ describe("Session signout (await fix)", () => {
     const result = await handler.signout(event as never);
 
     expect(result).toBe(true);
-    expect(deleteCookieSpy).toHaveBeenCalledWith(expect.any(Object), "drop-token");
+    expect(deleteCookieSpy).toHaveBeenCalledWith(
+      expect.any(Object),
+      "drop-token",
+    );
   });
 
   it("awaits signoutByToken before clearing cookie", async () => {
