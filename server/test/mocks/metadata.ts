@@ -310,9 +310,11 @@ export const DEFAULT_PCGW_CARGO_RESPONSE = {
   cargoquery: [
     {
       title: {
-        pageid: 1234,
-        title: "Mock Game",
-        description: "A mock game from PCGamingWiki.",
+        PageID: "1234",
+        PageName: "Mock Game",
+        "Cover URL": "https://www.pcgamingwiki.com/images/cover.jpg",
+        Released: "2024-01-01",
+        Released__precision: "day",
       },
     },
   ],

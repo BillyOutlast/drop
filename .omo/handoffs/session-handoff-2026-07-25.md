@@ -2,7 +2,7 @@
 
 **Last commit:** `75eaf7a8` (develop, merged PR #38)
 **Date:** 2026-07-25
-**Repo:** `/home/john/Projects/drop` (Drop monorepo — open-source game distribution platform)
+**Repo:** Drop monorepo — open-source game distribution platform
 **Repo:** BillyOutlast/drop on GitHub
 
 ## Current State (What's Done)
@@ -26,8 +26,8 @@ Entire test-strategy-goal.md plan executed across 3 branches, 14 commits, 2 merg
 
 ### Uncommitted Changes
 
-```
- M desktop/src-tauri/tailscale/src/provider.rs   (uncommitted prettier fix)
+```text
+ M desktop/src-tauri/tailscale/src/provider.rs   (uncommitted cargo fmt diff)
 ?? .opencode/plans/hyperplan-dep-tdd-coverage.md
 ```
 
@@ -46,7 +46,7 @@ And the usual git-ignored: `.claude/`, `.nuxt/`, `coverage/`, `test-results/`, `
 ## Files Created / Modified This Session
 
 ### Phase 1 — Foundation
-```
+```text
 .gitignore                              — exclude .omo/run-continuation
 AGENTS.md                               — project skills section
 .github/workflows/droplet-ci.yml        — +cargo-llvm-cov + Codecov
@@ -61,7 +61,7 @@ desktop/src-tauri/Cargo.lock            — new deps for tailscale crate
 ```
 
 ### Phase 2 — Security Tests
-```
+```text
 server/server/internal/clients/ca-store.ts   — FIX: return false for missing certs
 server/server/internal/session/index.ts       — FIX: always issue new signin token
 server/test/unit/auth/webauthn.test.ts        — NEW: 5 tests + gap doc
@@ -76,7 +76,7 @@ server/vitest.config.ts                       — +~ alias (fixed 4 pre-existing
 ```
 
 ### Phase 3 — Integration Seams
-```
+```text
 server/test/unit/metadata/provider-chain.test.ts — NEW: 5 tests (Promise.allSettled)
 server/test/unit/plugins/init-order.test.ts      — NEW: 10 tests
 libraries/droplet/tests/pipeline_test.rs          — NEW: 2 integration tests
@@ -85,7 +85,7 @@ libraries/droplet/tests/pipeline_test.rs          — NEW: 2 integration tests
 ```
 
 ### Phase 4+ — CI Gates + Expansion
-```
+```text
 server/package.json                           — +@stryker-mutator deps
 server/stryker.config.json                    — NEW: mutation baseline config
 sites/promo/package.json                      — +vitest +@testing-library deps
@@ -124,7 +124,7 @@ server/test/e2e/pages.spec.ts                 — NEW: 3 page-flow tests
 
 ## Test File Map
 
-```
+```text
 server/test/
 ├── e2e/
 │   ├── smoke.spec.ts              (1 test — health endpoint)
@@ -189,7 +189,7 @@ server/test/
 
 ## Handoff Tips
 
-- **Next session start**: `cd /home/john/Projects/drop && git checkout develop && git pull`
+- **Next session start**: `cd "$(git rev-parse --show-toplevel)" && git checkout develop && git pull`
 - **Check PRs**: `gh pr list --author "dependabot[bot]" --state open`
 - **Check CI**: `gh run list --limit 5 --repo BillyOutlast/drop`
 - **Run all tests**: `pnpm --filter drop exec vitest run` (122 tests, ~60s)
