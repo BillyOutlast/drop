@@ -118,6 +118,26 @@ impl DropServer {
     /**
     Uses the waitmap to wait for a response from a query
     */
+    /// Waits for a response associated with a message ID and parses its payload.
+    ///
+    /// # Parameters
+    ///
+    /// * `message_id`: Identifier of the request whose response should be retrieved.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if no response is received, if the response reports a Torrential error, or if its payload cannot be parsed as `T`.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # async fn example(server: &DropServer) -> Result<(), anyhow::Error> {
+    /// let response: crate::proto::core::TorrentialBound =
+    ///     server.wait_for_message_id("request-id").await?;
+    /// # let _ = response;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn wait_for_message_id<T>(&self, message_id: &str) -> Result<T, anyhow::Error>
     where
         T: protobuf::Message,
