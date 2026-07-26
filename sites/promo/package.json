@@ -11,7 +11,7 @@
     "format:fix": "prettier --write .",
     "lint:fix": "next lint --fix && prettier --write .",
     "typegen": "content-collections build",
-    "typegen:sanity": "sanity schema extract --path=src/sanity/extract.json && sanity typegen generate && rm ./src/sanity/extract.json"
+    "typegen:sanity": "sanity schema extract --path=src/sanity/extract.json && sanity typegen generate; status=$?; rm -f ./src/sanity/extract.json; exit $status"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.6",

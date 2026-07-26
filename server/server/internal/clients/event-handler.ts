@@ -16,8 +16,7 @@ type ClientUtils = {
   fetchUser: () => Promise<UserModel>;
 };
 
-// I forgot how to spell leniancne
-const JWT_TIME_WIGGLE = 30_000;
+const JWT_TIME_WIGGLE_SECONDS = 30;
 
 export function defineClientEventHandler<T>(handler: EventHandlerFunction<T>) {
   return defineEventHandler(async (h3) => {
@@ -45,7 +44,7 @@ export function defineClientEventHandler<T>(handler: EventHandlerFunction<T>) {
 
         let publicKey: jose.CryptoKey;
         try {
-          publicKey = await jose.importSPKI(certBundle.cert, "ES384");
+          publicKey = await jose.importX509(certBundle.cert, "ES384");
         } catch (err) {
           logger.warn(
             { err, clientId },
@@ -59,7 +58,7 @@ export function defineClientEventHandler<T>(handler: EventHandlerFunction<T>) {
 
         const valid = await jose
           .jwtVerify(jwtToken, publicKey, {
-            clockTolerance: JWT_TIME_WIGGLE,
+            clockTolerance: JWT_TIME_WIGGLE_SECONDS,
           })
           .catch((err) => {
             logger.debug({ err, clientId }, "JWT verification failed");

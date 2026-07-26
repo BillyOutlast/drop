@@ -89,7 +89,9 @@ body:
     id: logs
     attributes:
       label: Relevant Logs
-      description: Please copy and paste any relevant log output.
+      description: |
+        Please copy and paste any relevant log output.
+        **Before submitting, redact any tokens, passwords, private keys, and personal information.**
       render: shell
 
   - type: checkboxes
