@@ -50,48 +50,22 @@ pub async fn create_download_context(
 }
 
 /// Creates a version backend using the filesystem location specified by the version data.
-
 ///
-
 /// Returns an internal server error when the backend configuration is invalid, the version
-
-/// path does not exist, or the backend cannot be constructed. Panics if the backend type is
-
-/// absent from `version_data.source`.
-
+/// path does not exist, or the backend cannot be constructed.
 ///
-
 /// # Examples
-
 ///
-
 /// ```no_run
-
 /// # let version_data: &VersionResponse = todo!();
-
 /// let backend = create_backend(version_data)?;
-
 /// # Ok::<(), StatusCode>(())
-
 /// ```
-
 ///
-
 /// # Errors
-
 ///
-
 /// Returns `StatusCode::INTERNAL_SERVER_ERROR` when the backend configuration, version path,
-
 /// or backend construction is invalid.
-
-///
-
-/// # Panics
-
-///
-
-/// Panics if `version_data.source.backend` is `None`.
 fn create_backend(
     version_data: &VersionResponse,
 ) -> Result<Box<dyn VersionBackend + Send + Sync>, StatusCode> {
@@ -104,7 +78,11 @@ fn create_backend(
 
     let version_path = PathBuf::from(base_path);
     let version_path = version_path.join(version_data.library_path.clone());
-    let version_path = match version_data.source.backend.unwrap() {
+    let backend_type = version_data.source.backend.ok_or_else(|| {
+        warn!("version_data.source.backend is None");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    let version_path = match backend_type {
         LibraryBackend::FILESYSTEM => version_path.join(version_data.version_path.clone()),
         LibraryBackend::FLAT_FILESYSTEM => version_path,
     };

@@ -2,7 +2,8 @@ import type { ClientModel, UserModel } from "~/prisma/client/models";
 import type { EventHandlerRequest, H3Event } from "h3";
 import prisma from "../db/database";
 import { useCertificateAuthority } from "~/server/plugins/ca";
-import jwt from "jsonwebtoken";
+import { logger } from "../logging";
+import * as jose from "jose";
 
 export type EventHandlerFunction<T> = (
   h3: H3Event<EventHandlerRequest>,
@@ -15,8 +16,7 @@ type ClientUtils = {
   fetchUser: () => Promise<UserModel>;
 };
 
-// I forgot how to spell leniancne
-const JWT_TIME_WIGGLE = 30_000;
+const JWT_TIME_WIGGLE_SECONDS = 30;
 
 export function defineClientEventHandler<T>(handler: EventHandlerFunction<T>) {
   return defineEventHandler(async (h3) => {
@@ -42,10 +42,28 @@ export function defineClientEventHandler<T>(handler: EventHandlerFunction<T>) {
             message: "Invalid client ID",
           });
 
-        const valid = jwt.verify(jwtToken, certBundle.cert, {
-          clockTolerance: JWT_TIME_WIGGLE,
-          // algorithms: ["ES384"],
-        });
+        let publicKey: jose.CryptoKey;
+        try {
+          publicKey = await jose.importX509(certBundle.cert, "ES384");
+        } catch (err) {
+          logger.warn(
+            { err, clientId },
+            "failed to import client certificate SPKI",
+          );
+          throw createError({
+            statusCode: 403,
+            message: "Invalid client certificate",
+          });
+        }
+
+        const valid = await jose
+          .jwtVerify(jwtToken, publicKey, {
+            clockTolerance: JWT_TIME_WIGGLE_SECONDS,
+          })
+          .catch((err) => {
+            logger.debug({ err, clientId }, "JWT verification failed");
+            return null;
+          });
         if (!valid)
           throw createError({
             statusCode: 403,
