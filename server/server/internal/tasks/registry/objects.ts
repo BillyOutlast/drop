@@ -100,13 +100,9 @@ function buildOrConditions(
     [field]: { in: objectIds },
   }));
 
-  const arrayFieldConditions: Array<Record<string, Record<string, string>>> =
-    [];
-  for (const field of arrayFields) {
-    for (const id of objectIds) {
-      arrayFieldConditions.push({ [field]: { has: id } });
-    }
-  }
+  const arrayFieldConditions = arrayFields.map((field) => ({
+    [field]: { hasSome: objectIds },
+  }));
 
   return [...singleFieldConditions, ...arrayFieldConditions];
 }
