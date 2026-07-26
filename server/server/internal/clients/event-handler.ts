@@ -2,6 +2,7 @@ import type { ClientModel, UserModel } from "~/prisma/client/models";
 import type { EventHandlerRequest, H3Event } from "h3";
 import prisma from "../db/database";
 import { useCertificateAuthority } from "~/server/plugins/ca";
+import { logger } from "../logging";
 import * as jose from "jose";
 
 export type EventHandlerFunction<T> = (
@@ -42,12 +43,28 @@ export function defineClientEventHandler<T>(handler: EventHandlerFunction<T>) {
             message: "Invalid client ID",
           });
 
-        const publicKey = await jose.importSPKI(certBundle.cert, "ES384");
+        let publicKey: jose.CryptoKey;
+        try {
+          publicKey = await jose.importSPKI(certBundle.cert, "ES384");
+        } catch (err) {
+          logger.warn(
+            { err, clientId },
+            "failed to import client certificate SPKI",
+          );
+          throw createError({
+            statusCode: 403,
+            message: "Invalid client certificate",
+          });
+        }
+
         const valid = await jose
           .jwtVerify(jwtToken, publicKey, {
             clockTolerance: JWT_TIME_WIGGLE,
           })
-          .catch(() => null);
+          .catch((err) => {
+            logger.debug({ err, clientId }, "JWT verification failed");
+            return null;
+          });
         if (!valid)
           throw createError({
             statusCode: 403,

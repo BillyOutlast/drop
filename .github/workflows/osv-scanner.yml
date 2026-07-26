@@ -34,17 +34,9 @@ jobs:
 
   scan-pr:
     if: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Run OSV-Scanner
-        uses: google/osv-scanner-action/osv-scanner-cli@v2.3.8
-        with:
-          scan-args: |-
-            -r
-            --skip-git
-            ./
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.3.8"
+    with:
+      scan-args: |-
+        -r
+        --skip-git
+        ./
