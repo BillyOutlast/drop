@@ -172,8 +172,10 @@ jobs:
   sonar:
     name: SonarCloud Scan
     runs-on: ubuntu-latest
-    continue-on-error: true  # Quality gate needs auth to fix
+    continue-on-error: true # Quality gate needs auth to fix
     if: github.event_name == 'push' || github.event_name == 'pull_request'
+    permissions:
+      issues: write
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
@@ -188,6 +190,12 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Sync findings to GitHub Issues
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/sonarcloud-sync.sh
 
   dockerfile:
     name: Dockerfile Lint
