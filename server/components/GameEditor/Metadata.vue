@@ -107,7 +107,7 @@
                   id="ageRatingValue"
                   v-model="newAgeRatingValue"
                   :disabled="!newAgeRatingOrg"
-                  :aria-label="$t('library.admin.game.ageRatingValue')"
+                  aria-label="Age rating value"
                   class="rounded-md bg-zinc-800 px-2 py-1 text-sm text-zinc-100 outline outline-1 -outline-offset-1 outline-zinc-700 focus:outline-blue-600"
                 >
                   <option
