@@ -15,7 +15,7 @@ on:
 
 jobs:
   ci:
-    name: Format, Check
+    name: Format, Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -34,7 +34,7 @@ jobs:
               libappindicator3-dev \
               librsvg2-dev \
               patchelf
-          lint-command: cargo check --workspace
+          lint-command: cargo clippy --workspace
           coverage-path: desktop/src-tauri/coverage.lcov
           test-command: cargo test --workspace --no-fail-fast
-          components: rustfmt
+          components: rustfmt, clippy
