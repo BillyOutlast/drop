@@ -183,7 +183,7 @@ gh issue list --repo BillyOutlast/drop --label sonarcloud --state open
 
 **SonarCloud project key**: `BillyOutlast_drop`. Use MCP sonarqube tools to query issues directly:
 
-```
+```text
 search_sonar_issues_in_projects(projects=["BillyOutlast_drop"], issueStatuses=["OPEN"])
 ```
 

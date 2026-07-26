@@ -58,6 +58,7 @@ export function defineClientEventHandler<T>(handler: EventHandlerFunction<T>) {
 
         const valid = await jose
           .jwtVerify(jwtToken, publicKey, {
+            algorithms: ["ES384"],
             clockTolerance: JWT_TIME_WIGGLE_SECONDS,
           })
           .catch((err) => {

@@ -199,8 +199,8 @@ export default function News() {
   let page: number;
   if (!paramsPage) {
     page = 1;
-  } else if (typeof paramsPage === "string" && Number.parseInt(paramsPage) > 1) {
-    page = Number.parseInt(paramsPage);
+  } else if (/^\d+$/.test(paramsPage) && Number.parseInt(paramsPage, 10) >= 1) {
+    page = Number.parseInt(paramsPage, 10);
   } else {
     notFound();
   }
