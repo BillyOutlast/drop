@@ -130,7 +130,7 @@ impl DropServer {
 
         let message = message.value();
 
-        if message.type_.unwrap() == crate::proto::core::TorrentialBoundType::ERROR {
+        if message.type_.ok_or_else(|| anyhow!("torrential: missing message type"))? == crate::proto::core::TorrentialBoundType::ERROR {
             Err(anyhow!(
                 "torrential error: {}",
                 String::from_utf8_lossy(&message.data)
