@@ -6,8 +6,8 @@
 
 ## 1. Executive Summary
 
-| Workspace | Source Files | Test Files | Coverage Ratio | Status |
-|-----------|-------------|------------|----------------|--------|
+| Workspace | Source Files | Test Files | Test-to-Source File Ratio | Status |
+|-----------|-------------|------------|---------------------------|--------|
 | server/ (Nitro backend) | ~173 TS files | 23 test + 4 mock/2 util | ~0.13:1 (13%) | Critical Gaps |
 | server/ (Vue frontend) | ~142 Vue/TS files | 2 component tests | ~0.01:1 (1%) | Near Zero |
 | cli/ (Rust) | 16 Rust files | 2 integration tests | ~0.13:1 (13%) | Low |
@@ -365,14 +365,16 @@ server/test/mocks/                   ██████████████�
 
 ## 9. Summary
 
-**Overall test coverage: ~10% of codebase has tests.**
+**Overall test-to-source file ratio: ~10% (44 test files for ~450 source files).**
 
-- **Server backend:** ~30% of business logic tested, 0% of API routes tested
-- **Server frontend:** ~1% tested
-- **CLI:** ~13% tested
-- **Desktop Rust:** ~3% tested
-- **Desktop Nuxt:** 0% tested
-- **Sites:** 0% tested
-- **Libraries:** native_model (good), libarchive (moderate), droplet (low), droplet_types (zero)
+Note: This is a file-count heuristic, not measured code coverage from an instrumented coverage tool. It provides a rough estimate of test presence across the codebase.
+
+- **Server backend:** ~30% file ratio for business logic, 0% of API routes tested
+- **Server frontend:** ~1% file ratio
+- **CLI:** ~13% file ratio
+- **Desktop Rust:** ~3% file ratio
+- **Desktop Nuxt:** 0% (no tests)
+- **Sites:** 0% (no tests)
+- **Libraries:** native_model (good file ratio), libarchive (moderate), droplet (low), droplet_types (zero)
 
 **Most urgent: Add API route handler tests utilizing the existing h3 factory + MSW infrastructure.**

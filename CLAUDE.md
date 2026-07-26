@@ -32,7 +32,7 @@ pnpm --filter drop test
 pnpm --filter drop format:check
 ```
 
-The pre-commit hook runs lint-staged + `pnpm --filter drop typecheck` automatically. Tests run on pre-push via `pnpm --filter drop test`. If pre-commit fails, fix the issue, then `git commit --amend --no-edit` (if no new files) or re-stage and commit.
+The pre-commit hook runs lint-staged + `pnpm --filter drop typecheck` automatically. Tests run on pre-push via `pnpm --filter drop test`. If pre-commit fails, fix the issue and re-run the original `git commit` command.
 
 ## Do not commit
 

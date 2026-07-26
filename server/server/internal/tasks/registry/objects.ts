@@ -66,14 +66,12 @@ function buildRefMap(): FieldReferenceMap {
   const result: FieldReferenceMap = {};
 
   for (const model of tables) {
-    // @ts-expect-error can't get model to typematch key names
     const fields = Object.keys(prisma[model]["fields"]);
 
     const single = fields.filter((v) => v.toLowerCase().endsWith("objectid"));
     const array = fields.filter((v) => v.toLowerCase().endsWith("objectids"));
 
     result[model] = {
-      // @ts-expect-error im not dealing with this
       model: prisma[model],
       fields: single,
       arrayFields: array,
@@ -81,6 +79,70 @@ function buildRefMap(): FieldReferenceMap {
   }
 
   return result;
+}
+
+/**
+ * Builds WHERE conditions for querying references.
+ *
+ * @param objectIds - The object IDs to check
+ * @param fields - Scalar fields to check
+ * @param arrayFields - Array fields to check
+ * @returns Array of OR condition objects
+ */
+function buildOrConditions(
+  objectIds: string[],
+  fields: string[],
+  arrayFields: string[],
+): Array<Record<string, unknown>> {
+  const singleFieldConditions = fields.map((field) => ({
+    [field]: { in: objectIds },
+  }));
+
+  const arrayFieldConditions: Array<Record<string, Record<string, string>>> =
+    [];
+  for (const field of arrayFields) {
+    for (const id of objectIds) {
+      arrayFieldConditions.push({ [field]: { has: id } });
+    }
+  }
+
+  return [...singleFieldConditions, ...arrayFieldConditions];
+}
+
+/**
+ * Extracts referenced object IDs from query results.
+ *
+ * @param rows - Query result rows
+ * @param fields - Scalar fields to extract
+ * @param arrayFields - Array fields to extract
+ * @param objectIds - Valid object IDs to filter
+ * @param referenced - Set to accumulate referenced IDs into
+ */
+function extractReferencedIds(
+  rows: Array<Record<string, unknown>>,
+  fields: string[],
+  arrayFields: string[],
+  objectIds: string[],
+  referenced: Set<string>,
+): void {
+  for (const row of rows) {
+    for (const field of fields) {
+      const val = row[field];
+      if (val && typeof val === "string" && objectIds.includes(val)) {
+        referenced.add(val);
+      }
+    }
+    for (const field of arrayFields) {
+      const arr = row[field];
+      if (Array.isArray(arr)) {
+        for (const val of arr) {
+          if (typeof val === "string" && objectIds.includes(val)) {
+            referenced.add(val);
+          }
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -95,52 +157,26 @@ async function findReferencedIds(
   fieldRefMap: FieldReferenceMap,
 ): Promise<Set<string>> {
   const referenced = new Set<string>();
+  const BATCH_SIZE = 500;
 
   for (const { model, fields, arrayFields } of Object.values(fieldRefMap)) {
-    // Build OR conditions for scalar fields using 'in' (batched)
-    const singleFieldConditions = fields.map((field) => ({
-      [field]: { in: objectIds },
-    }));
+    // Process in batches to avoid overwhelming the query builder with large ID lists
+    for (let i = 0; i < objectIds.length; i += BATCH_SIZE) {
+      const batch = objectIds.slice(i, i + BATCH_SIZE);
+      const orConditions = buildOrConditions(batch, fields, arrayFields);
 
-    // Build OR conditions for array fields using 'has' (one per object per field)
-    const arrayFieldConditions: Array<Record<string, Record<string, string>>> =
-      [];
-    for (const field of arrayFields) {
-      for (const id of objectIds) {
-        arrayFieldConditions.push({ [field]: { has: id } });
-      }
-    }
+      if (orConditions.length === 0) continue;
 
-    const orConditions = [...singleFieldConditions, ...arrayFieldConditions];
-    if (orConditions.length === 0) continue;
+      // @ts-expect-error dynamic model access
+      const rows = await model.findMany({
+        where: { OR: orConditions },
+        select: Object.fromEntries([
+          ...fields.map((f) => [f, true]),
+          ...arrayFields.map((f) => [f, true]),
+        ]),
+      });
 
-    // @ts-expect-error dynamic model access
-    const rows = await model.findMany({
-      where: { OR: orConditions },
-      select: Object.fromEntries([
-        ...fields.map((f) => [f, true]),
-        ...arrayFields.map((f) => [f, true]),
-      ]),
-    });
-
-    // Extract referenced IDs from results
-    for (const row of rows) {
-      for (const field of fields) {
-        const val = row[field];
-        if (val && typeof val === "string" && objectIds.includes(val)) {
-          referenced.add(val);
-        }
-      }
-      for (const field of arrayFields) {
-        const arr = row[field];
-        if (Array.isArray(arr)) {
-          for (const val of arr) {
-            if (typeof val === "string" && objectIds.includes(val)) {
-              referenced.add(val);
-            }
-          }
-        }
-      }
+      extractReferencedIds(rows, fields, arrayFields, batch, referenced);
     }
   }
 

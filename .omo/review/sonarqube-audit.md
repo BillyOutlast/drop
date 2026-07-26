@@ -53,7 +53,7 @@
 | 7 | `server/prisma/migrations/20241105221904_different_client_capabilities/migration.sql` | 13 | plsql:QuotedIdentifiersCheck | Avoid using quoted identifiers. |
 | 8 | `server/prisma/migrations/20241105222110_trackable_names_for_capabilities/migration.sql` | 13 | plsql:QuotedIdentifiersCheck | Avoid using quoted identifiers. |
 
-> All BLOCKER issues are in auto-generated Prisma migration SQL — inherited from Prisma's naming conventions. The DELETE without WHERE (item 2) warrants review.
+> All BLOCKER issues are in auto-generated Prisma migration SQL — inherited from Prisma's naming conventions. The DELETE without WHERE (item 2, in GameVersion table) is auto-generated Prisma output to clear existing data before schema changes, but warrants review for production safety.
 
 ### 3.2 CRITICAL / HIGH (4 issues — Cognitive Complexity)
 
