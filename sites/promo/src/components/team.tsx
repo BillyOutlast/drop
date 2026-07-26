@@ -32,7 +32,7 @@ function Person({
         target="_blank"
         className="group flex items-center gap-4"
       >
-        <img alt="" src={img} className="size-12 rounded-full" />
+        <img alt={name} src={img} className="size-12 rounded-full" />
         <div className="text-sm/6">
           <h3 className="font-medium group-hover:underline">{name}</h3>
           <p className="text-zinc-400">{description}</p>
@@ -134,10 +134,7 @@ export function Team() {
         The team
       </Subheading>
       <hr className="mt-6 border-t border-zinc-800" />
-      <ul
-        role="list"
-        className="mx-auto mt-16 grid grid-cols-1 gap-8 sm:grid-cols-3 lg:grid-cols-4"
-      >
+      <ul className="mx-auto mt-16 grid grid-cols-1 gap-8 sm:grid-cols-3 lg:grid-cols-4">
         {team?.map((member) => (
           <Person
             key={member.login}
