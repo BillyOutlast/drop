@@ -1,8 +1,7 @@
 [audit]
 gate = "new-only"
 
-[ignore]
-patterns = [
+ignorePatterns = [
   ".nuxt/**",
   "dist/**",
   "node_modules/**",

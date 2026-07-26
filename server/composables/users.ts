@@ -2,6 +2,7 @@ import type { SerializeObject } from "nitropack";
 import type { UserModel } from "~/prisma/client/models";
 import type { AuthMec } from "~/prisma/client/enums";
 
+// fallow-ignore-next-line unused-export
 export const useUsers = () =>
   useState<
     | Array<
@@ -14,12 +15,12 @@ export const useUsers = () =>
     | undefined
   >("users", () => undefined);
 
+// fallow-ignore-next-line unused-export
 export const fetchUsers = async () => {
   const users = useUsers();
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore forget why this ignor exists
-  const newValue: User[] = await $dropFetch("/api/v1/admin/users");
+  const newValue = await $dropFetch("/api/v1/admin/users");
+  // @ts-expect-error: API returns authMecs without `id`, but state type requires it
   users.value = newValue;
   return newValue;
 };

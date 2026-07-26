@@ -1,3 +1,6 @@
+# Fallow audit gate
+fallow audit --format json --quiet --explain --gate-marker agent || exit 1
+
 pnpm --filter drop lint-staged && pnpm --filter drop typecheck
 
 # Check Rust formatting on changed .rs files, filtered by workspace
