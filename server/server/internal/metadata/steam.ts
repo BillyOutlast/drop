@@ -603,9 +603,9 @@ export class SteamProvider implements MetadataProvider {
 
   private _extractDescription(html: string): string | undefined {
     const ogDescRegex =
-      /<meta\s+property\s*=\s*"(?:og:description|twitter:description)"\s+content\s*=\s*"([^"]+)"\s*\/?>/i;
+      /<meta\s+property\s*=\s*"(?:og|twitter):description"\s+content\s*=\s*"([^"]+)"\s*\/?>/i;
     const nameDescRegex =
-      /<meta\s+name\s*=\s*"(?:Description|description)"\s+content\s*=\s*"([^"]+)"\s*\/?>/i;
+      /<meta\s+name\s*=\s*"description"\s+content\s*=\s*"([^"]+)"\s*\/?>/i;
 
     let descMatch = ogDescRegex.exec(html);
     descMatch ??= nameDescRegex.exec(html);

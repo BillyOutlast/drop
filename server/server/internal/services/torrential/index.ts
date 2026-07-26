@@ -1,6 +1,7 @@
 import { spawn, execSync } from "node:child_process";
 import { Service } from "..";
 import fs from "node:fs";
+import path from "node:path";
 import { logger } from "../../logging";
 import type { Socket } from "node:net";
 import net from "node:net";
@@ -86,13 +87,21 @@ export class TorrentialService extends Service<unknown> {
 
         const localDir = fs.readdirSync(".");
         if (localDir.includes("torrential")) {
-          return spawn("./torrential", [], {});
+          return spawn(path.resolve("./torrential"), [], {});
         }
 
         const envPath = process.env.TORRENTIAL_PATH;
         if (envPath) return spawn(envPath, [], {});
 
-        return spawn("torrential", [], {});
+        let torrentialPath = "torrential";
+        try {
+          torrentialPath = execSync("which torrential", {
+            encoding: "utf-8",
+          }).trim();
+        } catch {
+          /* ignore */
+        }
+        return spawn(torrentialPath, [], {});
       },
       async () => {
         const socket = net.createConnection({ port: 33148, host: "127.0.0.1" });
