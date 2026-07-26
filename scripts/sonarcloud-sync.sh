@@ -46,7 +46,7 @@ done
 
 # --- Validation ---------------------------------------------------------------
 
-if [[ -z "$SONAR_TOKEN" ]]; then
+if [[ -z "${SONAR_TOKEN:-}" ]]; then
   echo "FATAL: SONAR_TOKEN is not set" >&2
   exit 1
 fi
@@ -184,7 +184,6 @@ CATCHALL_MAJOR_JSON="[]"
 
 for gid in "${!GROUP_KEYS[@]}"; do
   count=$(echo "${GROUP_ISSUES[$gid]}" | jq 'length')
-  severity="${GROUP_SEVERITY[$gid]}"
 
   if [[ "$count" -ge 3 ]]; then
     LARGE_GROUPS["$gid"]=1
@@ -195,7 +194,7 @@ done
 
 for gid in "${!GROUP_KEYS[@]}"; do
   count=$(echo "${GROUP_ISSUES[$gid]}" | jq 'length')
-  severity="${GROUP_SEVERITY[$gid]}"
+  severity="${gid%%/*}"
 
   if [[ "$count" -ge 3 ]]; then
     continue
@@ -223,7 +222,7 @@ GH_ISSUES=$(gh issue list \
   --label sonarcloud \
   --state open \
   --json number,title,body \
-  --limit 500 2>/dev/null || echo "[]")
+  --limit 500)
 
 EXISTING_ISSUES=$(echo "$GH_ISSUES" | jq -c '.' 2>/dev/null || echo "[]")
 log "Found $(echo "$EXISTING_ISSUES" | jq 'length') existing open sonarcloud issues"
@@ -269,7 +268,7 @@ build_issue_body() {
   )
 
   body+="\n### Fix\n\nFollow SonarCloud rule guidance for \`${short_rule}\`."
-  echo -e "$body"
+  printf '%b' "$body"
 }
 
 build_catchall_body() {
@@ -297,7 +296,7 @@ build_catchall_body() {
   )
 
   body+="\n### Fix\n\nAddress each issue according to its rule guidance."
-  echo -e "$body"
+  printf '%b' "$body"
 }
 
 determine_labels() {
@@ -410,7 +409,7 @@ log "Checking for resolved findings to close..."
 
 if [[ "$(echo "$EXISTING_ISSUES" | jq 'length')" -gt 0 ]]; then
   # Get all currently unresolved SonarCloud issue keys
-  ALL_UNRESOLVED_KEYS=$(echo "$SONAR_RESPONSE" | jq -r '[.issues[].key] | join("|")')
+  ALL_UNRESOLVED_KEYS_JSON=$(echo "$SONAR_RESPONSE" | jq '[.issues[].key]')
 
   while IFS= read -r issue; do
     issue_num=$(echo "$issue" | jq -r '.number')
@@ -418,7 +417,7 @@ if [[ "$(echo "$EXISTING_ISSUES" | jq 'length')" -gt 0 ]]; then
     issue_body=$(echo "$issue" | jq -r '.body // ""')
 
     # Extract SonarCloud keys from body
-    if [[ "$issue_body" =~ sonarcloud-keys:\ ([^\n]+) ]]; then
+    if [[ "$issue_body" =~ sonarcloud-keys:\ ([A-Za-z0-9,._-]+) ]]; then
       keys="${BASH_REMATCH[1]}"
       # Remove whitespace, split by comma
       IFS=',' read -ra key_array <<< "$keys"
@@ -428,7 +427,7 @@ if [[ "$(echo "$EXISTING_ISSUES" | jq 'length')" -gt 0 ]]; then
         key=$(echo "$key" | xargs)  # trim
         [[ -z "$key" ]] && continue
         # Check if this key still appears in unresolved results
-        if echo "$ALL_UNRESOLVED_KEYS" | grep -q "${key}"; then
+        if echo "$ALL_UNRESOLVED_KEYS_JSON" | jq -e --arg k "$key" 'index($k)' >/dev/null; then
           all_resolved=false
           break
         fi
@@ -442,13 +441,15 @@ if [[ "$(echo "$EXISTING_ISSUES" | jq 'length')" -gt 0 ]]; then
       if $all_resolved && [[ ${#key_array[@]} -gt 0 ]]; then
         dry "Closing issue #${issue_num}: All SonarCloud findings resolved"
         if ! $DRY_RUN; then
-          gh issue close "$issue_num" \
+          if gh issue close "$issue_num" \
             --repo "$GITHUB_REPOSITORY" \
-            --comment "All constituent SonarCloud findings have been resolved." 2>/dev/null || \
+            --comment "All constituent SonarCloud findings have been resolved." 2>/dev/null; then
+            log "Closed issue #${issue_num}: ${issue_title}"
+            (( ++CLOSED ))
+          else
             warn "Failed to close issue #${issue_num}"
-          log "Closed issue #${issue_num}: ${issue_title}"
+          fi
         fi
-        (( ++CLOSED ))
       fi
     fi
   done < <(echo "$EXISTING_ISSUES" | jq -c '.[]')

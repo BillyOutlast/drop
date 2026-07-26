@@ -114,7 +114,7 @@ For non-skill agents, treat the task map below as the local onboarding source: r
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | delete an "unused" export or file                                 | `fallow dead-code --trace <file>:<export>`                                           |
 | delete an "unused" dependency                                     | `fallow dead-code --trace-dependency <name>`                                         |
-| commit or open a PR                                               | `fallow audit --base <ref>`                                                          |
+| commit or open a PR                                               | `fallow audit --format json --quiet --explain --gate-marker agent`                   |
 | prioritize refactoring                                            | `fallow health --hotspots --targets`                                                 |
 | ask who owns code                                                 | `fallow health --ownership`                                                          |
 | check untested-but-reachable code                                 | `fallow health --coverage-gaps`                                                      |
@@ -184,8 +184,10 @@ gh issue list --repo BillyOutlast/drop --label sonarcloud --state open
 **SonarCloud project key**: `BillyOutlast_drop`. Use MCP sonarqube tools to query issues directly:
 
 ```text
-search_sonar_issues_in_projects(projects=["BillyOutlast_drop"], issueStatuses=["OPEN"])
+search_sonar_issues_in_projects(projects=["BillyOutlast_drop"], issueStatuses=["OPEN"], severities=["BLOCKER","CRITICAL","MAJOR"])
 ```
+
+This queries unresolved findings matching the sync script scope
 
 **Issue labels**: `sonarcloud`, `critical`, `major`, `minor`, `a11y`, `security`, `vue`, `react`, `readability`, `performance`, `code-quality`, `refactoring`
 
