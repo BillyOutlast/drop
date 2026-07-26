@@ -52,8 +52,9 @@ export default defineDropTask({
 });
 
 /**
- * Builds a map of Prisma models and their fields that may contain object IDs
- * @returns
+ * Builds a map of Prisma models and fields that may reference object IDs.
+ *
+ * @returns A field reference map containing each model, its scalar object ID fields, and its array object ID fields.
  */
 function buildRefMap(): FieldReferenceMap {
   const tables = Object.keys(prisma).filter(
@@ -83,12 +84,11 @@ function buildRefMap(): FieldReferenceMap {
 }
 
 /**
- * Determines which object IDs from the given set are referenced by any configured model field.
- * Batched: one query per model instead of one per object per model.
+ * Identifies object IDs referenced by the configured scalar and array fields.
  *
  * @param objectIds - The object IDs to check
  * @param fieldRefMap - The models and fields to inspect
- * @returns Set of object IDs that ARE referenced
+ * @returns A set containing the referenced object IDs
  */
 async function findReferencedIds(
   objectIds: string[],
@@ -148,10 +148,11 @@ async function findReferencedIds(
 }
 
 /**
- * Takes a list of objects and checks if they are referenced in any model fields
- * @param objects
- * @param fieldRefMap
- * @returns
+ * Identifies object IDs that are not referenced by any model fields.
+ *
+ * @param objects - The object IDs to inspect
+ * @param fieldRefMap - The model fields that may reference object IDs
+ * @returns The object IDs with no references
  */
 async function findUnreferencedStrings(
   objects: string[],

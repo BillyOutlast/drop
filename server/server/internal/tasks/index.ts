@@ -521,6 +521,12 @@ export const TaskLog = type({
   prefix: "string?",
 });
 
+/**
+ * Creates a task-group definition from a task builder.
+ *
+ * @param buildTask - The task definition used to construct task instances
+ * @returns A drop task that builds configured task instances
+ */
 export function defineDropTask(buildTask: BuildTask): DropTask {
   return {
     taskGroup: buildTask.taskGroup,

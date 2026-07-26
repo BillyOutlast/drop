@@ -49,6 +49,49 @@ pub async fn create_download_context(
     Ok(download_context)
 }
 
+/// Creates a version backend using the filesystem location specified by the version data.
+
+///
+
+/// Returns an internal server error when the backend configuration is invalid, the version
+
+/// path does not exist, or the backend cannot be constructed. Panics if the backend type is
+
+/// absent from `version_data.source`.
+
+///
+
+/// # Examples
+
+///
+
+/// ```no_run
+
+/// # let version_data: &VersionResponse = todo!();
+
+/// let backend = create_backend(version_data)?;
+
+/// # Ok::<(), StatusCode>(())
+
+/// ```
+
+///
+
+/// # Errors
+
+///
+
+/// Returns `StatusCode::INTERNAL_SERVER_ERROR` when the backend configuration, version path,
+
+/// or backend construction is invalid.
+
+///
+
+/// # Panics
+
+///
+
+/// Panics if `version_data.source.backend` is `None`.
 fn create_backend(
     version_data: &VersionResponse,
 ) -> Result<Box<dyn VersionBackend + Send + Sync>, StatusCode> {
