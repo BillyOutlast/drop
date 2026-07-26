@@ -8,7 +8,7 @@ export const useUsers = () =>
     | Array<
         SerializeObject<
           UserModel & {
-            authMecs?: Array<{ id: string; mec: AuthMec }>;
+            authMecs?: Array<{ mec: AuthMec }>;
           }
         >
       >
@@ -20,7 +20,6 @@ export const fetchUsers = async () => {
   const users = useUsers();
 
   const newValue = await $dropFetch("/api/v1/admin/users");
-  // @ts-expect-error: API returns authMecs without `id`, but state type requires it
   users.value = newValue;
   return newValue;
 };

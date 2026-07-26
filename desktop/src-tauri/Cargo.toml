@@ -100,7 +100,7 @@ utils = { path = "./utils" } # utils
 walkdir = "2.5.0"
 webbrowser = "1.0.2"
 whoami = "1.6.0"
-wry = { version = "*", features = [] }
+wry = { version = "0.53.5", features = [] }
 zstd = "0.13.3"
 
 [dependencies.log4rs]
