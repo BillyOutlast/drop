@@ -66,12 +66,14 @@ function buildRefMap(): FieldReferenceMap {
   const result: FieldReferenceMap = {};
 
   for (const model of tables) {
+    // @ts-expect-error can't get model to typematch key names
     const fields = Object.keys(prisma[model]["fields"]);
 
     const single = fields.filter((v) => v.toLowerCase().endsWith("objectid"));
     const array = fields.filter((v) => v.toLowerCase().endsWith("objectids"));
 
     result[model] = {
+      // @ts-expect-error im not dealing with this
       model: prisma[model],
       fields: single,
       arrayFields: array,

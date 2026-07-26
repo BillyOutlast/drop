@@ -50,7 +50,7 @@ jobs:
           - language: javascript-typescript
             build-mode: autobuild
           - language: rust
-            build-mode: autobuild
+            build-mode: none
           # No Swift project in repo — remove entry. Re-add when Swift files need analysis.
           # - language: swift
           #   build-mode: autobuild
