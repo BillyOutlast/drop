@@ -1,1 +1,9 @@
 pnpm --filter drop lint-staged && pnpm --filter drop typecheck
+
+# Check Rust formatting on changed .rs files
+changed_rs=$(git diff --cached --name-only --diff-filter=ACM -- '*.rs')
+if [ -n "$changed_rs" ]; then
+  cargo fmt --manifest-path torrential/Cargo.toml -- --check $changed_rs || exit 1
+  cargo fmt --manifest-path cli/Cargo.toml -- --check $changed_rs || exit 1
+  cargo fmt --manifest-path desktop/src-tauri/Cargo.toml -- --check $changed_rs || exit 1
+fi

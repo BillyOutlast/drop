@@ -83,61 +83,68 @@ function buildRefMap(): FieldReferenceMap {
 }
 
 /**
- * Determines whether an object ID is referenced by any configured model field.
+ * Determines which object IDs from the given set are referenced by any configured model field.
+ * Batched: one query per model instead of one per object per model.
  *
- * @param id - The object ID to search for
+ * @param objectIds - The object IDs to check
  * @param fieldRefMap - The models and fields to inspect
- * @returns `true` if the ID is referenced, `false` otherwise
+ * @returns Set of object IDs that ARE referenced
  */
-async function isReferencedInModelFields(
-  id: string,
+async function findReferencedIds(
+  objectIds: string[],
   fieldRefMap: FieldReferenceMap,
-): Promise<boolean> {
-  // PENDING(sonar): batch DB queries instead of one-per-id-per-table - deferred, performance optimization
+): Promise<Set<string>> {
+  const referenced = new Set<string>();
+
   for (const { model, fields, arrayFields } of Object.values(fieldRefMap)) {
-    const singleFieldOrConditions = fields
-      ? fields.map((field) => ({
-          [field]: {
-            equals: id,
-          },
-        }))
-      : [];
-    const arrayFieldOrConditions = arrayFields
-      ? arrayFields.map((field) => ({
-          [field]: {
-            has: id,
-          },
-        }))
-      : [];
+    // Build OR conditions for scalar fields using 'in' (batched)
+    const singleFieldConditions = fields.map((field) => ({
+      [field]: { in: objectIds },
+    }));
 
-    // prisma.game.findFirst({
-    //   where: {
-    //     OR: [
-    //       // single item
-    //       {
-    //         mIconId: {
-    //           equals: "",
-    //         },
-    //       },
-    //       // array
-    //       {
-    //         mImageCarousel: {
-    //           has: "",
-    //         },
-    //       },
-    //     ],
-    //   },
-    // });
+    // Build OR conditions for array fields using 'has' (one per object per field)
+    const arrayFieldConditions: Array<Record<string, Record<string, string>>> =
+      [];
+    for (const field of arrayFields) {
+      for (const id of objectIds) {
+        arrayFieldConditions.push({ [field]: { has: id } });
+      }
+    }
 
-    // @ts-expect-error using unknown because im not typing this mess omg
-    const found = await model.findFirst({
-      where: { OR: [...singleFieldOrConditions, ...arrayFieldOrConditions] },
+    const orConditions = [...singleFieldConditions, ...arrayFieldConditions];
+    if (orConditions.length === 0) continue;
+
+    // @ts-expect-error dynamic model access
+    const rows = await model.findMany({
+      where: { OR: orConditions },
+      select: Object.fromEntries([
+        ...fields.map((f) => [f, true]),
+        ...arrayFields.map((f) => [f, true]),
+      ]),
     });
 
-    if (found) return true;
+    // Extract referenced IDs from results
+    for (const row of rows) {
+      for (const field of fields) {
+        const val = row[field];
+        if (val && typeof val === "string" && objectIds.includes(val)) {
+          referenced.add(val);
+        }
+      }
+      for (const field of arrayFields) {
+        const arr = row[field];
+        if (Array.isArray(arr)) {
+          for (const val of arr) {
+            if (typeof val === "string" && objectIds.includes(val)) {
+              referenced.add(val);
+            }
+          }
+        }
+      }
+    }
   }
 
-  return false;
+  return referenced;
 }
 
 /**
@@ -150,12 +157,6 @@ async function findUnreferencedStrings(
   objects: string[],
   fieldRefMap: FieldReferenceMap,
 ): Promise<string[]> {
-  const unreferenced: string[] = [];
-
-  for (const obj of objects) {
-    const isRef = await isReferencedInModelFields(obj, fieldRefMap);
-    if (!isRef) unreferenced.push(obj);
-  }
-
-  return unreferenced;
+  const referenced = await findReferencedIds(objects, fieldRefMap);
+  return objects.filter((id) => !referenced.has(id));
 }

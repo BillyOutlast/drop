@@ -2,6 +2,18 @@ import type { TSESLint } from "@typescript-eslint/utils";
 
 const blacklistedFunctions = ["delete", "update"];
 
+// Models where hard-delete is correct (join tables, auth tokens, ephemeral data)
+const allowedModels = new Set([
+  "companyGame",
+  "gameTag",
+  "linkedAuthMec",
+  "linkedMFAMec",
+  "invitation",
+  "apiToken",
+  "certificate",
+  "session",
+]);
+
 export default {
   meta: {
     type: "problem",
@@ -25,6 +37,9 @@ export default {
         if (!tableExpr) return;
         const prismaExpr = tableExpr.object;
         if (prismaExpr?.name !== "prisma") return;
+        // Allow hard-delete on join tables, auth tokens, and ephemeral data
+        const modelName = tableExpr.property?.name;
+        if (modelName && allowedModels.has(modelName)) return;
         context.report({
           node,
           messageId: "noPrismaDelete",
