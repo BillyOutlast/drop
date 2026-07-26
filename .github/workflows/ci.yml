@@ -185,8 +185,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=Heretek-Drop_drop
-            -Dsonar.organization=heretek-drop
+            -Dsonar.projectKey=BillyOutlast_drop
+            -Dsonar.organization=billyoutlast
 
   dockerfile:
     name: Dockerfile Lint
