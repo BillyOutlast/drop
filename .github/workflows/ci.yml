@@ -36,7 +36,7 @@ jobs:
               exit 1
             fi
           done
-          echo "All $(echo $IGNORED | wc -w) ignored advisories have risk register entries"
+          echo "All $(echo "$IGNORED" | wc -w) ignored advisories have risk register entries"
 
   dependency-review:
     name: Dependency Review
