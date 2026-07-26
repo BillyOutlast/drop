@@ -175,6 +175,7 @@ jobs:
     continue-on-error: true # Quality gate needs auth to fix
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     permissions:
+      contents: read
       issues: write
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1

@@ -95,23 +95,41 @@ catchall_title() {
   echo "sonar: ${severity} — Various unresolved issues"
 }
 
-# --- Step 1: Fetch unresolved issues from SonarCloud --------------------------
+# --- Step 1: Fetch unresolved issues from SonarCloud (with pagination) --------
 
 log "Fetching unresolved issues from SonarCloud (project: ${SONAR_PROJECT_KEY})..."
 
 SONAR_RESPONSE=$(curl -sS -f \
   -H "Authorization: Bearer ${SONAR_TOKEN}" \
-  "${SONAR_API}?componentKeys=${SONAR_PROJECT_KEY}&resolved=false&severities=${SEVERITIES}&ps=${PAGE_SIZE}") || {
+  "${SONAR_API}?componentKeys=${SONAR_PROJECT_KEY}&resolved=false&severities=${SEVERITIES}&ps=${PAGE_SIZE}&p=1") || {
     warn "SonarCloud API request failed (exit code $?)"
     exit 1
   }
 
 TOTAL=$(echo "$SONAR_RESPONSE" | jq -r '.total // 0')
-log "Found ${TOTAL} unresolved issues (BLOCKER/CRITICAL/MAJOR)"
+TOTAL_PAGES=$(( (TOTAL + PAGE_SIZE - 1) / PAGE_SIZE ))
+log "Found ${TOTAL} unresolved issues across ${TOTAL_PAGES} page(s) (BLOCKER/CRITICAL/MAJOR)"
 
 if [[ "$TOTAL" -eq 0 ]]; then
   log "No unresolved issues — nothing to sync."
   exit 0
+fi
+
+if [[ "$TOTAL_PAGES" -gt 1 ]]; then
+  ALL_ISSUES=$(echo "$SONAR_RESPONSE" | jq '.issues')
+  PAGE=2
+  while [[ "$PAGE" -le "$TOTAL_PAGES" ]]; do
+    log "Fetching page ${PAGE}/${TOTAL_PAGES}..."
+    PAGE_RESPONSE=$(curl -sS -f \
+      -H "Authorization: Bearer ${SONAR_TOKEN}" \
+      "${SONAR_API}?componentKeys=${SONAR_PROJECT_KEY}&resolved=false&severities=${SEVERITIES}&ps=${PAGE_SIZE}&p=${PAGE}") || {
+        warn "SonarCloud API request failed on page ${PAGE} (exit code $?)"
+        exit 1
+      }
+    ALL_ISSUES=$(echo "$ALL_ISSUES $(echo "$PAGE_RESPONSE" | jq '.issues')" | jq -s 'add')
+    PAGE=$((PAGE + 1))
+  done
+  SONAR_RESPONSE=$(echo "$SONAR_RESPONSE" | jq --argjson issues "$ALL_ISSUES" '.issues = $issues')
 fi
 
 # --- Step 2: Group issues by (severity, rule) ---------------------------------
@@ -121,7 +139,7 @@ log "Grouping issues by (severity, rule)..."
 # Build array of deduplicated groups
 declare -A GROUP_KEYS  # group_id -> 1 (track which groups exist)
 
-while IFS="|" read -r rule severity message; do
+while IFS=$'\t' read -r rule severity message; do
   gid=$(group_id "$severity" "$rule")
   GROUP_KEYS["$gid"]=1
 done < <(
@@ -212,7 +230,7 @@ log "Found $(echo "$EXISTING_ISSUES" | jq 'length') existing open sonarcloud iss
 
 # Build a map: title -> issue number
 declare -A TITLE_TO_NUMBER
-while IFS="|" read -r number title; do
+while IFS=$'\t' read -r number title; do
   TITLE_TO_NUMBER["$title"]="$number"
 done < <(
   echo "$EXISTING_ISSUES" | jq -r '.[] | [.number, .title] | @tsv'
@@ -242,7 +260,7 @@ build_issue_body() {
   body+="| File | Line |\n"
   body+="|------|------|\n"
 
-  while IFS="|" read -r component line; do
+  while IFS=$'\t' read -r component line; do
     # Strip project prefix from component: "BillyOutlast_drop:server/file.ts" -> "server/file.ts"
     local file="${component#*:}"
     body+="| \`${file}\` | ${line} |\n"
@@ -268,7 +286,7 @@ build_catchall_body() {
   body+="| File | Line | Rule | Issue |\n"
   body+="|------|------|------|-------|\n"
 
-  while IFS="|" read -r component line rule message; do
+  while IFS=$'\t' read -r component line rule message; do
     local file="${component#*:}"
     local short_rule="${rule##*:}"
     # Escape pipe characters in message
@@ -318,7 +336,7 @@ for gid in "${!LARGE_GROUPS[@]}"; do
           --body-file - || warn "Failed to update issue #${existing_num}"
       fi
     else
-      ((SKIPPED++))
+      (( ++SKIPPED ))
     fi
   else
     # Create new issue
@@ -335,7 +353,7 @@ for gid in "${!LARGE_GROUPS[@]}"; do
         }
       log "Created issue: ${title} → ${created_url}"
     fi
-    ((CREATED++))
+    (( ++CREATED ))
   fi
 done
 
@@ -364,7 +382,7 @@ process_catchall() {
           --body-file - || warn "Failed to update catch-all issue #${existing_num}"
       fi
     else
-      ((SKIPPED++))
+      (( ++SKIPPED ))
     fi
   else
     dry "Creating issue: ${title}"
@@ -379,7 +397,7 @@ process_catchall() {
         }
       log "Created issue: ${title} → ${created_url}"
     fi
-    ((CREATED++))
+    (( ++CREATED ))
   fi
 }
 
@@ -430,7 +448,7 @@ if [[ "$(echo "$EXISTING_ISSUES" | jq 'length')" -gt 0 ]]; then
             warn "Failed to close issue #${issue_num}"
           log "Closed issue #${issue_num}: ${issue_title}"
         fi
-        ((CLOSED++))
+        (( ++CLOSED ))
       fi
     fi
   done < <(echo "$EXISTING_ISSUES" | jq -c '.[]')
