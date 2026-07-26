@@ -74,8 +74,7 @@ fn directory_to_manifest_pipeline() {
     let total_expected_size = b"Hello, World!".len() as u64
         + 4096u64
         + b"# Nested\n\nThis is a nested file.".len() as u64
-        + b"deeply nested file content here".len() as u64
-        + 0u64;
+        + b"deeply nested file content here".len() as u64;
 
     // ---- 2. generate manifest --------------------------------------------
     let rt = tokio::runtime::Builder::new_current_thread()
@@ -221,7 +220,7 @@ fn multi_chunk_manifest_pipeline() {
         write_file(&dir.join(format!("file_{}.bin", i)), &content);
     }
 
-    let total_expected = file_count as u64 * file_size as u64;
+    let total_expected = file_count * file_size;
 
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
