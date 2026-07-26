@@ -45,7 +45,7 @@
                 Admin Dashboard
               </a>
             </MenuItem>
-            <MenuItem v-for="(nav, navIdx) in navigation" v-slot="{ active, close }">
+            <MenuItem v-for="(nav, navIdx) in navigation" :key="navIdx" v-slot="{ active, close }">
               <button
                 type="button"
                 @click="() => navigate(close, nav)"

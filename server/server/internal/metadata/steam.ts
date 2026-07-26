@@ -445,8 +445,11 @@ export class SteamProvider implements MetadataProvider {
 
     const ageRatings = this._extractAgeRatings(webAppDetails?.ratings);
     if (ageRatings.length > 0) {
+      const ratingsList = ageRatings
+        .map((r) => `${r.organization}: ${r.rating}`)
+        .join(", ");
       context?.logger.info(
-        `Found ${ageRatings.length} age ratings: ${ageRatings.map((r) => `${r.organization}: ${r.rating}`).join(", ")}`,
+        `Found ${ageRatings.length} age ratings: ${ratingsList}`,
       );
     }
 

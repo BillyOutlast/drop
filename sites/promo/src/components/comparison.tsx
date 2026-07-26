@@ -277,8 +277,8 @@ function ProjectCards() {
       <Gradient className="absolute inset-x-2 top-48 bottom-0 rounded-4xl ring-1 ring-black/5 ring-inset" />
       <Container className="relative">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          {projects.map((tier, tierIndex) => (
-            <ProjectCard key={tierIndex} tier={tier} />
+          {projects.map((tier) => (
+            <ProjectCard key={tier.slug} tier={tier} />
           ))}
         </div>
       </Container>
@@ -447,27 +447,36 @@ function ProjectTable({
                 {projects.map((project) => {
                   let value = project.features[section]?.[name];
 
+                  function renderValue() {
+                    if (typeof value === "function") {
+                      return <>{value()}</>;
+                    }
+                    if (value === true) {
+                      return (
+                        <>
+                          <CheckIcon className="size-4 fill-green-600" />
+                          <span className="sr-only">Included in {project.name}</span>
+                        </>
+                      );
+                    }
+                    if (value === false || value === undefined) {
+                      return (
+                        <>
+                          <MinusIcon className="size-4 fill-gray-400" />
+                          <span className="sr-only">Not included in {project.name}</span>
+                        </>
+                      );
+                    }
+                    return <div className="text-xs text-zinc-400">{value}</div>;
+                  }
+
                   return (
                     <td
                       key={project.slug}
                       data-selected={selectedProject === project ? true : undefined}
                       className="p-4 data-selected:table-cell max-sm:hidden"
                     >
-                      {typeof value === "function" ? (
-                        <>{value()}</>
-                      ) : value === true ? (
-                        <>
-                          <CheckIcon className="size-4 fill-green-600" />
-                          <span className="sr-only">Included in {project.name}</span>
-                        </>
-                      ) : value === false || value === undefined ? (
-                        <>
-                          <MinusIcon className="size-4 fill-gray-400" />
-                          <span className="sr-only">Not included in {project.name}</span>
-                        </>
-                      ) : (
-                        <div className="text-xs text-zinc-400">{value}</div>
-                      )}
+                      {renderValue()}
                     </td>
                   );
                 })}
