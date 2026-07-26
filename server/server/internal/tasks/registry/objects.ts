@@ -116,6 +116,37 @@ function buildOrConditions(
  * @param objectIds - Valid object IDs to filter
  * @param referenced - Set to accumulate referenced IDs into
  */
+function extractScalarReferences(
+  row: Record<string, unknown>,
+  fields: string[],
+  validIds: Set<string>,
+  referenced: Set<string>,
+): void {
+  for (const field of fields) {
+    const val = row[field];
+    if (typeof val === "string" && validIds.has(val)) {
+      referenced.add(val);
+    }
+  }
+}
+
+function extractArrayReferences(
+  row: Record<string, unknown>,
+  arrayFields: string[],
+  validIds: Set<string>,
+  referenced: Set<string>,
+): void {
+  for (const field of arrayFields) {
+    const arr = row[field];
+    if (!Array.isArray(arr)) continue;
+    for (const val of arr) {
+      if (typeof val === "string" && validIds.has(val)) {
+        referenced.add(val);
+      }
+    }
+  }
+}
+
 function extractReferencedIds(
   rows: Array<Record<string, unknown>>,
   fields: string[],
@@ -123,23 +154,10 @@ function extractReferencedIds(
   objectIds: string[],
   referenced: Set<string>,
 ): void {
+  const validIds = new Set(objectIds);
   for (const row of rows) {
-    for (const field of fields) {
-      const val = row[field];
-      if (val && typeof val === "string" && objectIds.includes(val)) {
-        referenced.add(val);
-      }
-    }
-    for (const field of arrayFields) {
-      const arr = row[field];
-      if (Array.isArray(arr)) {
-        for (const val of arr) {
-          if (typeof val === "string" && objectIds.includes(val)) {
-            referenced.add(val);
-          }
-        }
-      }
-    }
+    extractScalarReferences(row, fields, validIds, referenced);
+    extractArrayReferences(row, arrayFields, validIds, referenced);
   }
 }
 
