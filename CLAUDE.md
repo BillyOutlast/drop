@@ -78,6 +78,7 @@ If a file is repeatedly auto-formatted by linters, the file has a deeper issue. 
 
 ## Do not touch
 
-- `.husky/pre-commit` (root pre-commit hook, handled by husky)
 - Generated Prisma client (`server/prisma/client/`)
 - Lockfiles (`pnpm-lock.yaml`, `Cargo.lock`) — only update via `pnpm install` / `cargo update`
+
+Note: `.husky/pre-commit` may be modified to add audit gates (e.g., fallow). See `AGENTS.md` for fallow integration.
