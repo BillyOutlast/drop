@@ -46,6 +46,7 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
+        working-directory: .
 
       - name: Typecheck
         run: pnpm typecheck
