@@ -4,16 +4,12 @@ on:
   push:
     branches: [develop]
     paths:
-      - "desktop/main/composables/**"
-      - "desktop/main/utils/**"
-      - "desktop/main/nuxt.config.ts"
+      - "desktop/main/**"
       - ".github/workflows/desktop-main-ci.yml"
   pull_request:
     branches: [develop]
     paths:
-      - "desktop/main/composables/**"
-      - "desktop/main/utils/**"
-      - "desktop/main/nuxt.config.ts"
+      - "desktop/main/**"
       - ".github/workflows/desktop-main-ci.yml"
   workflow_dispatch:
 
@@ -22,7 +18,7 @@ env:
 
 jobs:
   ci:
-    name: Typecheck, Test
+    name: Typecheck, Lint, Test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -30,6 +26,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpng-dev
 
       - name: Install pnpm
         uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66dd77 # v4
@@ -43,10 +44,13 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Typecheck
         run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
 
       - name: Test
         run: pnpm test

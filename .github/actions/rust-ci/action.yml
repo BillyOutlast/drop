@@ -60,14 +60,11 @@ runs:
   using: composite
   steps:
     # ── Setup ──────────────────────────────────────────────────────
-    - name: Checkout repository
-      # pinned to v4
-      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-
     - name: Install Rust toolchain
       # pinned to nightly
       uses: dtolnay/rust-toolchain@4fd1da8b0805d2d2e936788875a7d65dbd677dc2
       with:
+        toolchain: nightly
         components: ${{ inputs.components }}
 
     - name: Rust cache
@@ -103,18 +100,14 @@ runs:
       run: ${{ inputs.test-command }}
 
     # ── Coverage ───────────────────────────────────────────────────
-    - name: Install LLVM tools (cargo-llvm-cov)
-      # pinned to nightly
-      uses: dtolnay/rust-toolchain@4fd1da8b0805d2d2e936788875a7d65dbd677dc2
-      with:
-        components: llvm-tools-preview
+    - name: Install cargo-llvm-cov
+      uses: taiki-e/install-action@cargo-llvm-cov
 
     - name: Generate code coverage
       continue-on-error: true
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        cargo install cargo-llvm-cov --locked
         cargo llvm-cov --all-features --workspace \
           --codecov --output-path coverage.lcov
 
@@ -126,10 +119,11 @@ runs:
         fail_ci_if_error: false
 
     # ── Security audit ─────────────────────────────────────────────
+    - name: Install cargo-audit
+      uses: taiki-e/install-action@cargo-audit
+
     - name: Audit dependencies
       continue-on-error: true
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: |
-        cargo install cargo-audit --locked
-        cargo audit
+      run: cargo audit

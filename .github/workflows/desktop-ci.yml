@@ -18,6 +18,9 @@ jobs:
     name: Format, Check
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
       - uses: ./.github/actions/rust-ci
         with:
           working-directory: desktop/src-tauri

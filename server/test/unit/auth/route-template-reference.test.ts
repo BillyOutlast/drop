@@ -26,7 +26,7 @@ import { createMockH3Event } from "../../utils/h3";
 // Module mocks — hoisted by vitest to the top of the file
 // ---------------------------------------------------------------------------
 
-const mockSignout = vi.fn();
+const mockSignout = vi.hoisted(() => vi.fn());
 
 vi.mock("../../../../server/server/internal/session", () => ({
   default: {

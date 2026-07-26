@@ -23,7 +23,7 @@ export default {
     },
     messages: {
       noPrismaDelete:
-        "Prisma .delete(...) is used. Use .deleteMany(...) and check count instead.",
+        "Prisma .delete(...) is used. Soft-delete via .update(..., { deletedAt: new Date() }) instead.",
     },
     schema: [],
   },
