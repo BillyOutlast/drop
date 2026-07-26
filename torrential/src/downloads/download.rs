@@ -54,7 +54,10 @@ fn create_backend(
 ) -> Result<Box<dyn VersionBackend + Send + Sync>, StatusCode> {
     let base_path = serde_json::from_str::<Value>(&version_data.source.options)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let base_path = base_path.get("baseDir").unwrap().as_str().unwrap();
+    let base_path = base_path
+        .get("baseDir")
+        .and_then(|v| v.as_str())
+        .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
 
     let version_path = PathBuf::from(base_path);
     let version_path = version_path.join(version_data.library_path.clone());

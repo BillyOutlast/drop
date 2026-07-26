@@ -131,7 +131,10 @@ impl DropServer {
         let message = message.value();
 
         if message.type_.unwrap() == crate::proto::core::TorrentialBoundType::ERROR {
-            Err(anyhow!(String::from_utf8(message.data.clone()).unwrap()))
+            Err(anyhow!(
+                "torrential error: {}",
+                String::from_utf8_lossy(&message.data)
+            ))
         } else {
             let response = T::parse_from_bytes(&message.data)?;
             Ok(response)

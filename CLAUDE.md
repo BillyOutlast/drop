@@ -1,6 +1,6 @@
 # Drop — Agent Behavioral Rules
 
-Cross-tool behavioral rules. Read by Claude Code, Cursor, Codex, OpenCode, and other AI coding agents. This file governs *behavior*; the dense technical reference is in `AGENTS.md`.
+Cross-tool behavioral rules. Read by Claude Code, Cursor, Codex, OpenCode, and other AI coding agents. This file governs _behavior_; the dense technical reference is in `AGENTS.md`.
 
 ## After editing any file, format it immediately
 
@@ -32,7 +32,7 @@ pnpm --filter drop test
 pnpm --filter drop format:check
 ```
 
-The pre-commit hook runs lint-staged + `pnpm test` automatically. If pre-commit fails, fix the issue, then `git commit --amend --no-edit` (if no new files) or re-stage and commit.
+The pre-commit hook runs lint-staged + `pnpm --filter drop typecheck` automatically. Tests run on pre-push via `pnpm --filter drop test`. If pre-commit fails, fix the issue, then `git commit --amend --no-edit` (if no new files) or re-stage and commit.
 
 ## Do not commit
 
@@ -50,6 +50,7 @@ ALWAYS pnpm. NEVER yarn or npm. The project has `packageManager: pnpm@11.17.0` e
 ## Run commands from workspace directory
 
 For `cd server && pnpm test`-style commands, either:
+
 - `pnpm --filter drop <script>` from root
 - `cd server && pnpm <script>` from inside the workspace
 
@@ -58,6 +59,7 @@ Do NOT run `pnpm test` from root (root has no `test` script).
 ## Verify before claiming completion
 
 Do not say "done" or "fixed" without tool evidence from this session:
+
 - Tests: `pnpm --filter drop test` output showing pass
 - Lint: `pnpm --filter drop lint` output showing pass
 - Typecheck: `pnpm --filter drop typecheck` output showing pass
@@ -76,6 +78,6 @@ If a file is repeatedly auto-formatted by linters, the file has a deeper issue. 
 
 ## Do not touch
 
-- `server/.husky/pre-commit` (dead code, will be deleted)
+- `.husky/pre-commit` (root pre-commit hook, handled by husky)
 - Generated Prisma client (`server/prisma/client/`)
 - Lockfiles (`pnpm-lock.yaml`, `Cargo.lock`) — only update via `pnpm install` / `cargo update`

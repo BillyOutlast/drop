@@ -130,8 +130,6 @@ const navigation = computed(() => ({
     { name: t("common.servers"), href: "#" },
   ],
   documentation: [
-    // Public API documentation endpoint - link currently disabled, uncomment when docs go live
-    // { name: t("footer.api"), href: "https://api.droposs.org/" },
     {
       name: t("footer.docs.server"),
       href: "https://droposs.org/docs/admin/quickstart",

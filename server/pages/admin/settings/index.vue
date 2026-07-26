@@ -120,7 +120,7 @@ const mCustomLogoObjectId = ref<string>(
   settings.value.generalSettings.mLogoObjectId || "",
 );
 
-const updateServerName = (event: InputEvent) => {
+const updateServerName = (event: Event) => {
   settings.value.generalSettings.serverName =
     (event.target as HTMLInputElement)?.value || "";
   allowSave.value = true;
@@ -168,7 +168,7 @@ function updateLogo(response: { id: string }) {
   allowSave.value = true;
 }
 
-const updateFormLogo = (event: InputEvent | null) => {
+const updateFormLogo = (event: Event | null) => {
   settings.value.generalSettings.mLogoObjectId =
     (event?.target as HTMLInputElement)?.value || null;
   allowSave.value = true;

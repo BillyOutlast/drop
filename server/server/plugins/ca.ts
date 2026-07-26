@@ -9,7 +9,5 @@ export const useCertificateAuthority = () => {
 };
 
 export default defineNitroPlugin(async () => {
-  // const store = fsCertificateStore();
-
   ca = await CertificateAuthority.new(dbCertificateStore());
 });
