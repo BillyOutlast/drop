@@ -1,0 +1,52 @@
+name: Desktop Main CI
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - "desktop/main/composables/**"
+      - "desktop/main/utils/**"
+      - "desktop/main/nuxt.config.ts"
+      - ".github/workflows/desktop-main-ci.yml"
+  pull_request:
+    branches: [develop]
+    paths:
+      - "desktop/main/composables/**"
+      - "desktop/main/utils/**"
+      - "desktop/main/nuxt.config.ts"
+      - ".github/workflows/desktop-main-ci.yml"
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  ci:
+    name: Typecheck, Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: desktop/main
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66dd77 # v4
+        with:
+          version: 11
+
+      - name: Install Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
