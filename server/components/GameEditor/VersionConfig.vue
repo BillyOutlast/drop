@@ -50,6 +50,6 @@ const props = defineProps<{
 function isSetup(
   v: typeof props.config,
 ): v is AdminFetchGameType["versions"][number]["setups"][number] {
-  return Object.prototype.hasOwnProperty.call(v, "setupId");
+  return Object.hasOwn(v, "setupId");
 }
 </script>

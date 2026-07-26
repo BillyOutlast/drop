@@ -53,7 +53,10 @@
             </div>
           </div>
           <div class="flex flex-col">
-            <label class="text-sm/6 font-medium text-zinc-100">
+            <label
+              for="ageRatingOrg"
+              class="text-sm/6 font-medium text-zinc-100"
+            >
               {{ $t("library.admin.game.ageRatings") }}
             </label>
             <div class="mt-2 space-y-2">
@@ -88,6 +91,7 @@
               </p>
               <div v-if="showAddAgeRating" class="flex items-center gap-2">
                 <select
+                  id="ageRatingOrg"
                   v-model="newAgeRatingOrg"
                   class="rounded-md bg-zinc-800 px-2 py-1 text-sm text-zinc-100 outline outline-1 -outline-offset-1 outline-zinc-700 focus:outline-blue-600"
                 >
@@ -100,8 +104,10 @@
                   </option>
                 </select>
                 <select
+                  id="ageRatingValue"
                   v-model="newAgeRatingValue"
                   :disabled="!newAgeRatingOrg"
+                  aria-label="Age rating value"
                   class="rounded-md bg-zinc-800 px-2 py-1 text-sm text-zinc-100 outline outline-1 -outline-offset-1 outline-zinc-700 focus:outline-blue-600"
                 >
                   <option

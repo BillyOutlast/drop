@@ -345,7 +345,7 @@
           </div>
         </div>
         <div v-else class="w-full flex items-center justify-center p-4">
-          <div role="status" aria-live="polite">
+          <output aria-live="polite">
             <svg
               aria-hidden="true"
               class="w-7 h-7 text-transparent animate-spin fill-white"
@@ -363,7 +363,7 @@
               />
             </svg>
             <span class="sr-only">Loading...</span>
-          </div>
+          </output>
         </div>
         <div v-if="installDirs">
           <InstallDirectorySelector :install-dirs="installDirs" v-model="installDir" />
@@ -478,7 +478,7 @@
       </div>
 
       <ol class="space-y-2">
-        <li v-for="(launchData, launchIdx) in launchOptions!">
+        <li v-for="(launchData, launchIdx) in launchOptions!" :key="launchIdx">
           <button
             type="button"
             class="transition w-full rounded-sm bg-zinc-800 inline-flex items-center text-sm py-2 px-3 gap-x-2 text-zinc-100 hover:text-zinc-300 hover:bg-zinc-700"

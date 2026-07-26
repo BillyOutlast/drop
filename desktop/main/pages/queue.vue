@@ -9,7 +9,8 @@
       </div>
       <div class="absolute inset-0 h-full flex flex-row items-end justify-end space-x-[1px]">
         <div
-          v-for="bar in speedHistory"
+          v-for="(bar, barIdx) in speedHistory"
+          :key="barIdx"
           :style="{ height: `${(bar / speedMax) * 100}%` }"
           class="w-[3px] bg-blue-600 rounded-t-full"
         />

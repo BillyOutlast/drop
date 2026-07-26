@@ -54,7 +54,7 @@
         <DisclosurePanel as="dd" class="mt-2 flex flex-col gap-y-1.5">
           <NuxtLink
             v-for="item in nav.items"
-            :key="nav.id"
+            :key="item.id"
             :class="[
               'transition-all duration-300 rounded-lg flex items-center px-1 py-0.5 hover:scale-105 active:scale-95 hover:shadow-lg hover:shadow-zinc-950/50',
               currentNavigation == item.id
@@ -93,7 +93,7 @@
       </Disclosure>
     </TransitionGroup>
     <div v-if="loading" class="h-full grow flex p-8 justify-center text-zinc-100">
-      <div role="status" aria-live="polite">
+      <output aria-live="polite">
         <svg
           aria-hidden="true"
           class="w-6 h-6 text-transparent animate-spin fill-zinc-600"
@@ -111,7 +111,7 @@
           />
         </svg>
         <span class="sr-only">Loading...</span>
-      </div>
+      </output>
     </div>
   </div>
 </template>

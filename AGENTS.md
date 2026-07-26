@@ -99,6 +99,7 @@ cargo clippy --all-targets --all-features -- -D warnings
 ## Pre-commit Hooks (ACTUAL BEHAVIOR)
 
 <!-- fallow:setup-hooks:start -->
+
 ## Fallow local gate
 
 Before any `git commit` or `git push`, run `fallow audit --format json --quiet --explain --gate-marker agent`. If the verdict is `fail`, fix the reported findings before retrying. Treat JSON runtime errors like `{ "error": true, ... }` as non-blocking.
@@ -109,20 +110,21 @@ For non-skill agents, treat the task map below as the local onboarding source: r
 
 ## Fallow task map
 
-| When the agent is about to... | Run |
-|---|---|
-| delete an "unused" export or file | `fallow dead-code --trace <file>:<export>` |
-| delete an "unused" dependency | `fallow dead-code --trace-dependency <name>` |
-| commit or open a PR | `fallow audit --base <ref>` |
-| prioritize refactoring | `fallow health --hotspots --targets` |
-| ask who owns code | `fallow health --ownership` |
-| check untested-but-reachable code | `fallow health --coverage-gaps` |
-| consolidate duplication | `fallow dupes --trace dup:<fingerprint>` |
-| find feature flags | `fallow flags` |
-| check which architecture rules apply to a file before changing it | `fallow guard <files>` |
-| surface security candidates | `fallow security` |
-| understand a finding | `fallow explain <issue-type>` |
-| scope a monorepo | `--workspace <glob> / --changed-workspaces <ref>` (global flags, prefix any command) |
+| When the agent is about to...                                     | Run                                                                                  |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| delete an "unused" export or file                                 | `fallow dead-code --trace <file>:<export>`                                           |
+| delete an "unused" dependency                                     | `fallow dead-code --trace-dependency <name>`                                         |
+| commit or open a PR                                               | `fallow audit --base <ref>`                                                          |
+| prioritize refactoring                                            | `fallow health --hotspots --targets`                                                 |
+| ask who owns code                                                 | `fallow health --ownership`                                                          |
+| check untested-but-reachable code                                 | `fallow health --coverage-gaps`                                                      |
+| consolidate duplication                                           | `fallow dupes --trace dup:<fingerprint>`                                             |
+| find feature flags                                                | `fallow flags`                                                                       |
+| check which architecture rules apply to a file before changing it | `fallow guard <files>`                                                               |
+| surface security candidates                                       | `fallow security`                                                                    |
+| understand a finding                                              | `fallow explain <issue-type>`                                                        |
+| scope a monorepo                                                  | `--workspace <glob> / --changed-workspaces <ref>` (global flags, prefix any command) |
+
 <!-- fallow:setup-hooks:end -->
 
 - `.husky/pre-commit` (root, ACTIVE): runs `pnpm --filter drop lint-staged && pnpm --filter drop typecheck`
@@ -169,16 +171,43 @@ Coverage 1.17% lines / 2.09% funcs (server, no gates). See `docs/coverage-baseli
 
 Bugs caught during this sequence: `prioritylist.ts:34` (`a.priority == a.priority`); `database/Cargo.toml` missing `serde/derive` (53 errs); `cli/` binary-only, no `lib.rs`.
 
+## GitHub Issues & SonarCloud
+
+**Repo**: `BillyOutlast/drop` (fork). Upstream is `Drop-OSS/drop`. Always use `--repo BillyOutlast/drop` for issues/PRs.
+
+**Checking SonarCloud issues:**
+
+```bash
+gh issue list --repo BillyOutlast/drop --label sonarcloud --state open
+```
+
+**SonarCloud project key**: `BillyOutlast_drop`. Use MCP sonarqube tools to query issues directly:
+
+```text
+search_sonar_issues_in_projects(projects=["BillyOutlast_drop"], issueStatuses=["OPEN"])
+```
+
+**Issue labels**: `sonarcloud`, `critical`, `major`, `minor`, `a11y`, `security`, `vue`, `react`, `readability`, `performance`, `code-quality`, `refactoring`
+
+**Working SonarCloud issues:**
+
+1. List issues: `gh issue list --repo BillyOutlast/drop --label sonarcloud --state open`
+2. Fix issues in code, referencing the SonarCloud rule and file:line
+3. Link fixed issues in PR body with `Closes #N` syntax
+4. One PR can close multiple related issues (e.g., all `:key` binding fixes in one PR)
+
+**Creating issues**: Use `gh issue create --repo BillyOutlast/drop --label sonarcloud` for new findings.
+
 ## Deferred Work Backlog (2026-07-24)
 
-Captured at PR #22 (https://github.com/BillyOutlast/drop/pull/22) close-out. Repo issues disabled — document here instead of filing GitHub issues. **Re-evaluate when coverage >30% or as bandwidth allows.**
+Captured at PR #22 (https://github.com/BillyOutlast/drop/pull/22) close-out. **Re-evaluate when coverage >30% or as bandwidth allows.**
 
 | Item                               | Trigger                  | Why deferred                                                                                                                                                                                                                                                                                                                                                   |
 | ---------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Codecov test-results reporting     | Coverage >30%            | JUnit analytics produce zero signal at 32 tests. Use `codecov-action@v5` with `report_type: test_results` (NOT `codecov/test-results-action@v1` which is DEPRECATED).                                                                                                                                                                                          |
 | `.codecov.yml` with `target: auto` | Coverage >30%            | At 1.17% baseline, ANY new uncovered code drops percentage and blocks every PR. Contradicts current "no gates" policy.                                                                                                                                                                                                                                         |
 | gitleaks-action v2→v3 migration    | Pre-Sept 2026            | v2 uses Node 20; GitHub deprecates Node 20 default in Sept 2026. Also unlocks v3's native fork-PR base-SHA resolution.                                                                                                                                                                                                                                         |
-| SonarCloud C rating fix            | Needs SonarCloud auth    | Cannot view findings via GitHub API. Likely test-only noise (90% of PR #22 is test code).                                                                                                                                                                                                                                                                      |
+| SonarCloud C rating fix            | Ongoing                  | 130 open issues tracked via GitHub labels. Use `gh issue list --repo BillyOutlast/drop --label sonarcloud` to query. Fix batches by category (a11y, vue, react, code-quality).                                                                                                                                                                                 |
 | `noUncheckedIndexedAccess` enable  | After latent-error fixup | 30+ latent TS errors in `server/api/v1/{admin/import/massversion, auth/mfa/webauthn, auth/passkey}/`, `server/internal/{auth/totp, clients/event-handler, metadata/pcgamingwiki, system-data/index, utils/prioritylist}.ts`. Each requires explicit `if (!arr[i]) return` guard.                                                                               |
 | CLI integration tests refactor     | Post lib.rs unblock      | `cli/tests/*.rs` now compile (commit 35b63960), but real coverage of `commands/upload/` and `commands/connect/` flows needs fixture data setup.                                                                                                                                                                                                                |
 | E2E user-flow data fixtures        | Post test DB infra       | 5 page-flow E2E tests were added then removed in PR #22: they return 500 in CI because the app needs DB + auth setup to render pages. The tailwindcss v4 vite plugin recursion is fixed (`E2E=true` guard in `server/nuxt.config.ts`), but the application itself can't render without services. Re-add page tests when test DB + auth fixtures are available. |
@@ -203,12 +232,14 @@ This file is a cache. Before trusting any fact, verify with a direct command:
 When users ask you to perform tasks, check if any of the available skills below can help complete the task more effectively. Skills provide specialized capabilities and domain knowledge.
 
 How to use skills:
+
 - Invoke: `npx openskills read <skill-name>` (run in your shell)
   - For multiple: `npx openskills read skill-one,skill-two`
 - The skill content will load with detailed instructions on how to complete the task
 - Base directory provided in output for resolving bundled resources (references/, scripts/, assets/)
 
 Usage notes:
+
 - Only use skills listed in <available_skills> below
 - Do not invoke a skill that is already loaded in your context
 - Each skill invocation is stateless

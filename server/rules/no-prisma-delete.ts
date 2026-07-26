@@ -1,6 +1,6 @@
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const blacklistedFunctions = ["delete"];
+const blacklistedFunctions = new Set(["delete"]);
 
 // Models where hard-delete is correct (join tables, auth tokens, ephemeral data)
 const allowedModels = new Set([
@@ -32,7 +32,7 @@ export default {
       CallExpression: function (node) {
         // @ts-expect-error It ain't typing properly
         const funcId = node.callee.property;
-        if (!funcId || !blacklistedFunctions.includes(funcId.name)) return;
+        if (!funcId || !blacklistedFunctions.has(funcId.name)) return;
         // @ts-expect-error It ain't typing properly
         const tableExpr = node.callee.object;
         if (!tableExpr) return;

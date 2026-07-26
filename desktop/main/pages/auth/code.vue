@@ -7,13 +7,13 @@
         </h1>
         <div class="mt-4">
           <p class="text-sm text-zinc-400 max-w-md mx-auto">
-            Open Drop on another one of your devices, and use your account
-            dropdown to "Authorize client", and enter the code below.
+            Open Drop on another one of your devices, and use your account dropdown to "Authorize
+            client", and enter the code below.
           </p>
           <div
             class="mt-8 flex items-center justify-center gap-x-5 text-8xl font-bold text-zinc-100"
           >
-            <span v-for="letter in code.split('')">{{ letter }}</span>
+            <span v-for="(letter, letterIdx) in code.split('')" :key="letterIdx">{{ letter }}</span>
           </div>
         </div>
         <div class="mt-10 flex items-center justify-center gap-x-6">

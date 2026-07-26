@@ -4,7 +4,7 @@
     :class="[styles[style].base, props.disabled ? styles[style].disabled : styles[style].dft]"
     :disabled="props.disabled"
   >
-    <div v-if="props.loading" role="status" aria-live="polite">
+    <output v-if="props.loading" aria-live="polite">
       <svg
         aria-hidden="true"
         class="w-5 h-5 text-transparent animate-spin fill-white"
@@ -22,7 +22,7 @@
         />
       </svg>
       <span class="sr-only">Loading...</span>
-    </div>
+    </output>
     <slot v-else />
   </button>
 </template>

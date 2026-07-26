@@ -196,11 +196,14 @@ function Pagination({ page, category }: { readonly page: number; readonly catego
 
 export default function News() {
   const paramsPage = useSearchParams().get("page");
-  let page = paramsPage
-    ? typeof paramsPage === "string" && Number.parseInt(paramsPage) > 1
-      ? Number.parseInt(paramsPage)
-      : notFound()
-    : 1;
+  let page: number;
+  if (paramsPage === null) {
+    page = 1;
+  } else if (/^\d+$/.test(paramsPage) && Number.parseInt(paramsPage, 10) >= 1) {
+    page = Number.parseInt(paramsPage, 10);
+  } else {
+    notFound();
+  }
 
   return (
     <main className="overflow-hidden">

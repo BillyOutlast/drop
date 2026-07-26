@@ -51,7 +51,7 @@ function input(index: number) {
     codeElements.value[index + 1].focus();
   }
 
-  if (!(index - 1 < 0) && !v) {
+  if (index >= 1 && !v) {
     codeElements.value[index - 1].focus();
   }
 
