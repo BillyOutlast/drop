@@ -61,10 +61,9 @@ runs:
   steps:
     # ── Setup ──────────────────────────────────────────────────────
     - name: Install Rust toolchain
-      # pinned to nightly-2025-07-26
       uses: dtolnay/rust-toolchain@4fd1da8b0805d2d2e936788875a7d65dbd677dc2
       with:
-        toolchain: nightly-2025-07-26
+        toolchain: nightly
         components: ${{ inputs.components }}
 
     - name: Rust cache
