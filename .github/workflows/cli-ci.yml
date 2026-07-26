@@ -13,67 +13,17 @@ on:
       - ".github/workflows/cli-ci.yml"
   workflow_dispatch:
 
-env:
-  CARGO_TERM_COLOR: always
-
 jobs:
   ci:
     name: Build, Test, Lint
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: cli
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@4fd1da8b0805d2d2e936788875a7d65dbd677dc2 # nightly
+      - uses: ./.github/actions/rust-ci
         with:
-          components: rustfmt, clippy
-
-      - name: Rust cache
-        uses: swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
-        with:
-          workspaces: "./cli -> target"
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libarchive-dev
-
-      - name: Check formatting
-        run: cargo fmt --all -- --check
-
-      - name: Run Clippy
-        # `--all-targets` includes tests since lib.rs was added.
-        # `--no-deps` to avoid linting transitive deps (unmaintained crates).
-        # Pre-existing warnings not escalated to errors; fix incrementally.
-        run: cargo clippy --all-targets --no-deps --all-features
-
-      - name: Run tests
-        run: cargo test --all-features --all --verbose
-
-      - name: Install LLVM tools (cargo-llvm-cov)
-        uses: dtolnay/rust-toolchain@4fd1da8b0805d2d2e936788875a7d65dbd677dc2 # nightly
-        with:
-          components: llvm-tools-preview
-
-      - name: Generate code coverage
-        continue-on-error: true
-        run: |
-          cargo install cargo-llvm-cov --locked
-          cargo llvm-cov --all-features --workspace --codecov --output-path coverage.lcov
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@04b047e8bb82a0c002c8312c1c880fbc6a999d45 # v5
-        with:
-          files: cli/coverage.lcov
-          fail_ci_if_error: false
-
-      # Advisory until noise rate is low. Tighten to blocking after triage.
-      - name: Audit dependencies
-        continue-on-error: true
-        run: |
-          cargo install cargo-audit --locked
-          cargo audit
+          working-directory: cli
+          cache-workspaces: "./cli -> target"
+          system-dependencies: |
+            sudo apt-get update
+            sudo apt-get install -y libarchive-dev
+          lint-command: cargo clippy --all-targets --no-deps --all-features
+          coverage-path: cli/coverage.lcov
