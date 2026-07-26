@@ -92,6 +92,54 @@ describe("PriorityListIndexed", () => {
     const list = new PriorityListIndexed<Tagged>("id");
     expect(() => list.pop()).toThrow(/empty/);
   });
+
+  it("get() returns undefined for any key on empty list", () => {
+    const list = new PriorityListIndexed<Tagged>("id");
+    expect(list.get("a")).toBeUndefined();
+    expect(list.get("")).toBeUndefined();
+    expect(list.get("nonexistent")).toBeUndefined();
+  });
+
+  it("sorts items with Number.MAX_SAFE_INTEGER and minimum priority correctly", () => {
+    const list = new PriorityListIndexed<Tagged>("id");
+    list.push({ id: "low" }, Number.MIN_SAFE_INTEGER);
+    list.push({ id: "high" }, Number.MAX_SAFE_INTEGER);
+    list.push({ id: "mid" }, 0);
+    const vals = list.values();
+    expect(vals[0].id).toBe("high");
+    expect(vals[1].id).toBe("mid");
+    expect(vals[2].id).toBe("low");
+    expect(list.get("high")).toEqual({ id: "high" });
+    expect(list.get("mid")).toEqual({ id: "mid" });
+    expect(list.get("low")).toEqual({ id: "low" });
+  });
+
+  it("maintains insertion order for items with duplicate priority", () => {
+    const list = new PriorityListIndexed<Tagged>("id");
+    list.push({ id: "a" }, 10);
+    list.push({ id: "b" }, 10);
+    list.push({ id: "c" }, 10);
+    list.push({ id: "d" }, 10);
+    expect(list.values()).toEqual([
+      { id: "a" },
+      { id: "b" },
+      { id: "c" },
+      { id: "d" },
+    ]);
+  });
+
+  it("handles 1000 items push/pop under 100ms", () => {
+    const list = new PriorityListIndexed<Tagged>("id");
+    const start = performance.now();
+    for (let i = 0; i < 1000; i++) {
+      list.push({ id: `item-${i}` });
+    }
+    for (let i = 0; i < 1000; i++) {
+      list.pop();
+    }
+    const elapsed = performance.now() - start;
+    expect(elapsed).toBeLessThan(100);
+  });
 });
 
 interface TaggedWithPriority {
