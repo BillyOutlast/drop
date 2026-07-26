@@ -306,30 +306,57 @@ export function giantbombHandlers(overrides?: {
 // PCGamingWiki (pcgamingwiki.com)
 // ---------------------------------------------------------------------------
 
-export const DEFAULT_PCGW_SEARCH_RESPONSE = {
-  query: {
-    results: [
-      {
-        pageid: 1234,
-        title: "Mock Game",
-        description: "A mock game from PCGamingWiki.",
+export const DEFAULT_PCGW_CARGO_RESPONSE = {
+  cargoquery: [
+    {
+      title: {
+        PageID: "1234",
+        PageName: "Mock Game",
+        "Cover URL": "https://www.pcgamingwiki.com/images/cover.jpg",
+        Released: "2024-01-01",
+        Released__precision: "day",
       },
-    ],
+    },
+  ],
+};
+
+export const DEFAULT_PCGW_PARSE_RESPONSE = {
+  parse: {
+    pageid: 1234,
+    title: "Mock Game",
+    text: {
+      "*": '<div class="mw-parser-output"><p>Mock game content for testing.</p></div>',
+    },
   },
 };
 
 /**
  * Create MSW handlers for PCGamingWiki provider endpoints.
+ *
+ * Routes by `action` query param:
+ * - `cargoquery` → cargo response (game metadata)
+ * - `parse` → parse response (page content)
+ * - default → empty response
  */
 export function pcgamingwikiHandlers(overrides?: {
-  search?: unknown;
+  cargo?: unknown;
+  parse?: unknown;
 }): HttpHandler[] {
-  const searchResponse = overrides?.search ?? DEFAULT_PCGW_SEARCH_RESPONSE;
+  const cargoResponse = overrides?.cargo ?? DEFAULT_PCGW_CARGO_RESPONSE;
+  const parseResponse = overrides?.parse ?? DEFAULT_PCGW_PARSE_RESPONSE;
 
   return [
-    http.get("https://www.pcgamingwiki.com/w/api.php", () =>
-      HttpResponse.json(searchResponse),
-    ),
+    http.get("https://www.pcgamingwiki.com/w/api.php", ({ request }) => {
+      const url = new URL(request.url);
+      const action = url.searchParams.get("action");
+      if (action === "cargoquery") {
+        return HttpResponse.json(cargoResponse);
+      }
+      if (action === "parse") {
+        return HttpResponse.json(parseResponse);
+      }
+      return HttpResponse.json({});
+    }),
   ];
 }
 
