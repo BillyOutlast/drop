@@ -15,6 +15,18 @@ declare global {
   }
 }
 
+/**
+ * Reads and validates a request body using an ArkType validator.
+ *
+ * Strips null-valued fields from the body before validation to avoid
+ * rejection from type schemas that do not allow null. Throws a 400
+ * error with a localized message on validation failure.
+ *
+ * @typeParam T - The validated output type.
+ * @param event - The incoming H3 event whose body will be read.
+ * @param validate - An ArkType validation function (e.g. `MyType.assert`).
+ * @returns The validated body value.
+ */
 export async function readDropValidatedBody<T>(
   event: H3Event,
   validate: (data: object) => T,

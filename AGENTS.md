@@ -158,16 +158,16 @@ pnpm --filter drop exec prettier --write <file>
 
 Before batch commits: `pnpm --filter drop lint:fix` from repo root.
 
-## Test State (2026-07-24)
+## Test State (2026-07-26)
 
-| Workspace                     | Tests                 | Notes                                            |
-| ----------------------------- | --------------------- | ------------------------------------------------ |
-| `server/`                     | 32 vitest + 1 skipped | `pnpm --filter drop test`                        |
-| `cli/`                        | 10 cargo              | `cd cli && cargo test`                           |
-| `desktop/src-tauri/database/` | 6 cargo               | `cargo test -p database`                         |
-| `server/test/e2e/`            | 1 smoke               | `pnpm --filter drop test:e2e` (needs dev server) |
+| Workspace                     | Tests                  | Notes                                            |
+| ----------------------------- | ---------------------- | ------------------------------------------------ |
+| `server/`                     | 176 vitest + 1 skipped | `pnpm --filter drop test`                        |
+| `cli/`                        | 10 cargo               | `cd cli && cargo test`                           |
+| `desktop/src-tauri/database/` | 6 cargo                | `cargo test -p database`                         |
+| `server/test/e2e/`            | 1 smoke                | `pnpm --filter drop test:e2e` (needs dev server) |
 
-Coverage 1.17% lines / 2.09% funcs (server, no gates). See `docs/coverage-baseline-2026-07-24.md`.
+Coverage 1.17% lines / 2.09% funcs (server, no gates). See `docs/coverage-baseline-2026-07-26.md`.
 
 Bugs caught during this sequence: `prioritylist.ts:34` (`a.priority == a.priority`); `database/Cargo.toml` missing `serde/derive` (53 errs); `cli/` binary-only, no `lib.rs`.
 
@@ -206,10 +206,10 @@ Captured at PR #22 (https://github.com/BillyOutlast/drop/pull/22) close-out. **R
 
 | Item                               | Trigger                  | Why deferred                                                                                                                                                                                                                                                                                                                                                   |
 | ---------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Codecov test-results reporting     | Coverage >30%            | JUnit analytics produce zero signal at 32 tests. Use `codecov-action@v5` with `report_type: test_results` (NOT `codecov/test-results-action@v1` which is DEPRECATED).                                                                                                                                                                                          |
+| Codecov test-results reporting     | Coverage >30%            | JUnit analytics produce zero signal at 176 tests. Use `codecov-action@v5` with `report_type: test_results` (NOT `codecov/test-results-action@v1` which is DEPRECATED).                                                                                                                                                                                         |
 | `.codecov.yml` with `target: auto` | Coverage >30%            | At 1.17% baseline, ANY new uncovered code drops percentage and blocks every PR. Contradicts current "no gates" policy.                                                                                                                                                                                                                                         |
 | gitleaks-action v2→v3 migration    | Pre-Sept 2026            | v2 uses Node 20; GitHub deprecates Node 20 default in Sept 2026. Also unlocks v3's native fork-PR base-SHA resolution.                                                                                                                                                                                                                                         |
-| SonarCloud C rating fix            | Ongoing                  | 130 open issues tracked via GitHub labels. Use `gh issue list --repo BillyOutlast/drop --label sonarcloud` to query. Fix batches by category (a11y, vue, react, code-quality).                                                                                                                                                                                 |
+| SonarCloud C rating fix            | Ongoing                  | 109 open issues tracked via GitHub labels. Use `gh issue list --repo BillyOutlast/drop --label sonarcloud` to query. Fix batches by category (a11y, vue, react, code-quality).                                                                                                                                                                                 |
 | `noUncheckedIndexedAccess` enable  | After latent-error fixup | 30+ latent TS errors in `server/api/v1/{admin/import/massversion, auth/mfa/webauthn, auth/passkey}/`, `server/internal/{auth/totp, clients/event-handler, metadata/pcgamingwiki, system-data/index, utils/prioritylist}.ts`. Each requires explicit `if (!arr[i]) return` guard.                                                                               |
 | CLI integration tests refactor     | Post lib.rs unblock      | `cli/tests/*.rs` now compile (commit 35b63960), but real coverage of `commands/upload/` and `commands/connect/` flows needs fixture data setup.                                                                                                                                                                                                                |
 | E2E user-flow data fixtures        | Post test DB infra       | 5 page-flow E2E tests were added then removed in PR #22: they return 500 in CI because the app needs DB + auth setup to render pages. The tailwindcss v4 vite plugin recursion is fixed (`E2E=true` guard in `server/nuxt.config.ts`), but the application itself can't render without services. Re-add page tests when test DB + auth fixtures are available. |
