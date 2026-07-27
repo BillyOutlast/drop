@@ -930,7 +930,7 @@ export class SteamProvider implements MetadataProvider {
     markdown = markdown.replace(/•\s*\t+/g, "\n- ");
 
     // Handle numbered enumeration (1.\t, 2.\t, etc.)
-    markdown = markdown.replace(/(\d+)\.\t{1,}/g, "\n$1. ");
+    markdown = markdown.replace(/(\d+)\.\t+/g, "\n$1. ");
 
     // Convert bold text
     markdown = markdown.replace(
@@ -1022,10 +1022,10 @@ export class SteamProvider implements MetadataProvider {
 
   private _cleanupBasicFormatting(markdown: string): string {
     // Clean up spaces before newlines
-    markdown = markdown.replace(/[^\S\r\n]*\n/g, "\n");
+    markdown = markdown.replace(/[ \t]*\n/g, "\n");
 
     // Clean up excessive spacing around punctuation
-    markdown = markdown.replace(/\s+(?=[.,!?;:])/g, "");
+    markdown = markdown.replace(/[ \t]+(?=[.,!?;:])/g, "");
 
     return markdown;
   }

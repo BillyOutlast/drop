@@ -367,6 +367,40 @@ impl GameDownloadAgent {
         }
     }
 
+    fn update_completed_chunks(
+        completed_chunks: &mut HashMap<String, bool>,
+        outputs: &[String],
+    ) -> Vec<(String, bool)> {
+        for completed in outputs {
+            completed_chunks.insert(completed.clone(), true);
+        }
+        completed_chunks
+            .iter()
+            .map(|(k, v)| (k.clone(), *v))
+            .collect()
+    }
+
+    fn finalize_download(
+        &self,
+        drop_data_chunks: &[(String, bool)],
+        completed_count: usize,
+        chunk_len: usize,
+    ) -> Result<bool, ApplicationDownloadError> {
+        self.dropdata.set_contexts(drop_data_chunks);
+        self.dropdata.write();
+
+        info!("completed {} chunks", drop_data_chunks.len());
+
+        if completed_count != chunk_len {
+            info!(
+                "download agent for {} exited without completing ({}/{})",
+                self.metadata.id, completed_count, chunk_len,
+            );
+            return Ok(false);
+        }
+        Ok(true)
+    }
+
     async fn run(&self) -> Result<bool, ApplicationDownloadError> {
         self.depot_manager.sync_depots().await?;
         info!("synced depots");
@@ -456,30 +490,9 @@ impl GameDownloadAgent {
             Self::collect_output(&mut outputs, value)?;
         }
 
-        for completed in &outputs {
-            completed_chunks.insert(completed.clone(), true);
-        }
+        let drop_data_chunks = Self::update_completed_chunks(&mut completed_chunks, &outputs);
 
-        let drop_data_chunks: Vec<(String, bool)> = completed_chunks
-            .iter()
-            .map(|(k, v)| (k.clone(), *v))
-            .collect();
-
-        self.dropdata.set_contexts(&drop_data_chunks);
-        self.dropdata.write();
-
-        info!("completed {} chunks", drop_data_chunks.len());
-
-        if completed_chunks.len() != chunk_len {
-            info!(
-                "download agent for {} exited without completing ({}/{})",
-                self.metadata.id,
-                completed_chunks.len(),
-                chunk_len,
-            );
-            return Ok(false);
-        }
-        Ok(true)
+        self.finalize_download(&drop_data_chunks, completed_chunks.len(), chunk_len)
     }
 
     #[allow(dead_code)]

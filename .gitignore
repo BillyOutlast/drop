@@ -1,5 +1,8 @@
 dist/
 node_modules/
-.omo/run-continuation/
+.omo/
+.nuxt/
+.nuxtrc
+server/test-results/
 fallow.txt
 fallow.json
