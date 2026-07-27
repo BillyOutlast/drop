@@ -15,7 +15,7 @@ on:
   push:
     branches: ["rebuild"]
   pull_request:
-    branches: ["rebuild"]
+    branches: ["rebuild", "develop"]
   schedule:
     - cron: "39 17 * * 0"
 

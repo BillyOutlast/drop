@@ -1,0 +1,36 @@
+# Codecov configuration for Drop monorepo.
+# Current baseline: 29.32% line coverage (server backend).
+# Thresholds are intentionally informational until coverage crosses 50% —
+# flipping to blocking now would block PRs on coverage infrastructure noise.
+# Re-evaluate when server coverage > 50% (track in dedicated issue).
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 2%
+        base: auto
+        informational: true
+    patch:
+      default:
+        target: 80%
+        informational: true
+flag_management:
+  default_rules:
+    carryforward: true
+    statuses:
+      - type: project
+        target: auto
+        threshold: 2%
+        informational: true
+      - type: patch
+        target: 80%
+        informational: true
+  individual_flags:
+    - name: server
+      paths:
+        - server/
+      carryforward: true
+comment:
+  layout: "diff, flags, files"
+  behavior: default

@@ -9,6 +9,7 @@ on:
     branches:
       - main
       - rebuild
+      - develop
 
 permissions:
   contents: read
@@ -96,6 +97,19 @@ jobs:
         # Remove ignore when upstream publishes decompress@>=4.2.2.
         continue-on-error: true
         run: pnpm audit --audit-level=critical --ignore GHSA-mp2f-45pm-3cg9
+
+      - name: Check for new critical advisories
+        # Run on success or failure of the audit step, but not on cancel.
+        # Use --min-severity critical for pnpm to limit noise; the script
+        # handles missing/empty/malformed JSON gracefully.
+        if: success() || failure()
+        run: |
+          pnpm audit --audit-level=critical --json > /tmp/audit.json 2>/dev/null || true
+          node scripts/check-new-vulns.cjs \
+            --format pnpm \
+            --json /tmp/audit.json \
+            --ignored GHSA-mp2f-45pm-3cg9 \
+            --min-severity critical
       - name: Typecheck
         working-directory: server
         run: pnpm run typecheck
@@ -174,7 +188,14 @@ jobs:
           fail_ci_if_error: false
           flags: server
       - name: Post coverage gaps to PR
+        # Skip silently when CODECOV_TOKEN is unset — the script fails
+        # Only run on PRs (script posts a comment); wrap with || true so a
+        # missing or invalid CODECOV_TOKEN does not fail the workflow.
+        # Step-level env is not visible in this step's own `if:` context
+        # so we cannot gate on env.CODECOV_TOKEN here; rely on the script
+        # being tolerant instead.
         if: github.event_name == 'pull_request'
+        continue-on-error: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -217,7 +238,6 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
       - name: SonarQube Scan
         id: sonar-scan
-        continue-on-error: true
         uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -244,7 +264,11 @@ jobs:
     name: SonarCloud PR Comment
     runs-on: ubuntu-latest
     needs: sonar
-    if: github.event_name == 'pull_request'
+    # Only run when the scan succeeded — otherwise the API has no findings
+    # to comment on and the script would post a confusing empty/errored
+    # comment. Branch protection enforces SonarCloud Scan as required, so
+    # a scan failure correctly blocks the merge regardless.
+    if: github.event_name == 'pull_request' && needs.sonar.result == 'success'
     permissions:
       contents: read
       pull-requests: write

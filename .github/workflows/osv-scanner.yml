@@ -1,10 +1,16 @@
 name: OSV-Scanner
 
+# Cancel outdated in-progress runs of the same workflow on the same PR
+# when a new commit is pushed. Avoids redundant scans and stale SARIF uploads.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 on:
   pull_request:
-    branches: ["rebuild"]
+    branches: ["rebuild", "develop"]
   merge_group:
-    branches: ["rebuild"]
+    branches: ["rebuild", "develop"]
   schedule:
     - cron: "26 14 * * 5"
   push:
@@ -28,6 +34,10 @@ jobs:
           persist-credentials: false
 
       - name: Run OSV-Scanner
+        # OSV scanner exits 1 on ANY CVE in the dependency tree (including transitive).
+        # We keep continue-on-error: true because blocking on transitive vulns would
+        # create constant noise. SARIF results are still uploaded below for review
+        # and the scan-pr job on pull_request events catches direct deps separately.
         continue-on-error: true
         uses: google/osv-scanner-action/osv-scanner-action@9a498708959aeaef5ef730655706c5a1df1edbc2 # v2.3.8
         with:

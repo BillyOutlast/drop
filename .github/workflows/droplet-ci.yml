@@ -8,13 +8,17 @@ on:
       - "libraries/droplet_types/**"
       - "libraries/libarchive/**"
       - ".github/workflows/droplet-ci.yml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
   pull_request:
-    branches: [rebuild]
+    branches: [rebuild, develop]
     paths:
       - "libraries/droplet/**"
       - "libraries/droplet_types/**"
       - "libraries/libarchive/**"
       - ".github/workflows/droplet-ci.yml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
   workflow_dispatch:
 
 jobs:
