@@ -5,7 +5,6 @@
 
 set -e
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SERVER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$SERVER_DIR"
 
@@ -37,6 +36,9 @@ fi
 
 step "Generating Prisma client"
 pnpm exec prisma generate
+
+step "Generating protobuf code"
+pnpm exec buf generate
 
 step "Preparing Nuxt"
 pnpm exec nuxt prepare

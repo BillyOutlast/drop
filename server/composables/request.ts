@@ -28,8 +28,8 @@ interface DropFetch<
   >;
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
+ 
+// @ts-expect-error — Nuxt internal type mismatch with $fetch ofetch wrapper
 export const $dropFetch: DropFetch = async (rawRequest, opts) => {
   const requestParts = rawRequest.toString().split("/");
   requestParts.forEach((part, index) => {

@@ -511,7 +511,8 @@ function invite_wrapper() {
       invitations.value.push(invitation);
     })
     .catch((error_) => {
-      const message = error_.statusMessage || t("errors.unknown");
+      const message =
+        error_?.data?.message || error_.statusMessage || t("errors.unknown");
       error.value = message;
     })
     .finally(() => {

@@ -45,7 +45,7 @@ function buildFilters(
     }
     if (filterSet.has("metadata.noCarousel")) {
       rawFilters.push({
-        where: { OR: [{ mImageCarouselObjectIds: { isEmpty: true } }] },
+        where: { mImageCarouselObjectIds: { isEmpty: true } },
       });
     }
     if (filterSet.has("metadata.emptyDescription")) {
