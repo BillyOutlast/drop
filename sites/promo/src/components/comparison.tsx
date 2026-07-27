@@ -12,6 +12,30 @@ import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon, MinusIcon } from "@heroicons/react/16/solid";
 import { useSearchParams } from "next/navigation";
 import type React from "react";
+
+function renderComparisonValue(value: unknown, projectName: string): React.ReactNode {
+  if (typeof value === "function") {
+    return <>{value()}</>;
+  }
+  if (value === true) {
+    return (
+      <>
+        <CheckIcon className="size-4 fill-green-600" />
+        <span className="sr-only">Included in {projectName}</span>
+      </>
+    );
+  }
+  if (value === false || value === undefined) {
+    return (
+      <>
+        <MinusIcon className="size-4 fill-gray-400" />
+        <span className="sr-only">Not included in {projectName}</span>
+      </>
+    );
+  }
+  return <div className="text-xs text-zinc-400">{String(value)}</div>;
+}
+
 function DropLogo() {
   return (
     <div className="relative -mb-1 inline-flex items-center justify-center gap-x-1">
@@ -52,7 +76,7 @@ function GameVaultPlus() {
   return (
     <div className="inline-flex items-center gap-x-1 rounded-full bg-zinc-800 px-2 py-1 text-xs">
       <img src="/icons/gamevault-plus.png" alt="" className="size-4" />
-      GameVault+
+      <span>GameVault+</span>
     </div>
   );
 }
@@ -254,10 +278,7 @@ function Header() {
     <Container className="mt-16">
       <Heading as="h1" className="leading-12">
         What&apos;s the{" "}
-        <span className="rounded-xl bg-zinc-900 px-3 py-2 font-mono text-zinc-300">
-          git&nbsp;diff
-        </span>
-        ?
+        <span className="rounded-xl bg-zinc-900 px-3 py-2 font-mono text-zinc-300">git diff</span>?
       </Heading>
       <Lead className="mt-6 max-w-3xl">
         A breakdown between the different projects available to you, put together by the Drop OSS
@@ -322,15 +343,15 @@ function ProjectCard({ tier }: { readonly tier: (typeof projects)[number] }) {
  *
  * @param selectedProject - The project whose comparison column is highlighted and selected on small screens.
  */
+function onlyUnique<T>(value: T, index: number, array: Array<T>) {
+  return array.indexOf(value) === index;
+}
+
 function ProjectTable({
   selectedProject,
 }: {
   readonly selectedProject: (typeof projects)[number];
 }) {
-  function onlyUnique<T>(value: T, index: number, array: Array<T>) {
-    return array.indexOf(value) === index;
-  }
-
   const sections = projects
     .flatMap((e) => Object.keys(e.features))
     .filter((v, i, a) => onlyUnique(v, i, a));
@@ -447,36 +468,13 @@ function ProjectTable({
                 {projects.map((project) => {
                   let value = project.features[section]?.[name];
 
-                  function renderValue() {
-                    if (typeof value === "function") {
-                      return <>{value()}</>;
-                    }
-                    if (value === true) {
-                      return (
-                        <>
-                          <CheckIcon className="size-4 fill-green-600" />
-                          <span className="sr-only">Included in {project.name}</span>
-                        </>
-                      );
-                    }
-                    if (value === false || value === undefined) {
-                      return (
-                        <>
-                          <MinusIcon className="size-4 fill-gray-400" />
-                          <span className="sr-only">Not included in {project.name}</span>
-                        </>
-                      );
-                    }
-                    return <div className="text-xs text-zinc-400">{value}</div>;
-                  }
-
                   return (
                     <td
                       key={project.slug}
                       data-selected={selectedProject === project ? true : undefined}
                       className="p-4 data-selected:table-cell max-sm:hidden"
                     >
-                      {renderValue()}
+                      {renderComparisonValue(value, project.name)}
                     </td>
                   );
                 })}
