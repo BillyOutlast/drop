@@ -1,5 +1,11 @@
 name: OSV-Scanner
 
+# Cancel outdated in-progress runs of the same workflow on the same PR
+# when a new commit is pushed. Avoids redundant scans and stale SARIF uploads.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 on:
   pull_request:
     branches: ["rebuild", "develop"]

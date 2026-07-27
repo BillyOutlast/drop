@@ -26,8 +26,8 @@
 
 "use strict";
 
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const HELP_TEXT =
   "Usage: check-new-vulns.cjs --format {pnpm|cargo} --json <path> " +
@@ -40,21 +40,36 @@ const HELP_TEXT =
 // fallow-ignore-next-line complexity
 function parseArgs(argv) {
   const args = {};
-  const nextArg = (i) => (i < argv.length ? argv[i] : null);
+  // Reject values that look like another flag (start with `--`) or are
+  // missing entirely. Catches typos like `--format --json file.json` where
+  // `--json` would be silently consumed as the format value.
+  const nextArg = (i, flagName) => {
+    if (i >= argv.length) {
+      console.error(`[check-new-vulns] missing value for ${flagName}`);
+      process.exit(2);
+    }
+    const v = argv[i];
+    if (v.startsWith("--")) {
+      console.error(
+        `[check-new-vulns] ${flagName} requires a value (got another flag '${v}')`,
+      );
+      process.exit(2);
+    }
+    return v;
+  };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === "--format") args.format = nextArg(++i);
-    else if (a === "--json") args.json = nextArg(++i);
-    else if (a === "--register") args.register = nextArg(++i);
+    if (a === "--format") args.format = nextArg(++i, "--format");
+    else if (a === "--json") args.json = nextArg(++i, "--json");
+    else if (a === "--register") args.register = nextArg(++i, "--register");
     else if (a === "--ignored") {
-      const val = nextArg(++i);
+      const val = nextArg(++i, "--ignored");
       args.ignored = val
-        ? val
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : [];
-    } else if (a === "--min-severity") args.minSeverity = nextArg(++i);
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    } else if (a === "--min-severity")
+      args.minSeverity = nextArg(++i, "--min-severity");
     else if (a === "--help" || a === "-h") {
       console.log(HELP_TEXT);
       process.exit(0);
@@ -90,7 +105,9 @@ function readKnownAdvisories(path) {
   try {
     if (!fs.existsSync(path)) return { known, loaded: false };
     const text = fs.readFileSync(path, "utf8");
-    const re = /^\s*advisory:\s*(\S+)\s*$/gm;
+    // Lenient: ignore any trailing content (e.g. inline `# comment`).
+    // Avoids super-linear backtracking and future-proofs against trailing comments.
+    const re = /^\s*advisory:\s*(\S+)/gm;
     let m;
     while ((m = re.exec(text)) !== null) {
       known.add(m[1]);
@@ -135,10 +152,10 @@ function extractCargo(data, minSeverity) {
       .filter((v) => v.advisory && severityRank(v.advisory.severity) >= minRank)
       // fallow-ignore-next-line complexity
       .map((v) => ({
-        id: v.advisory.id ?? "unknown",
-        module: v.package && v.package.name ? v.package.name : "unknown",
-        severity: v.advisory.severity ?? "unknown",
-        title: v.advisory.title ?? "unknown",
+        id: v.advisory?.id ?? "unknown",
+        module: v.package?.name ?? "unknown",
+        severity: v.advisory?.severity ?? "unknown",
+        title: v.advisory?.title ?? "unknown",
       }))
   );
 }
