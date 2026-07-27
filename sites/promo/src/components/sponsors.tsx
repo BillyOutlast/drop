@@ -97,18 +97,15 @@ function SponsorCard({
 }
 
 function CallToAction() {
-  return <div />;
   return (
-    <div>
-      <p className="max-w-sm text-sm/6 text-gray-600">
-        Join the best sellers in the business and start using Radiant to hit your targets today.
-      </p>
+    <div className="space-y-4">
+      <p className="max-w-sm text-sm/6 text-gray-600">Support Drop OSS on Open Collective.</p>
       <div className="mt-2">
         <Link
-          href="#"
+          href="https://opencollective.com/drop-oss"
           className="inline-flex items-center gap-2 text-sm/6 font-medium text-pink-600"
         >
-          Get started
+          Become a sponsor
           <ArrowLongRightIcon className="size-5" />
         </Link>
       </div>
