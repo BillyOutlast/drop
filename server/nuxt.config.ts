@@ -27,10 +27,19 @@ const twemojiAssetsPath = path.join(
 // get drop version
 const dropVersion = getDropVersion();
 
+function resolveGitPath(): string {
+  try {
+    return execSync("which git", { encoding: "utf-8" }).trim();
+  } catch {
+    return "git";
+  }
+}
+
 // get git ref or supply during build
+const gitPath = resolveGitPath();
 const commitHash =
   process.env.BUILD_GIT_REF ??
-  execSync("git rev-parse --short HEAD").toString().trim();
+  execSync(`${gitPath} rev-parse --short HEAD`).toString().trim();
 
 console.log(`Drop ${dropVersion} #${commitHash}`);
 
