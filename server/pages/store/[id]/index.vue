@@ -51,7 +51,7 @@
               aria-hidden="true"
             />
           </NuxtLink>
-          <table class="min-w-full">
+          <table class="min-w-full" aria-label="Game details">
             <tbody>
               <tr>
                 <td
@@ -255,7 +255,7 @@
                 <img
                   class="w-fit h-48 lg:h-96 rounded"
                   :src="useObject(image)"
-                  alt=""
+                  :alt="'Game screenshot'"
                 />
               </VueSlide>
               <VueSlide v-if="game.mImageCarouselObjectIds.length == 0">

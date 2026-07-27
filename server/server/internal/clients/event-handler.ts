@@ -18,6 +18,16 @@ type ClientUtils = {
 
 const JWT_TIME_WIGGLE_SECONDS = 30;
 
+/**
+ * Wraps a client-authenticated event handler with JWT validation.
+ *
+ * Extracts a JWT from the Authorization header, validates the signature
+ * against the client's X.509 certificate, and provides the caller with
+ * utility functions for fetching the client and its owning user.
+ *
+ * @param handler - The handler function receiving the H3 event and client utils.
+ * @returns An H3 event handler with client authentication middleware applied.
+ */
 export function defineClientEventHandler<T>(handler: EventHandlerFunction<T>) {
   return defineEventHandler(async (h3) => {
     const header = getHeader(h3, "Authorization");

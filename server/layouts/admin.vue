@@ -56,7 +56,7 @@
                 <div class="inline-flex items-center py-4 px-4">
                   <DropWordmark class="h-full w-auto" alt="Drop" />
                 </div>
-                <nav>
+                <nav aria-label="Admin navigation">
                   <ul class="grid grid-cols-2 items-stretch gap-4 px-5">
                     <li v-for="(item, itemIdx) in navigation" :key="item.route">
                       <NuxtLink
@@ -98,7 +98,7 @@
           >{{ $t("header.admin.admin") }}</span
         >
       </div>
-      <nav class="mt-8">
+      <nav aria-label="Admin navigation" class="mt-8">
         <ul class="flex flex-col items-stretch space-y-4 mx-2">
           <li v-for="(item, itemIdx) in navigation" :key="item.route">
             <NuxtLink

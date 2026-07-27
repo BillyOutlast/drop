@@ -21,9 +21,9 @@ const OIDCWellKnownV1 = type({
   issuer: "string",
   authorization_endpoint: "string.url.parse",
   token_endpoint: "string.url.parse",
-  userinfo_endpoint: "string.url.parse",
+  "userinfo_endpoint?": "string.url.parse",
   jwks_uri: "string.url.parse",
-  scopes_supported: "string[]",
+  "scopes_supported?": "string[]",
 });
 
 // Represents required OIDC configuration
@@ -158,104 +158,10 @@ export class OIDCManager {
       );
     }
 
-    const wellKnownUrlString = process.env.OIDC_WELLKNOWN as string | undefined;
-    const scopes = process.env.OIDC_SCOPES as string | undefined;
-    let configuration: OIDCConfiguration;
-    if (wellKnownUrlString) {
-      const wellKnownUrl = new URL(wellKnownUrlString);
-      if (systemConfig.shouldOidcRequireHttps() && !isHttps(wellKnownUrl)) {
-        throw new Error("OIDC_WELLKNOWN URL must use HTTPS");
-      }
-
-      const response = await $fetch<unknown>(wellKnownUrl.toString());
-      const wellKnown = OIDCWellKnownV1(response);
-      if (wellKnown instanceof type.errors) {
-        throw new TypeError(
-          `Failed to parse OIDC well-known configuration: ${wellKnown.summary}`,
-        );
-      }
-
-      if (scopes) {
-        wellKnown.scopes_supported = scopes.split(",");
-      } else if (!wellKnown.scopes_supported) {
-        throw new Error(
-          "OIDC_SCOPES environment variable required if not provided by well-known configuration",
-        );
-      }
-
-      if (!wellKnown.userinfo_endpoint) {
-        throw new Error(
-          "OIDC_USERINFO environment variable required if not provided by well-known configuration",
-        );
-      }
-
-      configuration = {
-        authorization_endpoint: wellKnown.authorization_endpoint,
-        token_endpoint: wellKnown.token_endpoint,
-        userinfo_endpoint: wellKnown.userinfo_endpoint,
-        scopes_supported: wellKnown.scopes_supported,
-        issuer: wellKnown.issuer,
-        jwks_uri: wellKnown.jwks_uri,
-      };
-    } else {
-      const authorizationEndpoint = process.env.OIDC_AUTHORIZATION as
-        string | undefined;
-      const tokenEndpoint = process.env.OIDC_TOKEN as string | undefined;
-      const userinfoEndpoint = process.env.OIDC_USERINFO as string | undefined;
-      const issuer = process.env.OIDC_ISSUER as string | undefined;
-      const jwksEndpoint = process.env.OIDC_JWKS as string | undefined;
-
-      if (
-        !authorizationEndpoint ||
-        !tokenEndpoint ||
-        !userinfoEndpoint ||
-        !scopes ||
-        !issuer ||
-        !jwksEndpoint
-      ) {
-        const debugObject = {
-          OIDC_AUTHORIZATION: authorizationEndpoint,
-          OIDC_TOKEN: tokenEndpoint,
-          OIDC_USERINFO: userinfoEndpoint,
-          OIDC_SCOPES: scopes,
-          OIDC_ISSUER: issuer,
-          OIDC_JWKS: jwksEndpoint,
-        };
-        throw new Error(
-          "Missing all necessary OIDC configuration: \n" +
-            Object.entries(debugObject)
-              .map(([k, v]) => `  ${k}: ${v}`)
-              .join("\n"),
-        );
-      }
-
-      configuration = {
-        authorization_endpoint: new URL(authorizationEndpoint),
-        token_endpoint: new URL(tokenEndpoint),
-        userinfo_endpoint: new URL(userinfoEndpoint),
-        scopes_supported: scopes.split(","),
-        issuer: issuer,
-        jwks_uri: new URL(jwksEndpoint),
-      };
-    }
-
-    if (!configuration)
-      throw new Error("OIDC try to init without configuration");
+    const configuration = await loadOIDCConfiguration();
 
     if (systemConfig.shouldOidcRequireHttps()) {
-      const endpoints: OIDCUrlKey[] = [
-        "authorization_endpoint",
-        "token_endpoint",
-        "userinfo_endpoint",
-        "issuer",
-        "jwks_uri",
-      ];
-
-      for (const endpoint of endpoints) {
-        if (!isHttps(configuration[endpoint])) {
-          throw new Error(`OIDC ${endpoint} is not using HTTPS`);
-        }
-      }
+      validateOIDCEndpointSecurity(configuration);
     }
 
     const clientId = process.env.OIDC_CLIENT_ID as string | undefined;
@@ -273,7 +179,7 @@ export class OIDCManager {
   generateConfiguration() {
     return {
       authorizationUrl: this.oidcConfiguration.authorization_endpoint,
-      scopes: this.oidcConfiguration.scopes_supported.join(", "),
+      scopes: this.oidcConfiguration.scopes_supported?.join(", ") ?? "",
       adminGroup: this.adminGroup,
       usernameClaim: this.usernameClaim,
       externalUrl: this.externalUrl,
@@ -292,7 +198,7 @@ export class OIDCManager {
       redirect_uri: this.redirectUrl.toString(),
       state: stateKey,
       response_type: "code",
-      scope: this.oidcConfiguration.scopes_supported.join(" "),
+      scope: this.oidcConfiguration.scopes_supported?.join(" ") ?? "",
     });
 
     const finalUrl = `${normalisedUrl}?${queryParams}`;
@@ -326,7 +232,11 @@ export class OIDCManager {
 
     const tokenEndpoint = this.oidcConfiguration.token_endpoint.toString();
     const userinfoEndpoint =
-      this.oidcConfiguration.userinfo_endpoint.toString();
+      this.oidcConfiguration.userinfo_endpoint?.toString();
+
+    if (!userinfoEndpoint) {
+      return "OIDC userinfo_endpoint not configured";
+    }
 
     const requestBody = new URLSearchParams({
       client_id: this.clientId,
@@ -334,7 +244,7 @@ export class OIDCManager {
       grant_type: "authorization_code",
       code: code,
       redirect_uri: session.callbackUrl,
-      scope: this.oidcConfiguration.scopes_supported.join(","),
+      scope: this.oidcConfiguration.scopes_supported?.join(",") ?? "",
     });
 
     try {
@@ -549,6 +459,117 @@ export class OIDCManager {
     await Promise.all(taskQueue);
 
     return true;
+  }
+}
+
+async function loadOIDCConfiguration(): Promise<OIDCConfiguration> {
+  const wellKnownUrlString = process.env.OIDC_WELLKNOWN as string | undefined;
+  const scopes = process.env.OIDC_SCOPES as string | undefined;
+
+  if (wellKnownUrlString) {
+    return await loadFromWellKnown(wellKnownUrlString, scopes);
+  }
+
+  return loadFromEnvVars(scopes);
+}
+
+async function loadFromWellKnown(
+  wellKnownUrlString: string,
+  scopes: string | undefined,
+): Promise<OIDCConfiguration> {
+  const wellKnownUrl = new URL(wellKnownUrlString);
+  if (systemConfig.shouldOidcRequireHttps() && !isHttps(wellKnownUrl)) {
+    throw new Error("OIDC_WELLKNOWN URL must use HTTPS");
+  }
+
+  const response = await $fetch<unknown>(wellKnownUrl.toString());
+  const wellKnown = OIDCWellKnownV1(response);
+  if (wellKnown instanceof type.errors) {
+    throw new TypeError(
+      `Failed to parse OIDC well-known configuration: ${wellKnown.summary}`,
+    );
+  }
+
+  if (scopes) {
+    wellKnown.scopes_supported = scopes.split(",");
+  } else if (!wellKnown.scopes_supported) {
+    throw new Error(
+      "OIDC_SCOPES environment variable required if not provided by well-known configuration",
+    );
+  }
+
+  if (!wellKnown.userinfo_endpoint) {
+    throw new Error(
+      "OIDC_USERINFO environment variable required if not provided by well-known configuration",
+    );
+  }
+
+  return {
+    authorization_endpoint: wellKnown.authorization_endpoint,
+    token_endpoint: wellKnown.token_endpoint,
+    userinfo_endpoint: wellKnown.userinfo_endpoint,
+    scopes_supported: wellKnown.scopes_supported,
+    issuer: wellKnown.issuer,
+    jwks_uri: wellKnown.jwks_uri,
+  };
+}
+
+function loadFromEnvVars(scopes: string | undefined): OIDCConfiguration {
+  const authorizationEndpoint = process.env.OIDC_AUTHORIZATION as
+    string | undefined;
+  const tokenEndpoint = process.env.OIDC_TOKEN as string | undefined;
+  const userinfoEndpoint = process.env.OIDC_USERINFO as string | undefined;
+  const issuer = process.env.OIDC_ISSUER as string | undefined;
+  const jwksEndpoint = process.env.OIDC_JWKS as string | undefined;
+
+  if (
+    !authorizationEndpoint ||
+    !tokenEndpoint ||
+    !userinfoEndpoint ||
+    !scopes ||
+    !issuer ||
+    !jwksEndpoint
+  ) {
+    const debugObject = {
+      OIDC_AUTHORIZATION: authorizationEndpoint,
+      OIDC_TOKEN: tokenEndpoint,
+      OIDC_USERINFO: userinfoEndpoint,
+      OIDC_SCOPES: scopes,
+      OIDC_ISSUER: issuer,
+      OIDC_JWKS: jwksEndpoint,
+    };
+    throw new Error(
+      "Missing all necessary OIDC configuration: \n" +
+        Object.entries(debugObject)
+          .map(([k, v]) => `  ${k}: ${v}`)
+          .join("\n"),
+    );
+  }
+
+  return {
+    authorization_endpoint: new URL(authorizationEndpoint),
+    token_endpoint: new URL(tokenEndpoint),
+    userinfo_endpoint: new URL(userinfoEndpoint),
+    scopes_supported: scopes.split(","),
+    issuer: issuer,
+    jwks_uri: new URL(jwksEndpoint),
+  };
+}
+
+function validateOIDCEndpointSecurity(configuration: OIDCConfiguration) {
+  const endpoints: OIDCUrlKey[] = [
+    "authorization_endpoint",
+    "token_endpoint",
+    "userinfo_endpoint",
+    "issuer",
+    "jwks_uri",
+  ];
+
+  for (const endpoint of endpoints) {
+    const value = configuration[endpoint];
+    if (value && !isHttps(value)) {
+      throw new Error(`OIDC ${endpoint} is not using HTTPS`);
+    }
   }
 }
 

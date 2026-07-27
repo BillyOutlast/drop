@@ -1,5 +1,6 @@
 import cacheHandler from "../cache";
 import type { SessionProvider, SessionWithToken } from "./types";
+import { sessionMatchesFilter } from "./filter";
 
 /**
  * Creates a cache-backed session provider for in-memory session management.
@@ -52,37 +53,7 @@ export default function createCacheSessionProvider() {
       for (const token of await sessions.getKeys()) {
         const session = await sessions.get(token);
         if (!session) continue;
-        let match = true;
-
-        if (
-          options.userId &&
-          session.authenticated &&
-          session.authenticated.userId !== options.userId
-        ) {
-          match = false;
-        }
-        if (options.oidc && session.oidc) {
-          for (const [key, value] of Object.entries(options.oidc)) {
-            // stringify to do deep comparison
-            if (
-              JSON.stringify(
-                (session.oidc as unknown as Record<string, unknown>)[key],
-              ) !== JSON.stringify(value)
-            ) {
-              match = false;
-              break;
-            }
-          }
-        }
-
-        for (const [key, value] of Object.entries(options.data || {})) {
-          // stringify to do deep comparison
-          if (JSON.stringify(session.data[key]) !== JSON.stringify(value)) {
-            match = false;
-            break;
-          }
-        }
-        if (match) {
+        if (sessionMatchesFilter(session, options)) {
           results.push(session);
         }
       }

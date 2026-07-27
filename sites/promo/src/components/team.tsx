@@ -134,10 +134,7 @@ export function Team() {
         The team
       </Subheading>
       <hr className="mt-6 border-t border-zinc-800" />
-      <ul
-        role="list"
-        className="mx-auto mt-16 grid grid-cols-1 gap-8 sm:grid-cols-3 lg:grid-cols-4"
-      >
+      <ul className="mx-auto mt-16 grid grid-cols-1 gap-8 sm:grid-cols-3 lg:grid-cols-4">
         {team?.map((member) => (
           <Person
             key={member.login}

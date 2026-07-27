@@ -1,7 +1,12 @@
 <template>
   <div class="mx-auto w-full relative flex flex-col justify-center pt-72 overflow-hidden">
     <div class="absolute inset-0 z-0">
-      <img :src="bannerUrl" alt="" class="w-full h-[24rem] object-cover blur-sm scale-105" />
+      <img
+        :src="bannerUrl"
+        alt=""
+        class="w-full h-[24rem] object-cover blur-sm scale-105"
+        aria-hidden="true"
+      />
       <div
         class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/80 to-transparent opacity-90"
       />
@@ -119,7 +124,7 @@
                           :src="useObject(url)"
                           class="absolute inset-0 w-full h-full object-cover"
                           v-show="index === currentImageIndex"
-                          alt=""
+                          :alt="`${game.mName} screenshot ${index + 1}`"
                         />
                       </TransitionGroup>
                     </div>
@@ -390,7 +395,11 @@
               ]"
             >
               <div class="flex min-w-0 gap-x-2">
-                <img class="size-12 flex-none" :src="useObject(content.iconObjectId)" alt="" />
+                <img
+                  class="size-12 flex-none"
+                  :src="useObject(content.iconObjectId)"
+                  :alt="content.name"
+                />
                 <div class="min-w-0 flex-auto">
                   <p class="text-sm/6 font-semibold text-white">
                     <button

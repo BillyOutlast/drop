@@ -1,5 +1,5 @@
 import tailwindcss from "@tailwindcss/vite";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import module from "node:module";
@@ -30,7 +30,9 @@ const dropVersion = getDropVersion();
 // get git ref or supply during build
 const commitHash =
   process.env.BUILD_GIT_REF ??
-  execSync("git rev-parse --short HEAD").toString().trim();
+  execFileSync("git", ["rev-parse", "--short", "HEAD"], {
+    encoding: "utf-8",
+  }).trim();
 
 console.log(`Drop ${dropVersion} #${commitHash}`);
 

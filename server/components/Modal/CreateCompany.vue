@@ -25,6 +25,7 @@
                 v-model="companyName"
                 type="text"
                 name="name"
+                autocomplete="organization"
                 :placeholder="
                   $t(
                     'library.admin.metadata.companies.modals.createFieldNamePlaceholder',
@@ -71,8 +72,9 @@
               <input
                 id="website"
                 v-model="companyWebsite"
-                type="text"
+                type="url"
                 name="website"
+                autocomplete="url"
                 :placeholder="
                   $t(
                     'library.admin.metadata.companies.modals.createFieldWebsitePlaceholder',

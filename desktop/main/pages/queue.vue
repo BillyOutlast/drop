@@ -27,7 +27,7 @@
             <img
               class="size-24 flex-none bg-zinc-800 object-cover rounded"
               :src="games[element.meta.id].cover"
-              alt=""
+              :alt="games[element.meta.id].game.mName"
             />
             <div class="min-w-0 flex-auto">
               <p class="text-xl font-semibold text-zinc-100">

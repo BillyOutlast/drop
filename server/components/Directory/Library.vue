@@ -26,7 +26,6 @@
       v-if="filteredLibrary.length > 0"
       name="list"
       tag="ul"
-      role="list"
       class="mt-2 space-y-0.5"
     >
       <li v-for="game in filteredLibrary" :key="game.id" class="flex">

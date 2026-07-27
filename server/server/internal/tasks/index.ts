@@ -448,6 +448,18 @@ export type TaskRunContext = {
   addAction: (link: TaskActionLink) => void;
 };
 
+/**
+ * Wraps a task run context, remapping its progress range and attaching
+ * a child logger with the given prefix.
+ *
+ * Useful when a parent task delegates work to a sub-task and needs
+ * independent progress reporting (e.g. 0-100 maps to min-max range)
+ * without conflicting with the parent's own progress bar.
+ *
+ * @param context - The parent task's run context.
+ * @param options - Scoping options: min/max progress range and logger prefix.
+ * @returns A new context that maps progress(0-100) into min-max space.
+ */
 export function wrapTaskContext(
   context: TaskRunContext,
   options: { min: number; max: number; prefix: string },

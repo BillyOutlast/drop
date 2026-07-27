@@ -424,7 +424,10 @@ const username = computed({
     return _username.value;
   },
   set(v) {
-    if (!v) return (_username.value = undefined);
+    if (!v) {
+      _username.value = undefined;
+      return;
+    }
     _username.value = v;
   },
 });
@@ -439,7 +442,10 @@ const email = computed({
     return _email.value;
   },
   set(v) {
-    if (!v) return (_email.value = undefined);
+    if (!v) {
+      _email.value = undefined;
+      return;
+    }
     _email.value = v;
   },
 });
