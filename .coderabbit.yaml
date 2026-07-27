@@ -7,6 +7,9 @@ early_access: true
 reviews:
   request_changes_workflow: false
   profile: chill
+  base_branches:
+    - develop
+    - rebuild
   high_level_summary: true
   review_status: true
   commit_messages: true
