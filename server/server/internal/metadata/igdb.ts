@@ -651,34 +651,33 @@ export class IGDBProvider implements MetadataProvider {
       `where name = "${query}"; fields *; limit 1;`,
     );
 
-    for (const company of response) {
-      const logo = createObject(await this.getCompanyLogoURl(company.logo));
+    const company = response[0];
+    if (!company) return undefined;
 
-      let company_url = "";
-      for (const companySite of company.websites) {
-        const companySiteRes = await this.request<IGDBCompanyWebsite>(
-          "company_websites",
-          `where id = ${companySite}; fields *;`,
-        );
+    const logo = createObject(await this.getCompanyLogoURl(company.logo));
 
-        for (const site of companySiteRes) {
-          if (company_url.length <= 0) company_url = site.url;
-        }
+    let company_url = "";
+    for (const companySite of company.websites) {
+      const companySiteRes = await this.request<IGDBCompanyWebsite>(
+        "company_websites",
+        `where id = ${companySite}; fields *;`,
+      );
+
+      for (const site of companySiteRes) {
+        if (company_url.length <= 0) company_url = site.url;
       }
-      const metadata: CompanyMetadata = {
-        id: "" + company.id,
-        name: company.name,
-        shortDescription: this.trimMessage(company.description, 280),
-        description: company.description,
-        website: company_url,
-
-        logo: logo,
-        banner: logo,
-      };
-
-      return metadata;
     }
+    const metadata: CompanyMetadata = {
+      id: "" + company.id,
+      name: company.name,
+      shortDescription: this.trimMessage(company.description, 280),
+      description: company.description,
+      website: company_url,
 
-    return undefined;
+      logo: logo,
+      banner: logo,
+    };
+
+    return metadata;
   }
 }

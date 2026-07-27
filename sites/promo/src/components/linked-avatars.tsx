@@ -20,7 +20,7 @@ function Rings() {
         "mask-[linear-gradient(to_bottom,black_90%,transparent),radial-gradient(circle,rgba(0,0,0,1)_0%,rgba(0,0,0,0)_100%)] mask-intersect",
       )}
     >
-      {Array.from(Array(42).keys()).map((n) => (
+      {Array.from(new Array(42).keys()).map((n) => (
         <motion.circle
           variants={{
             idle: {

@@ -462,7 +462,8 @@ const filterQuery = computed(() => {
         .map(([k, v]) => `${k}=${v}`)
         .join("&")
     : props.params;
-  return `${query}${extraFilters ? (query ? "&" : "") + extraFilters : ""}`;
+  const separator = query && extraFilters ? "&" : "";
+  return `${query}${separator}${extraFilters ?? ""}`;
 });
 
 const games = ref<Array<SerializeObject<GameModel>>>();

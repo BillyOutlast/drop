@@ -1,15 +1,19 @@
-import { spawn, execSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { Service } from "..";
 import { systemConfig } from "../../config/sys-conf";
 import path from "node:path";
 import fs from "node:fs";
 
 function resolveNginxPath(): string {
-  try {
-    return execSync("which nginx", { encoding: "utf-8" }).trim();
-  } catch {
-    return "nginx";
+  const knownPaths = [
+    "/usr/sbin/nginx",
+    "/usr/local/bin/nginx",
+    "/usr/bin/nginx",
+  ];
+  for (const p of knownPaths) {
+    if (fs.existsSync(p)) return p;
   }
+  return "nginx";
 }
 
 export const NGINX_SERVICE = new Service(

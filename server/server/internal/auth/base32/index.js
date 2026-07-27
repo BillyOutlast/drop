@@ -68,7 +68,7 @@ export function b32e(u8a) {
   console.assert(u8a instanceof Uint8Array, u8a.constructor);
   const len = u8a.length,
     rem = len % 5;
-  const u5s = Array.from(Array((len - rem) / 5), (_, i) =>
+  const u5s = Array.from(new Array((len - rem) / 5), (_, i) =>
     u8a.subarray(i * 5, i * 5 + 5),
   );
   const pad = b32pad[rem];

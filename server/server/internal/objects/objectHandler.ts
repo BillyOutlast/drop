@@ -21,7 +21,7 @@ import type { Writable } from "node:stream";
 import { Readable } from "node:stream";
 import { getMimeType as getMimeTypeStream } from "stream-mime-type";
 
-export type ObjectReference = string;
+/** An object identifier string */
 
 export const objectMetadata = type({
   mime: "string",
@@ -50,27 +50,25 @@ export type Source = Readable | Buffer;
 export abstract class ObjectBackend {
   // Interface functions, not designed to be called directly.
   // They don't check permissions to provide any utilities
-  abstract fetch(id: ObjectReference): Promise<Source | undefined>;
-  abstract write(id: ObjectReference, source: Source): Promise<boolean>;
-  abstract startWriteStream(id: ObjectReference): Promise<Writable | undefined>;
+  abstract fetch(id: string): Promise<Source | undefined>;
+  abstract write(id: string, source: Source): Promise<boolean>;
+  abstract startWriteStream(id: string): Promise<Writable | undefined>;
   abstract create(
     id: string,
     source: Source,
     metadata: ObjectMetadata,
-  ): Promise<ObjectReference | undefined>;
+  ): Promise<string | undefined>;
   abstract createWithWriteStream(
     id: string,
     metadata: ObjectMetadata,
   ): Promise<Writable | undefined>;
-  abstract delete(id: ObjectReference): Promise<boolean>;
-  abstract fetchMetadata(
-    id: ObjectReference,
-  ): Promise<ObjectMetadata | undefined>;
+  abstract delete(id: string): Promise<boolean>;
+  abstract fetchMetadata(id: string): Promise<ObjectMetadata | undefined>;
   abstract writeMetadata(
-    id: ObjectReference,
+    id: string,
     metadata: ObjectMetadata,
   ): Promise<boolean>;
-  abstract fetchHash(id: ObjectReference): Promise<string | undefined>;
+  abstract fetchHash(id: string): Promise<string | undefined>;
   abstract listAll(): Promise<string[]>;
   abstract cleanupMetadata(taskLogger: pino.Logger): Promise<void>;
 }
@@ -162,7 +160,7 @@ export class ObjectHandler {
    * @param userId user to check, or act as anon user
    * @returns
    */
-  async fetchWithPermissions(id: ObjectReference, userId?: string) {
+  async fetchWithPermissions(id: string, userId?: string) {
     const metadata = await this.backend.fetchMetadata(id);
     if (!metadata) return;
 
@@ -184,7 +182,7 @@ export class ObjectHandler {
    * @param id object id
    * @returns
    */
-  async fetchHash(id: ObjectReference) {
+  async fetchHash(id: string) {
     return await this.backend.fetchHash(id);
   }
 
@@ -201,7 +199,7 @@ export class ObjectHandler {
    * And if we actually have permission to write, it fetches it then.
    */
   async writeWithPermissions(
-    id: ObjectReference,
+    id: string,
     sourceFetcher: () => Promise<Source>,
     userId?: string,
   ) {
@@ -228,7 +226,7 @@ export class ObjectHandler {
    * @param userId user to check, or act as anon user
    * @returns
    */
-  async deleteWithPermission(id: ObjectReference, userId?: string) {
+  async deleteWithPermission(id: string, userId?: string) {
     const metadata = await this.backend.fetchMetadata(id);
     if (!metadata) return false;
 
@@ -248,7 +246,7 @@ export class ObjectHandler {
    * @param id
    * @returns
    */
-  async deleteAsSystem(id: ObjectReference) {
+  async deleteAsSystem(id: string) {
     return await this.backend.delete(id);
   }
 

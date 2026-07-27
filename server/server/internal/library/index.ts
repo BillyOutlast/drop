@@ -378,7 +378,7 @@ class LibraryManager {
       );
     }
 
-    const sortedOptions = options.sort((a, b) => b.match - a.match);
+    const sortedOptions = options.toSorted((a, b) => b.match - a.match);
 
     return sortedOptions;
   }

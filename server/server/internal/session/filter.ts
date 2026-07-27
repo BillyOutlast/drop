@@ -1,4 +1,32 @@
-import type { SessionWithToken, SessionSearchTerms } from "./types";
+import type { OIDCData, SessionWithToken, SessionSearchTerms } from "./types";
+
+function matchesOidc(session: SessionWithToken, oidc: OIDCData): boolean {
+  if (!session.oidc) {
+    return false;
+  }
+  for (const [key, value] of Object.entries(oidc)) {
+    if (
+      JSON.stringify(
+        (session.oidc as unknown as Record<string, unknown>)[key],
+      ) !== JSON.stringify(value)
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function matchesData(
+  session: SessionWithToken,
+  data: Record<string, unknown>,
+): boolean {
+  for (const [key, value] of Object.entries(data)) {
+    if (JSON.stringify(session.data[key]) !== JSON.stringify(value)) {
+      return false;
+    }
+  }
+  return true;
+}
 
 /**
  * Checks if a session matches the given search criteria.
@@ -20,25 +48,12 @@ export function sessionMatchesFilter(
     }
   }
 
-  if (options.oidc) {
-    if (!session.oidc) {
-      return false;
-    }
-    for (const [key, value] of Object.entries(options.oidc)) {
-      if (
-        JSON.stringify(
-          (session.oidc as unknown as Record<string, unknown>)[key],
-        ) !== JSON.stringify(value)
-      ) {
-        return false;
-      }
-    }
+  if (options.oidc && !matchesOidc(session, options.oidc)) {
+    return false;
   }
 
-  for (const [key, value] of Object.entries(options.data || {})) {
-    if (JSON.stringify(session.data[key]) !== JSON.stringify(value)) {
-      return false;
-    }
+  if (options.data && !matchesData(session, options.data)) {
+    return false;
   }
 
   return true;

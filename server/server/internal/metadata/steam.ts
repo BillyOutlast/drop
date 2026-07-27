@@ -627,9 +627,9 @@ export class SteamProvider implements MetadataProvider {
 
   private _extractUrl(html: string): string | undefined {
     const curatorUrlRegex =
-      /<a[^>]*class\s*=\s*["'][^"']*curator_url[^"']*["'][^>]*href\s*=\s*["']https:\/\/steamcommunity\.com\/linkfilter\/\?u=([^"'&]+)["']/i;
+      /<a[^>]*class\s*=\s*"[^"]*curator_url[^"]*"[^>]*href\s*=\s*"https:\/\/steamcommunity\.com\/linkfilter\/\?u=([^"&]+)"/i;
     const linkfilterRegex =
-      /<a[^>]*href\s*=\s*["']https:\/\/steamcommunity\.com\/linkfilter\/\?u=([^"'&]+)["'][^>]*(?:target=["']_blank["']|rel=["'][^"']*["'])/i;
+      /<a[^>]*href\s*=\s*"https:\/\/steamcommunity\.com\/linkfilter\/\?u=([^"&]+)"[^>]*(?:target="_blank"|rel="[^"]*")/i;
 
     let curatorUrlMatch = curatorUrlRegex.exec(html);
     curatorUrlMatch ??= linkfilterRegex.exec(html);
@@ -646,7 +646,7 @@ export class SteamProvider implements MetadataProvider {
 
   private _extractBanner(html: string): string | undefined {
     const bannerRegex =
-      /background-image:\s*url\(['"]([^'"]*?(?:\/clan\/\d+|\/app\/\d+|background|header)[^'"]*?)['"][^}]*\)/i;
+      /background-image:\s*url\(['"]([^'"]*?(?:\/(?:clan|app)\/\d+|background|header)[^'"]*?)['"][^}]*\)/i;
     const backgroundImageRegex =
       /style\s*=\s*["'][^"']*background-image:\s*url\(([^)]+)\)[^"']*/i;
 

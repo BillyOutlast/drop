@@ -1,4 +1,4 @@
-import type { ObjectMetadata, ObjectReference, Source } from "./objectHandler";
+import type { ObjectMetadata, Source } from "./objectHandler";
 import { ObjectBackend, objectMetadata } from "./objectHandler";
 
 import fs from "node:fs";
@@ -30,12 +30,12 @@ export class FsObjectBackend extends ObjectBackend {
     fs.mkdirSync(this.baseMetadataPath, { recursive: true });
   }
 
-  async fetch(id: ObjectReference) {
+  async fetch(id: string) {
     const objectPath = path.join(this.baseObjectPath, id);
     if (!fs.existsSync(objectPath)) return undefined;
     return fs.createReadStream(objectPath);
   }
-  async write(id: ObjectReference, source: Source): Promise<boolean> {
+  async write(id: string, source: Source): Promise<boolean> {
     const objectPath = path.join(this.baseObjectPath, id);
     if (!fs.existsSync(objectPath)) return false;
 
@@ -56,7 +56,7 @@ export class FsObjectBackend extends ObjectBackend {
 
     return false;
   }
-  async startWriteStream(id: ObjectReference) {
+  async startWriteStream(id: string) {
     const objectPath = path.join(this.baseObjectPath, id);
     if (!fs.existsSync(objectPath)) return undefined;
     // remove item from cache
@@ -67,7 +67,7 @@ export class FsObjectBackend extends ObjectBackend {
     id: string,
     source: Source,
     metadata: ObjectMetadata,
-  ): Promise<ObjectReference | undefined> {
+  ): Promise<string | undefined> {
     const objectPath = path.join(this.baseObjectPath, id);
     const metadataPath = path.join(this.baseMetadataPath, `${id}.json`);
     if (fs.existsSync(objectPath) || fs.existsSync(metadataPath))
@@ -100,7 +100,7 @@ export class FsObjectBackend extends ObjectBackend {
     if (!stream) throw new Error("Could not create write stream");
     return stream;
   }
-  async delete(id: ObjectReference): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const objectPath = path.join(this.baseObjectPath, id);
     if (!fs.existsSync(objectPath)) return false;
 
@@ -124,9 +124,7 @@ export class FsObjectBackend extends ObjectBackend {
     await this.hashStore.delete(id);
     return true;
   }
-  async fetchMetadata(
-    id: ObjectReference,
-  ): Promise<ObjectMetadata | undefined> {
+  async fetchMetadata(id: string): Promise<ObjectMetadata | undefined> {
     const cacheResult = await this.metadataCache.get(id);
     if (cacheResult !== null) return cacheResult;
 
@@ -144,17 +142,14 @@ export class FsObjectBackend extends ObjectBackend {
     await this.metadataCache.set(id, metadata);
     return metadata;
   }
-  async writeMetadata(
-    id: ObjectReference,
-    metadata: ObjectMetadata,
-  ): Promise<boolean> {
+  async writeMetadata(id: string, metadata: ObjectMetadata): Promise<boolean> {
     const metadataPath = path.join(this.baseMetadataPath, `${id}.json`);
     if (!fs.existsSync(metadataPath)) return false;
     fs.writeFileSync(metadataPath, JSON.stringify(metadata));
     await this.metadataCache.set(id, metadata);
     return true;
   }
-  async fetchHash(id: ObjectReference): Promise<string | undefined> {
+  async fetchHash(id: string): Promise<string | undefined> {
     const cacheResult = await this.hashStore.get(id);
     if (cacheResult !== null) return cacheResult;
 
@@ -229,7 +224,7 @@ class FsHashStore {
    * @param id
    * @returns
    */
-  async get(id: ObjectReference) {
+  async get(id: string) {
     const cacheRes = await this.cache.get(id);
     if (cacheRes !== null) {
       return cacheRes;
@@ -252,7 +247,7 @@ class FsHashStore {
    * Saves hash of object
    * @param id
    */
-  async save(id: ObjectReference, hash: string) {
+  async save(id: string, hash: string) {
     await prisma.objectHash.upsert({
       where: {
         id,
@@ -272,7 +267,7 @@ class FsHashStore {
    * Hash is no longer valid for whatever reason
    * @param id
    */
-  async delete(id: ObjectReference) {
+  async delete(id: string) {
     await this.cache.remove(id);
     await prisma.objectHash.deleteMany({
       where: {

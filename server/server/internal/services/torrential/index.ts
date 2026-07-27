@@ -1,4 +1,4 @@
-import { spawn, execSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { Service } from "..";
 import fs from "node:fs";
 import path from "node:path";
@@ -58,14 +58,9 @@ export class TorrentialService extends Service<unknown> {
             logger.info(
               "torrential detected in development mode - building from source",
             );
-            let cargoPath = "cargo";
-            try {
-              cargoPath = execSync("which cargo", { encoding: "utf-8" }).trim();
-            } catch (e) {
-              logger.warn(
-                `could not locate cargo via which: ${(e as Error).message}`,
-              );
-            }
+            const cargoPaths = ["/usr/local/bin/cargo", "/usr/bin/cargo"];
+            const cargoPath =
+              cargoPaths.find((p) => fs.existsSync(p)) ?? "cargo";
             // sonarcloud-disable-next-line typescript:S4036
             return spawn(
               cargoPath,
@@ -78,7 +73,7 @@ export class TorrentialService extends Service<unknown> {
               {
                 env: {
                   ...process.env,
-                  PATH: "/usr/local/bin:/usr/bin:/bin",
+                  PATH: process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin",
                 },
               },
             );
@@ -99,13 +94,19 @@ export class TorrentialService extends Service<unknown> {
         const envPath = process.env.TORRENTIAL_PATH;
         if (envPath) return spawn(envPath, [], {});
 
-        let torrentialPath = "torrential";
-        try {
-          torrentialPath = execSync("which torrential", {
-            encoding: "utf-8",
-          }).trim();
-        } catch {
-          /* ignore */
+        let torrentialPath: string | null = null;
+        const knownTorrentialPaths = [
+          "/usr/local/bin/torrential",
+          "/usr/bin/torrential",
+        ];
+        for (const p of knownTorrentialPaths) {
+          if (fs.existsSync(p)) {
+            torrentialPath = p;
+            break;
+          }
+        }
+        if (!torrentialPath) {
+          throw new Error("torrential not found in any known path");
         }
         return spawn(torrentialPath, [], {});
       },

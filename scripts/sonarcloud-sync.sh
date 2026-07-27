@@ -306,6 +306,7 @@ determine_labels() {
   case "$severity" in
     BLOCKER|CRITICAL) labels="${labels},critical" ;;
     MAJOR)            labels="${labels},major" ;;
+    *)                labels="${labels},other" ;;
   esac
 
   echo "$labels"
