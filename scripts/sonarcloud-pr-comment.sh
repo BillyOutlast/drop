@@ -212,7 +212,7 @@ QG_RESPONSE=$(curl -sS -f \
 log "Fetching files needing coverage..."
 COVERAGE_RESPONSE=$(curl -sS -f \
   -H "Authorization: Bearer ${SONAR_TOKEN}" \
-  "https://sonarcloud.io/api/measures/component_tree?component=${SONAR_PROJECT_KEY}&metricKeys=uncovered_lines,coverage&qualifiers=FIL&s=metric&asc=true&ps=10&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"components":[]}')
+  "https://sonarcloud.io/api/measures/component_tree?component=${SONAR_PROJECT_KEY}&metricKeys=uncovered_lines,coverage,lines_to_cover&qualifiers=FIL&s=metric&asc=true&ps=15" 2>/dev/null || echo '{"components":[]}')
 
 COMMENT_BODY+="<details>\n<summary>📋 JSON Summary (for AI agents)</summary>\n\n"
 COMMENT_BODY+="\`\`\`json\n"
