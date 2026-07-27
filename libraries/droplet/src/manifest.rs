@@ -79,7 +79,7 @@ where
     })
 }
 
-fn push_chunk(
+pub(crate) fn push_chunk(
     chunks: &mut Vec<Vec<(VersionFile, u64, u64)>>,
     chunk: &mut Vec<(VersionFile, u64, u64)>,
 ) {
@@ -87,7 +87,7 @@ fn push_chunk(
     println!("Chunks: {}", chunks.len());
 }
 
-fn collect_whole_files(
+pub(crate) fn collect_whole_files(
     version_file: VersionFile,
     current_chunk: &mut Vec<(VersionFile, u64, u64)>,
     chunks: &mut Vec<Vec<(VersionFile, u64, u64)>>,
@@ -111,7 +111,7 @@ fn collect_whole_files(
     }
 }
 
-fn collect_split_files(
+pub(crate) fn collect_split_files(
     version_file: VersionFile,
     current_chunk: &mut Vec<(VersionFile, u64, u64)>,
     chunks: &mut Vec<Vec<(VersionFile, u64, u64)>>,
@@ -147,7 +147,7 @@ fn collect_split_files(
     }
 }
 
-fn organise_files(
+pub(crate) fn organise_files(
     files: Vec<VersionFile>,
     require_whole_files: bool,
 ) -> Vec<Vec<(VersionFile, u64, u64)>> {
