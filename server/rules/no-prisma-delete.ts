@@ -4,7 +4,7 @@ const blacklistedFunctions = new Set(["delete", "deleteMany"]);
 
 // Models where hard-delete is correct (join tables, auth tokens, ephemeral data, no deletedAt column)
 const allowedModels = new Set([
-  "aPIToken",
+  "apiToken",
   "certificate",
   "collection",
   "collectionEntry",

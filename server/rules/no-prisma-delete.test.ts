@@ -25,6 +25,7 @@ ruleTester.run("no-prisma-delete", ruleUnderTest, {
     // auth tokens / ephemeral data models.
     "prisma.companyGame.delete({ where: { id } });",
     "prisma.gameTag.delete({ where: { id } });",
+    "prisma.game.delete({ where: { id } });",
     "prisma.linkedAuthMec.delete({ where: { id } });",
     "prisma.linkedMFAMec.delete({ where: { id } });",
     "prisma.invitation.delete({ where: { id } });",
@@ -45,10 +46,6 @@ ruleTester.run("no-prisma-delete", ruleUnderTest, {
   invalid: [
     {
       code: "prisma.user.delete({ where: { id } });",
-      errors: [{ messageId: "noPrismaDelete" }],
-    },
-    {
-      code: "prisma.game.delete({ where: { id } });",
       errors: [{ messageId: "noPrismaDelete" }],
     },
     {
