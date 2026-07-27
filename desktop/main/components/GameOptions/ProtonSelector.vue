@@ -78,19 +78,8 @@
               </li>
             </ListboxOption>
           </template>
-          <ListboxOption
-            v-else
-            as="template"
-            disabled
-            :value="null"
-            v-slot="{ active }"
-          >
-            <li
-              :class="[
-                active ? 'bg-zinc-800' : '',
-                'italic text-zinc-400 py-2 pr-9 pl-3',
-              ]"
-            >
+          <ListboxOption v-else as="template" disabled :value="null" v-slot="{ active }">
+            <li :class="[active ? 'bg-zinc-800' : '', 'italic text-zinc-400 py-2 pr-9 pl-3']">
               No auto-discovered layers.
             </li>
           </ListboxOption>
@@ -125,19 +114,8 @@
               </li>
             </ListboxOption>
           </template>
-          <ListboxOption
-            v-else
-            as="template"
-            disabled
-            :value="null"
-            v-slot="{ active }"
-          >
-            <li
-              :class="[
-                active ? 'bg-zinc-800' : '',
-                'italic text-zinc-400 py-2 pr-9 pl-3',
-              ]"
-            >
+          <ListboxOption v-else as="template" disabled :value="null" v-slot="{ active }">
+            <li :class="[active ? 'bg-zinc-800' : '', 'italic text-zinc-400 py-2 pr-9 pl-3']">
               No manually added layers.
             </li>
           </ListboxOption>

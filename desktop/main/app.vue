@@ -11,10 +11,7 @@ import "~/composables/downloads.js";
 
 import { invoke } from "@tauri-apps/api/core";
 import { useAppState } from "./composables/app-state.js";
-import {
-  initialNavigation,
-  setupHooks,
-} from "./composables/state-navigation.js";
+import { initialNavigation, setupHooks } from "./composables/state-navigation.js";
 import { listen } from "@tauri-apps/api/event";
 import type { AppState } from "./types.js";
 

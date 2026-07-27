@@ -9,7 +9,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ref } from "vue";
 import { parseStatus, useGame } from "./game";
-import { InstalledType, type Game, type GameStatus, type GameVersion, type RawGameStatus } from "../types";
+import {
+  InstalledType,
+  type Game,
+  type GameStatus,
+  type GameVersion,
+  type RawGameStatus,
+} from "../types";
 
 const mockInvoke = vi.fn();
 const mockListen = vi.fn();
@@ -157,10 +163,7 @@ describe("useGame", () => {
     await useGame(gameId);
 
     expect(mockListen).toHaveBeenCalledTimes(1);
-    expect(mockListen).toHaveBeenCalledWith(
-      `update_game/${gameId}`,
-      expect.any(Function),
-    );
+    expect(mockListen).toHaveBeenCalledWith(`update_game/${gameId}`, expect.any(Function));
   });
 
   it("uses a distinct event channel per gameId", async () => {
@@ -174,25 +177,19 @@ describe("useGame", () => {
     await useGame(gameIdA);
     await useGame(gameIdB);
 
-    expect(mockListen).toHaveBeenNthCalledWith(
-      1,
-      `update_game/${gameIdA}`,
-      expect.any(Function),
-    );
-    expect(mockListen).toHaveBeenNthCalledWith(
-      2,
-      `update_game/${gameIdB}`,
-      expect.any(Function),
-    );
+    expect(mockListen).toHaveBeenNthCalledWith(1, `update_game/${gameIdA}`, expect.any(Function));
+    expect(mockListen).toHaveBeenNthCalledWith(2, `update_game/${gameIdB}`, expect.any(Function));
   });
 
   it("updates the status ref when the Tauri event handler fires", async () => {
     const gameId = "game-update-status";
     let capturedHandler: ((event: { payload: unknown }) => void) | undefined;
-    mockListen.mockImplementationOnce((_channel: string, handler: (event: { payload: unknown }) => void) => {
-      capturedHandler = handler;
-      return Promise.resolve(() => {});
-    });
+    mockListen.mockImplementationOnce(
+      (_channel: string, handler: (event: { payload: unknown }) => void) => {
+        capturedHandler = handler;
+        return Promise.resolve(() => {});
+      },
+    );
     mockInvoke.mockResolvedValueOnce({
       game: makeGame(gameId),
       status: [{ type: "Queued" }, null] as RawGameStatus,
@@ -211,10 +208,12 @@ describe("useGame", () => {
   it("updates the version ref when the event payload includes a version", async () => {
     const gameId = "game-update-version";
     let capturedHandler: ((event: { payload: unknown }) => void) | undefined;
-    mockListen.mockImplementationOnce((_channel: string, handler: (event: { payload: unknown }) => void) => {
-      capturedHandler = handler;
-      return Promise.resolve(() => {});
-    });
+    mockListen.mockImplementationOnce(
+      (_channel: string, handler: (event: { payload: unknown }) => void) => {
+        capturedHandler = handler;
+        return Promise.resolve(() => {});
+      },
+    );
     mockInvoke.mockResolvedValueOnce({
       game: makeGame(gameId),
       status: [{ type: "Queued" }, null] as RawGameStatus,
@@ -235,10 +234,12 @@ describe("useGame", () => {
     const gameId = "game-retain-version";
     const initialVersion = makeVersion();
     let capturedHandler: ((event: { payload: unknown }) => void) | undefined;
-    mockListen.mockImplementationOnce((_channel: string, handler: (event: { payload: unknown }) => void) => {
-      capturedHandler = handler;
-      return Promise.resolve(() => {});
-    });
+    mockListen.mockImplementationOnce(
+      (_channel: string, handler: (event: { payload: unknown }) => void) => {
+        capturedHandler = handler;
+        return Promise.resolve(() => {});
+      },
+    );
     mockInvoke.mockResolvedValueOnce({
       game: makeGame(gameId),
       status: [makeInstalledStatus("v1"), null] as RawGameStatus,

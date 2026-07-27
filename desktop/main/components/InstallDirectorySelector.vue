@@ -1,16 +1,12 @@
 <template>
   <Listbox as="div" v-model="installDir">
-    <ListboxLabel class="block text-sm/6 font-medium text-zinc-100"
-      >Install to</ListboxLabel
-    >
+    <ListboxLabel class="block text-sm/6 font-medium text-zinc-100">Install to</ListboxLabel>
     <div class="relative mt-2">
       <ListboxButton
         class="relative w-full cursor-default rounded-md bg-zinc-800 py-1.5 pl-3 pr-10 text-left text-zinc-100 shadow-sm ring-1 ring-inset ring-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-600 sm:text-sm/6"
       >
         <span class="block truncate">{{ installDirs[installDir] }}</span>
-        <span
-          class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
-        >
+        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
           <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
         </span>
       </ListboxButton>
@@ -76,11 +72,7 @@ import {
   ListboxOption,
   ListboxOptions,
 } from "@headlessui/vue";
-import {
-  CheckIcon,
-  ChevronUpDownIcon,
-  WrenchIcon,
-} from "@heroicons/vue/20/solid";
+import { CheckIcon, ChevronUpDownIcon, WrenchIcon } from "@heroicons/vue/20/solid";
 
 const installDir = defineModel<number>({ required: true });
 const { installDirs } = defineProps<{ installDirs: string[] }>();

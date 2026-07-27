@@ -23,8 +23,7 @@ export type StatsState = {
 export const useQueueState = () =>
   useState<QueueState>("queue", () => ({ queue: [], status: "Unknown" }));
 
-export const useStatsState = () =>
-  useState<StatsState>("stats", () => ({ speed: 0, time: 0 }));
+export const useStatsState = () => useState<StatsState>("stats", () => ({ speed: 0, time: 0 }));
 
 listen("update_queue", (event) => {
   const queue = useQueueState();
@@ -36,8 +35,7 @@ listen("update_stats", (event) => {
   stats.value = event.payload as StatsState;
 });
 
-export const useDownloadHistory = () =>
-  useState<Array<number>>("history", () => []);
+export const useDownloadHistory = () => useState<Array<number>>("history", () => []);
 
 export function formatKilobytes(bytes: number): string {
   const units = ["K", "M", "G", "T", "P"];

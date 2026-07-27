@@ -27,7 +27,11 @@
             class="transition inline-flex items-center w-full py-3 px-4 hover:bg-zinc-800"
           >
             <div class="inline-flex items-center text-zinc-300">
-              <img :src="profilePictureUrl" class="w-5 h-5 rounded-sm" :alt="state.user.displayName" />
+              <img
+                :src="profilePictureUrl"
+                class="w-5 h-5 rounded-sm"
+                :alt="state.user.displayName"
+              />
               <span class="ml-2 text-sm font-bold">{{ state.user.displayName }}</span>
             </div>
           </NuxtLink>

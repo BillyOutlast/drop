@@ -9,10 +9,7 @@ interface ProtonPaths {
   refresh: () => Promise<void>;
 }
 
-const protonPaths = useState<ProtonPaths["data"]["value"]>(
-  "proton_paths",
-  undefined,
-);
+const protonPaths = useState<ProtonPaths["data"]["value"]>("proton_paths", undefined);
 
 export const useProtonPaths = async (): Promise<ProtonPaths> => {
   const refresh = async () => {

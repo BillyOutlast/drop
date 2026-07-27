@@ -2,9 +2,7 @@
   <div class="space-y-8">
     <div class="flex flex-row items-center justify-between">
       <div>
-        <h3 class="text-sm font-medium leading-6 text-zinc-100">
-          Enable update checks
-        </h3>
+        <h3 class="text-sm font-medium leading-6 text-zinc-100">Enable update checks</h3>
         <p class="mt-1 text-sm leading-6 text-zinc-400">
           Drop will automatically check for updates from your server
         </p>
@@ -24,13 +22,12 @@
         />
       </Switch>
     </div>
-
   </div>
 </template>
 
 <script setup lang="ts">
 import { Switch } from "@headlessui/vue";
-import type { GameVersion } from '~/types';
+import type { GameVersion } from "~/types";
 
 const model = defineModel<GameVersion["userConfiguration"]>({ required: true });
 </script>
