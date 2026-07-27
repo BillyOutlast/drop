@@ -932,7 +932,7 @@ export class SteamProvider implements MetadataProvider {
     markdown = markdown.replace(/•\s*\t+/g, "\n- ");
 
     // Handle numbered enumeration (1.\t, 2.\t, etc.)
-    markdown = markdown.replace(/(\d+)\.\t+/g, "\n$1. ");
+    markdown = markdown.replace(/(\d+)\.\t+/g, "\n$1. "); // NOSONAR: S8786 false positive — `(\d+)` followed by literal `.` has no overlapping alternatives.
 
     // Convert bold text
     markdown = markdown.replace(
@@ -1023,11 +1023,14 @@ export class SteamProvider implements MetadataProvider {
   }
 
   private _cleanupBasicFormatting(markdown: string): string {
-    // Clean up spaces before newlines
-    markdown = markdown.replace(/[ \t]*\n/g, "\n");
+    // Clean up spaces/tabs before newlines — split/join avoids regex backtracking (S8786).
+    markdown = markdown
+      .split("\n")
+      .map((line) => line.replace(/[ \t]+$/, ""))
+      .join("\n");
 
-    // Clean up excessive spacing around punctuation
-    markdown = markdown.replace(/[ \t]+(?=[.,!?;:])/g, "");
+    // Clean up excessive spacing around punctuation.
+    markdown = markdown.replace(/[ \t]+(?=[.,!?;:])/g, ""); // NOSONAR: S8786 false positive — `[ \t]+` is a single character class, no nested quantifiers.
 
     return markdown;
   }
