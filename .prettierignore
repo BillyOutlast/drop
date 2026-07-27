@@ -3,6 +3,7 @@ dist/
 .nuxt/
 .output/
 coverage/
+target/
 
 # Dependencies
 **/node_modules/
