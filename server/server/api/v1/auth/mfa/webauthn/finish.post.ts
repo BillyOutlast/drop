@@ -56,7 +56,7 @@ export default defineEventHandler(async (h3) => {
   if (!passkey)
     throw createError({ statusCode: 400, message: "Invalid credential ID." });
 
-  const externalUrl = await systemConfig.getExternalUrl();
+  const externalUrl = systemConfig.getExternalUrl();
   const url = new URL(externalUrl);
 
   let verification;

@@ -34,7 +34,7 @@ export default defineEventHandler(async (h3) => {
   await sessionHandler.deleteSessionDataKey(h3, "webauthn/options");
 
   const rpID = await getRpId();
-  const externalUrl = await systemConfig.getExternalUrl();
+  const externalUrl = systemConfig.getExternalUrl();
   const url = new URL(externalUrl);
 
   let verification;
