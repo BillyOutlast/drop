@@ -9,6 +9,7 @@ on:
     branches:
       - main
       - rebuild
+      - develop
 
 permissions:
   contents: read

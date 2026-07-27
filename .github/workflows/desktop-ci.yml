@@ -6,11 +6,17 @@ on:
     paths:
       - "desktop/src-tauri/**"
       - ".github/workflows/desktop-ci.yml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - "pnpm-lock.yaml"
   pull_request:
-    branches: [rebuild]
+    branches: [rebuild, develop]
     paths:
       - "desktop/src-tauri/**"
       - ".github/workflows/desktop-ci.yml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - "pnpm-lock.yaml"
   workflow_dispatch:
 
 permissions:

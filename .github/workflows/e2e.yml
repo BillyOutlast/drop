@@ -11,7 +11,7 @@ on:
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
   pull_request:
-    branches: [rebuild]
+    branches: [rebuild, develop]
     paths:
       - "server/**"
       - ".github/workflows/e2e.yml"

@@ -6,11 +6,17 @@ on:
     paths:
       - "cli/**"
       - ".github/workflows/cli-ci.yml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - "pnpm-lock.yaml"
   pull_request:
-    branches: [rebuild]
+    branches: [rebuild, develop]
     paths:
       - "cli/**"
       - ".github/workflows/cli-ci.yml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - "pnpm-lock.yaml"
   workflow_dispatch:
 
 permissions:

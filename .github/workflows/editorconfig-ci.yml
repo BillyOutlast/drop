@@ -4,7 +4,7 @@ on:
   push:
     branches: [rebuild]
   pull_request:
-    branches: [rebuild]
+    branches: [rebuild, develop]
   workflow_dispatch:
 
 permissions:
