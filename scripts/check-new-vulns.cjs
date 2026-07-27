@@ -29,6 +29,14 @@
 const fs = require("fs");
 const path = require("path");
 
+const HELP_TEXT =
+  "Usage: check-new-vulns.cjs --format {pnpm|cargo} --json <path> " +
+  "[--register <path>] [--ignored <id,id,...>] [--min-severity <s>]\n\n" +
+  "Compares pnpm/cargo audit JSON output against entries in\n" +
+  "security/risk-register.yaml and exits 1 only when a new (un-accepted)\n" +
+  "advisory is detected. Missing/empty/malformed audit JSON or register\n" +
+  "exits 0 (treated as infra noise).";
+
 // fallow-ignore-next-line complexity
 function parseArgs(argv) {
   const args = {};
@@ -48,9 +56,7 @@ function parseArgs(argv) {
         : [];
     } else if (a === "--min-severity") args.minSeverity = nextArg(++i);
     else if (a === "--help" || a === "-h") {
-      console.log(
-        fs.readFileSync(__filename, "utf8").split("\n").slice(0, 25).join("\n"),
-      );
+      console.log(HELP_TEXT);
       process.exit(0);
     }
   }
@@ -97,10 +103,14 @@ function readKnownAdvisories(path) {
 }
 
 function severityRank(s) {
+  // Unknown / missing severity is treated as critical (highest rank) so
+  // we never silently filter out a vulnerability because its severity
+  // string was unrecognized or absent — false negatives are worse than
+  // false positives here.
   return (
     { critical: 4, high: 3, moderate: 2, medium: 2, low: 1, informational: 0 }[
       (s || "").toLowerCase()
-    ] ?? -1
+    ] ?? 4
   );
 }
 

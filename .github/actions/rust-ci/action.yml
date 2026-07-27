@@ -140,11 +140,15 @@ runs:
       # (RUSTSEC-2026-0194/0195 in quick-xml are severity "high"); the
       # script handles missing/empty/malformed JSON and missing risk
       # register gracefully (exits 0 with a warning in both cases).
+      # Resolve the script via $GITHUB_WORKSPACE because this composite
+      # action is invoked with working-directory set to a sub-crate
+      # (cli/, desktop/src-tauri/, libraries/droplet/), where a relative
+      # `scripts/check-new-vulns.cjs` would not exist.
       if: success() || failure()
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        node scripts/check-new-vulns.cjs \
+        node "$GITHUB_WORKSPACE/scripts/check-new-vulns.cjs" \
           --format cargo \
           --json /tmp/cargo-audit.json \
           --min-severity high
