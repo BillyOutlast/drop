@@ -3,6 +3,8 @@ node_modules/
 .omo/
 .nuxt/
 .nuxtrc
+.claude/
+.opencode/plans/
 server/test-results/
 fallow.txt
 fallow.json

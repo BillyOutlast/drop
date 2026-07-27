@@ -679,7 +679,6 @@ export class SteamProvider implements MetadataProvider {
   private _decodeHtmlEntities(text: string): string {
     return text
       .replaceAll("&nbsp;", " ")
-      .replaceAll("&amp;", "&")
       .replaceAll("&lt;", "<")
       .replaceAll("&gt;", ">")
       .replaceAll("&quot;", '"')
@@ -687,6 +686,7 @@ export class SteamProvider implements MetadataProvider {
       .replace(/&#x([0-9A-Fa-f]+);/g, (_, hex) =>
         String.fromCodePoint(Number.parseInt(hex, 16)),
       )
+      .replaceAll("&amp;", "&")
       .replace(/&#(\d+);/g, (_, dec) =>
         String.fromCodePoint(Number.parseInt(dec, 10)),
       );
@@ -1121,10 +1121,10 @@ export class SteamProvider implements MetadataProvider {
     return html
       .replace(/<[^>]{0,1000}>/g, "")
       .replaceAll("&nbsp;", " ")
-      .replaceAll("&amp;", "&")
       .replaceAll("&lt;", "<")
       .replaceAll("&gt;", ">")
       .replaceAll("&quot;", '"')
-      .replaceAll("&#39;", "'");
+      .replaceAll("&#39;", "'")
+      .replaceAll("&amp;", "&");
   }
 }

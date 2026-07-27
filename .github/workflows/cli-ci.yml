@@ -13,6 +13,9 @@ on:
       - ".github/workflows/cli-ci.yml"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   ci:
     name: Build, Test, Lint
