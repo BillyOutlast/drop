@@ -32,7 +32,7 @@ function Person({
         target="_blank"
         className="group flex items-center gap-4"
       >
-        <img alt={name} src={img} className="size-12 rounded-full" />
+        <img alt="" src={img} className="size-12 rounded-full" />
         <div className="text-sm/6">
           <h3 className="font-medium group-hover:underline">{name}</h3>
           <p className="text-zinc-400">{description}</p>

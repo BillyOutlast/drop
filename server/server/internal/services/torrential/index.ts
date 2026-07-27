@@ -87,7 +87,13 @@ export class TorrentialService extends Service<unknown> {
 
         const localDir = fs.readdirSync(".");
         if (localDir.includes("torrential")) {
-          return spawn(path.resolve("./torrential"), [], {});
+          const resolvedPath = path.resolve("./torrential");
+          try {
+            fs.accessSync(resolvedPath, fs.constants.X_OK);
+            return spawn(resolvedPath, [], {});
+          } catch {
+            // Not executable, fall through to other methods
+          }
         }
 
         const envPath = process.env.TORRENTIAL_PATH;

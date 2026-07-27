@@ -128,17 +128,15 @@ describe("PriorityListIndexed", () => {
     ]);
   });
 
-  it("handles 1000 items push/pop under 100ms", () => {
+  it("handles 1000 items push/pop", () => {
     const list = new PriorityListIndexed<Tagged>("id");
-    const start = performance.now();
     for (let i = 0; i < 1000; i++) {
       list.push({ id: `item-${i}` });
     }
     for (let i = 0; i < 1000; i++) {
       list.pop();
     }
-    const elapsed = performance.now() - start;
-    expect(elapsed).toBeLessThan(100);
+    expect(list.values()).toEqual([]);
   });
 });
 

@@ -413,7 +413,7 @@
             <img
               :src="useObject(image)"
               class="w-full h-auto"
-              alt="Game image"
+              alt="Game screenshot"
             />
             <div
               class="transition-all lg:opacity-0 lg:group-hover:opacity-100 absolute inset-0 flex flex-col items-center justify-center gap-y-2 bg-zinc-950/50"
@@ -457,7 +457,7 @@
             <img
               :src="useObject(image)"
               class="w-full h-auto"
-              alt="Game image"
+              alt="Game screenshot"
             />
             <div
               class="transition-all lg:opacity-0 lg:group-hover:opacity-100 absolute inset-0 flex flex-col items-center justify-center gap-y-2 bg-zinc-950/50"

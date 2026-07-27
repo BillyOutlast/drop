@@ -1,5 +1,5 @@
 import tailwindcss from "@tailwindcss/vite";
-import { execSync } from "node:child_process";
+import { execSync, execFileSync } from "node:child_process";
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import module from "node:module";
@@ -27,19 +27,12 @@ const twemojiAssetsPath = path.join(
 // get drop version
 const dropVersion = getDropVersion();
 
-function resolveGitPath(): string {
-  try {
-    return execSync("which git", { encoding: "utf-8" }).trim();
-  } catch {
-    return "git";
-  }
-}
-
 // get git ref or supply during build
-const gitPath = resolveGitPath();
 const commitHash =
   process.env.BUILD_GIT_REF ??
-  execSync(`${gitPath} rev-parse --short HEAD`).toString().trim();
+  execFileSync("git", ["rev-parse", "--short", "HEAD"], {
+    encoding: "utf-8",
+  }).trim();
 
 console.log(`Drop ${dropVersion} #${commitHash}`);
 

@@ -21,9 +21,9 @@ const OIDCWellKnownV1 = type({
   issuer: "string",
   authorization_endpoint: "string.url.parse",
   token_endpoint: "string.url.parse",
-  userinfo_endpoint: "string.url.parse",
+  "userinfo_endpoint?": "string.url.parse",
   jwks_uri: "string.url.parse",
-  scopes_supported: "string[]",
+  "scopes_supported?": "string[]",
 });
 
 // Represents required OIDC configuration
@@ -179,7 +179,7 @@ export class OIDCManager {
   generateConfiguration() {
     return {
       authorizationUrl: this.oidcConfiguration.authorization_endpoint,
-      scopes: this.oidcConfiguration.scopes_supported.join(", "),
+      scopes: this.oidcConfiguration.scopes_supported?.join(", ") ?? "",
       adminGroup: this.adminGroup,
       usernameClaim: this.usernameClaim,
       externalUrl: this.externalUrl,
@@ -198,7 +198,7 @@ export class OIDCManager {
       redirect_uri: this.redirectUrl.toString(),
       state: stateKey,
       response_type: "code",
-      scope: this.oidcConfiguration.scopes_supported.join(" "),
+      scope: this.oidcConfiguration.scopes_supported?.join(" ") ?? "",
     });
 
     const finalUrl = `${normalisedUrl}?${queryParams}`;
@@ -232,7 +232,11 @@ export class OIDCManager {
 
     const tokenEndpoint = this.oidcConfiguration.token_endpoint.toString();
     const userinfoEndpoint =
-      this.oidcConfiguration.userinfo_endpoint.toString();
+      this.oidcConfiguration.userinfo_endpoint?.toString();
+
+    if (!userinfoEndpoint) {
+      return "OIDC userinfo_endpoint not configured";
+    }
 
     const requestBody = new URLSearchParams({
       client_id: this.clientId,
@@ -240,7 +244,7 @@ export class OIDCManager {
       grant_type: "authorization_code",
       code: code,
       redirect_uri: session.callbackUrl,
-      scope: this.oidcConfiguration.scopes_supported.join(","),
+      scope: this.oidcConfiguration.scopes_supported?.join(",") ?? "",
     });
 
     try {
@@ -562,7 +566,8 @@ function validateOIDCEndpointSecurity(configuration: OIDCConfiguration) {
   ];
 
   for (const endpoint of endpoints) {
-    if (!isHttps(configuration[endpoint])) {
+    const value = configuration[endpoint];
+    if (value && !isHttps(value)) {
       throw new Error(`OIDC ${endpoint} is not using HTTPS`);
     }
   }

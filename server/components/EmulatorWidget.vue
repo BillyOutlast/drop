@@ -7,7 +7,7 @@
       <img
         :src="useObject(emulator.gameIcon)"
         class="size-6"
-        :alt="emulator.gameName"
+        alt=""
       />
       <span>{{ emulator.gameName }}</span>
     </div>

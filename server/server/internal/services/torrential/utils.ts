@@ -16,7 +16,7 @@ import type {
  * @typeParam K - The TorrentialBound (inbound) message type enum.
  * @typeParam V - The protobuf message class for deserialization.
  * @param opts - The processor configuration including type matchers and handler.
- * @returns The same processor configuration, registered for use by the service.
+ * @returns The supplied processor configuration.
  */
 export function defineQueryProcessor<
   T extends DropBoundType,
