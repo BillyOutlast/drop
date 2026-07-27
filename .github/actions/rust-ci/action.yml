@@ -126,7 +126,30 @@ runs:
       uses: taiki-e/install-action@cargo-audit
 
     - name: Audit dependencies
+      # cargo audit exits 1 on ANY advisory. Keep non-blocking here; the
+      # follow-up step fails only when a NEW (un-ignored) advisory is found
+      # that is not already documented in security/risk-register.yaml.
       continue-on-error: true
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: cargo audit
+      run: cargo audit --json > /tmp/cargo-audit.json 2>/dev/null || true
+
+    - name: Check for new Rust advisories
+      if: always()
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        node -e "
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('/tmp/cargo-audit.json', 'utf8'));
+          const vulnerabilities = data.vulnerabilities ? data.vulnerabilities.list || [] : [];
+          const known = [];
+          try {
+            const register = fs.readFileSync('security/risk-register.yaml', 'utf8');
+            const matches = register.match(/GHSA-[a-z0-9-]+/g) || [];
+            matches.forEach(m => known.push(m));
+          } catch (e) {}
+          const new_vulns = vulnerabilities.filter(v => !known.includes(v.advisory.id));
+          new_vulns.forEach(v => console.error('NEW RUST VULN:', v.advisory.id, v.package.name, v.advisory.title));
+          process.exit(new_vulns.length > 0 ? 1 : 0);
+        "
