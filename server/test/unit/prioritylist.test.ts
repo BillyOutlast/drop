@@ -106,9 +106,9 @@ describe("PriorityListIndexed", () => {
     list.push({ id: "high" }, Number.MAX_SAFE_INTEGER);
     list.push({ id: "mid" }, 0);
     const vals = list.values();
-    expect(vals[0].id).toBe("high");
-    expect(vals[1].id).toBe("mid");
-    expect(vals[2].id).toBe("low");
+    expect(vals[0]!.id).toBe("high");
+    expect(vals[1]!.id).toBe("mid");
+    expect(vals[2]!.id).toBe("low");
     expect(list.get("high")).toEqual({ id: "high" });
     expect(list.get("mid")).toEqual({ id: "mid" });
     expect(list.get("low")).toEqual({ id: "low" });
@@ -160,20 +160,21 @@ describe("PriorityList (property-based)", () => {
           const addedOrder = new Map<string, number>();
 
           for (let i = 0; i < items.length; i++) {
-            const key = `${items[i].id}\x00${i}`;
-            list.push({ id: key }, items[i].priority);
-            priorities.set(key, items[i].priority);
+            const item = items[i]!;
+            const key = `${item.id}\x00${i}`;
+            list.push({ id: key }, item.priority);
+            priorities.set(key, item.priority);
             addedOrder.set(key, i);
           }
 
           const result = list.values();
           for (let i = 1; i < result.length; i++) {
-            const a = result[i - 1];
-            const b = result[i];
+            const a = result[i - 1]!;
+            const b = result[i]!;
             const pa = priorities.get(a.id)!;
             const pb = priorities.get(b.id)!;
             if (pa === pb) {
-              expect(addedOrder.get(a.id)).toBeLessThan(addedOrder.get(b.id)!);
+              expect(addedOrder.get(a.id)!).toBeLessThan(addedOrder.get(b.id)!);
             } else {
               expect(pa).toBeGreaterThan(pb);
             }
@@ -230,7 +231,8 @@ describe("PriorityListIndexed (property-based)", () => {
           const popped = list.pop();
           expect(list.get(popped.object.id)).toBeUndefined();
           for (let i = 1; i < items.length; i++) {
-            expect(list.get(items[i].id)).toEqual({ id: items[i].id });
+            const item = items[i]!;
+            expect(list.get(item.id)).toEqual({ id: item.id });
           }
         },
       ),

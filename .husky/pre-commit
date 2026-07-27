@@ -1,7 +1,26 @@
 # Fallow audit gate
 fallow audit --format json --quiet --explain --gate-marker agent || exit 1
 
+# Run prisma generate when schema or proto files changed (needed for typecheck)
+changed_schema=$(git diff --cached --name-only --diff-filter=ACM -- 'server/prisma/schema.prisma' 'server/**/*.proto')
+if [ -n "$changed_schema" ]; then
+  echo "Prisma schema or proto changed — running prisma generate..."
+  pnpm --filter drop exec prisma generate || exit 1
+fi
+
 pnpm --filter drop lint-staged && pnpm --filter drop typecheck
+
+# Check test files for bare .toBeDefined() / .not.toBeNull() without companion assertions
+changed_tests=$(git diff --cached --name-only --diff-filter=ACM -- '*.test.ts' '*.spec.ts')
+if [ -n "$changed_tests" ]; then
+  bare_assertions=$(grep -n '\.toBeDefined()\|\.not\.toBeNull()' $changed_tests 2>/dev/null | grep -v '\.toEqual\|\.toMatchSnapshot\|\.toStrictEqual\|\.toBe(' || true)
+  if [ -n "$bare_assertions" ]; then
+    echo "ERROR: Bare .toBeDefined() or .not.toBeNull() without companion assertion:"
+    echo "$bare_assertions"
+    echo "Add a meaningful assertion (.toEqual, .toMatchSnapshot, etc.) or suppress with --no-verify."
+    exit 1
+  fi
+fi
 
 # Check shell scripts
 changed_sh=$(git diff --cached --name-only --diff-filter=ACM -- '*.sh')

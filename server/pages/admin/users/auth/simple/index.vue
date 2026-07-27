@@ -449,7 +449,7 @@ const email = computed({
     _email.value = v;
   },
 });
-const mailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const mailRegex = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
 const validEmail = computed(() =>
   _email.value === undefined ? true : mailRegex.test(email.value as string),
 );

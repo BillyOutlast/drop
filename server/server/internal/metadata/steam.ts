@@ -645,19 +645,31 @@ export class SteamProvider implements MetadataProvider {
   }
 
   private _extractBanner(html: string): string | undefined {
-    const bannerRegex =
-      /background-image:\s*url\(['"]([^'"]*?(?:\/(?:clan|app)\/\d+|background|header)[^'"]*?)['"][^}]*\)/i;
-    const backgroundImageRegex =
-      /style\s*=\s*["'][^"']*background-image:\s*url\(([^)]+)\)[^"']*/i;
+    // Two-step to avoid super-linear backtracking in single regex (S8786).
+    const urlRegex = /background-image:\s*url\(\s*['"]?([^'")\s]+)['"]?\s*\)/gi;
+    const bannerUrlRegex = /\/(?:clan|app)\/\d+|background|header/i;
 
-    let bannerMatch = bannerRegex.exec(html);
-    bannerMatch ??= backgroundImageRegex.exec(html);
+    let bannerUrl: string | undefined;
+    for (const match of html.matchAll(urlRegex)) {
+      const candidate = match[1];
+      if (!candidate) continue;
+      if (bannerUrlRegex.test(candidate)) {
+        bannerUrl = candidate;
+        break;
+      }
+    }
 
-    if (!bannerMatch) return undefined;
-    if (!bannerMatch[1]) return undefined;
+    if (!bannerUrl) {
+      const backgroundImageRegex =
+        /style\s*=\s*["'][^"']*background-image:\s*url\(([^)]+)\)[^"']*/i;
+      const bgMatch = backgroundImageRegex.exec(html);
+      if (bgMatch?.[1]) {
+        bannerUrl = bgMatch[1].replace(/['"]/g, "");
+      }
+    }
 
-    let bannerUrl = bannerMatch[1].replace(/['"]/g, "");
-    // Clean up the URL
+    if (!bannerUrl) return undefined;
+
     if (bannerUrl.includes("?")) {
       bannerUrl = bannerUrl.split("?")[0]!;
     }
@@ -918,7 +930,7 @@ export class SteamProvider implements MetadataProvider {
     markdown = markdown.replace(/•\s*\t+/g, "\n- ");
 
     // Handle numbered enumeration (1.\t, 2.\t, etc.)
-    markdown = markdown.replace(/(\d+)\.\t+/g, "\n$1. ");
+    markdown = markdown.replace(/(\d+)\.\t{1,}/g, "\n$1. ");
 
     // Convert bold text
     markdown = markdown.replace(
@@ -1010,10 +1022,10 @@ export class SteamProvider implements MetadataProvider {
 
   private _cleanupBasicFormatting(markdown: string): string {
     // Clean up spaces before newlines
-    markdown = markdown.replace(/ +\n/g, "\n");
+    markdown = markdown.replace(/[^\S\r\n]*\n/g, "\n");
 
     // Clean up excessive spacing around punctuation
-    markdown = markdown.replace(/\s+([.,!?;:])/g, "$1");
+    markdown = markdown.replace(/\s+(?=[.,!?;:])/g, "");
 
     return markdown;
   }
@@ -1107,7 +1119,7 @@ export class SteamProvider implements MetadataProvider {
 
   private _stripHtmlTags(html: string): string {
     return html
-      .replace(/<[^>]*>/g, "")
+      .replace(/<[^>]{0,1000}>/g, "")
       .replaceAll("&nbsp;", " ")
       .replaceAll("&amp;", "&")
       .replaceAll("&lt;", "<")

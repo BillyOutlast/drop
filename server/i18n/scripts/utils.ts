@@ -84,7 +84,7 @@ export function deleteLocalisation(localisation: Localisation, key: string) {
   for (const part of parts.slice(0, -1)) {
     if (typeof current === "string")
       throw new Error(`${key} not found in localisation`);
-    current = current[part];
+    current = current[part]!;
   }
   if (typeof current === "string")
     throw new Error(`${key} not found in localisation`);
@@ -102,7 +102,7 @@ export function fetchLocalisation(
   for (const part of parts.slice(0, -1)) {
     if (typeof current === "string")
       throw new Error(`${key} not found in localisation`);
-    current = current[part];
+    current = current[part]!;
   }
   if (typeof current === "string")
     throw new Error(`${key} not found in localisation`);

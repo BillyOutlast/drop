@@ -333,7 +333,7 @@ describe("MetadataHandler provider chain (search)", () => {
     expect(results.map((r) => r.id)).toEqual(["exact", "mediocre", "distant"]);
     // Verify scores are monotonically non-increasing
     for (let i = 1; i < results.length; i++) {
-      expect(results[i - 1].fuzzy).toBeGreaterThanOrEqual(results[i].fuzzy);
+      expect(results[i - 1]!.fuzzy).toBeGreaterThanOrEqual(results[i]!.fuzzy);
     }
   });
 });

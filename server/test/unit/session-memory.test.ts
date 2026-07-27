@@ -138,7 +138,7 @@ describe("memory session provider", () => {
       );
       const found = await provider.findSessions({ userId: "alice" });
       expect(found).toHaveLength(1);
-      expect(found[0].token).toBe("u1");
+      expect(found[0]!.token).toBe("u1");
     });
 
     it("returns sessions matching the data filter", async () => {
@@ -152,7 +152,7 @@ describe("memory session provider", () => {
       );
       const found = await provider.findSessions({ data: { role: "admin" } });
       expect(found).toHaveLength(1);
-      expect(found[0].token).toBe("s1");
+      expect(found[0]!.token).toBe("s1");
     });
 
     it("returns empty array when no sessions match", async () => {

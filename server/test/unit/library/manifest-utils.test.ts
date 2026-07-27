@@ -25,7 +25,7 @@ describe("castManifest", () => {
     const result = castManifest(json);
     expect(result.version).toBe("2");
     expect(result.size).toBe(1024);
-    expect(result.chunks.chunk1.files[0].filename).toBe("test.txt");
+    expect(result.chunks.chunk1!.files[0]!.filename).toBe("test.txt");
   });
 
   it("returns the object directly when already an object", () => {
