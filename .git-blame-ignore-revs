@@ -1,0 +1,7 @@
+# .git-blame-ignore-revs
+# Add commit hashes (full 40-char) of bulk formatting/refactoring commits below.
+# Configure: git config blame.ignoreRevsFile .git-blame-ignore-revs
+# GitHub auto-detects this file; no additional config needed.
+#
+# Template for bulk SonarCloud mechanical fixes commit:
+# <full-sha-here>  Bulk SonarCloud mechanical fixes (S1481, S1488, S1854, S1125, S7741)

@@ -90,11 +90,11 @@ export class MetadataHandler {
           try {
             const results = await provider.search(query);
             const mappedResults: InternalGameMetadataResult[] = results.map(
-              (result) =>
-                Object.assign({}, result, {
-                  sourceId: provider.source(),
-                  sourceName: provider.name(),
-                }),
+              (result) => ({
+                ...result,
+                sourceId: provider.source(),
+                sourceName: provider.name(),
+              }),
             );
             resolve(mappedResults);
           } catch (e) {

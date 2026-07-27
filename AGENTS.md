@@ -200,6 +200,15 @@ This queries unresolved findings matching the sync script scope
 
 **Creating issues**: Use `gh issue create --repo BillyOutlast/drop --label sonarcloud` for new findings.
 
+## OpenCodeReview (OCR)
+
+AI-powered code review CLI. Runs on PRs via GitHub Action and locally.
+
+**Local**: `ocr review` (workspace mode, staged/unstaged changes), `ocr review --from main --to feature` (branch range), `ocr delegate preview` (file preview).
+**CI**: `.github/workflows/open-code-review.yml` — incremental PR reviews with sticky summary comments.
+**GitHub Secrets**: `OCR_LLM_URL`, `OCR_LLM_TOKEN`, `OCR_LLM_MODEL` (OpenAI-compatible, `llm_use_anthropic: false`).
+**Docs**: https://open-codereview.ai/docs
+
 ## Deferred Work Backlog (2026-07-24)
 
 Captured at PR #22 (https://github.com/BillyOutlast/drop/pull/22) close-out. **Re-evaluate when coverage >30% or as bandwidth allows.**

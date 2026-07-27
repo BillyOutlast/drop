@@ -37,12 +37,14 @@ websocketHandler.listen((message) => {
       }
       case "disconnect": {
         const disconnectTaskId = data[0];
+        if (!disconnectTaskId) break;
         taskStates.delete(disconnectTaskId);
         console.log(`disconnected from ${disconnectTaskId}`);
         break;
       }
       case "error": {
         const [taskId, title, description] = data;
+        if (!taskId || !title || !description) break;
         const state = taskStates.get(taskId);
         if (!state) break;
         state.value ??= {

@@ -120,8 +120,8 @@ describe("IGDBProvider", () => {
     const results = await provider.search("test");
 
     expect(results).toHaveLength(1);
-    expect(results[0].icon).toBe("");
-    expect(results[0].id).toBe("7");
+    expect(results[0]!.icon).toBe("");
+    expect(results[0]!.id).toBe("7");
   });
 
   // -----------------------------------------------------------------------
@@ -148,8 +148,8 @@ describe("IGDBProvider", () => {
     const results = await provider.search("test");
 
     expect(results).toHaveLength(1);
-    expect(results[0].year).toBe(0);
-    expect(results[0].name).toBe("No Date Game");
+    expect(results[0]!.year).toBe(0);
+    expect(results[0]!.name).toBe("No Date Game");
   });
 
   // -----------------------------------------------------------------------

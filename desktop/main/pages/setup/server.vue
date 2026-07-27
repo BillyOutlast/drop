@@ -94,7 +94,7 @@ const showHttps = computed(() => {
 async function connect() {
   const newUrl = url.value.startsWith("http") ? url.value : `https://${url.value}`;
 
-  const result = await invoke("use_remote", { url: newUrl });
+  await invoke("use_remote", { url: newUrl });
   router.push("/auth");
 }
 

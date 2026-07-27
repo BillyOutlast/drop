@@ -154,7 +154,7 @@ describe("Session Fixation (T3)", () => {
       expect.objectContaining({ expires: expect.any(Date) }),
     );
     // The new token must differ from the attacker's known token
-    const newToken = setCookieSpy.mock.calls[0][2] as string;
+    const newToken = setCookieSpy.mock.calls[0]![2] as string;
     expect(newToken).not.toBe(attackerToken);
     // Old session was removed from the provider
     expect(mockSessionDeleteMany).toHaveBeenCalledWith(

@@ -58,7 +58,7 @@ function detectMisorderedPlugin(dir: string): string | null {
     for (const imp of imports) {
       const match = imp.match(/\/plugins\/(\d{2})/);
       if (!match) continue;
-      const refPrefix = match[1];
+      const refPrefix = match[1]!;
       const refIdx = prefixOrder.get(refPrefix);
       if (refIdx === undefined) continue;
       if (refIdx > fileIdx) return file;

@@ -5,7 +5,6 @@ use std::io::SeekFrom;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::sync::Arc;
-use std::time::Instant;
 
 use aes::cipher::{KeyIvInit, StreamCipher};
 use download_manager::error::ApplicationDownloadError;
@@ -15,7 +14,7 @@ use download_manager::util::download_thread_control_flag::{
 use download_manager::util::progress_object::ProgressHandle;
 use droplet_types::{ChunkData, FileEntry};
 use futures_util::StreamExt as _;
-use log::{debug, info};
+use log::info;
 use remote::auth::generate_authorization_header;
 use remote::error::{DropServerError, RemoteAccessError};
 use remote::utils::DROP_CLIENT_ASYNC;
