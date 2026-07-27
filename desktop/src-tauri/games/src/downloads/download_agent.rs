@@ -413,6 +413,7 @@ impl GameDownloadAgent {
                 let chunk_length: usize = chunk_data.files.iter().map(|v| v.length).sum();
                 if *completed_chunks.get(&chunk_id).unwrap_or(&false) {
                     dl_handle.skip(chunk_length);
+                    disk_handle.skip(chunk_length);
                     continue;
                 }
 

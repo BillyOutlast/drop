@@ -78,7 +78,22 @@
               </li>
             </ListboxOption>
           </template>
-          <li v-else class="italic text-zinc-400 py-2 pr-9 pl-3">No auto-discovered layers.</li>
+          <ListboxOption
+            v-else
+            as="template"
+            disabled
+            :value="null"
+            v-slot="{ active }"
+          >
+            <li
+              :class="[
+                active ? 'bg-zinc-800' : '',
+                'italic text-zinc-400 py-2 pr-9 pl-3',
+              ]"
+            >
+              No auto-discovered layers.
+            </li>
+          </ListboxOption>
           <h1 class="text-white text-sm font-semibold bg-zinc-900 py-2 px-2">Manually added</h1>
           <template v-if="protonPaths.custom.length > 0">
             <ListboxOption
@@ -110,7 +125,22 @@
               </li>
             </ListboxOption>
           </template>
-          <li v-else class="italic text-zinc-400 py-2 pr-9 pl-3">No manually added layers.</li>
+          <ListboxOption
+            v-else
+            as="template"
+            disabled
+            :value="null"
+            v-slot="{ active }"
+          >
+            <li
+              :class="[
+                active ? 'bg-zinc-800' : '',
+                'italic text-zinc-400 py-2 pr-9 pl-3',
+              ]"
+            >
+              No manually added layers.
+            </li>
+          </ListboxOption>
         </ListboxOptions>
       </transition>
     </div>

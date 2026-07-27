@@ -107,13 +107,14 @@ fn process_cert_file(path: &Path, certs: &mut Vec<Certificate>) {
             return;
         }
     };
-    file.read_to_end(&mut buf).unwrap_or_else(|e| {
-        panic!(
-            "Failed to read to end of certificate file {} with error {}",
+    if let Err(e) = file.read_to_end(&mut buf) {
+        warn!(
+            "Failed to read certificate file {} with error {}",
             path.display(),
             e
-        )
-    });
+        );
+        return;
+    }
 
     match Certificate::from_pem_bundle(&buf) {
         Ok(certificates) => {

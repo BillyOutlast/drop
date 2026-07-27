@@ -23,7 +23,7 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 
 ### BUILD TORRENTIAL
 # Bookworm-pinned to match the runtime image's glibc (a trixie build would not run on bookworm).
-FROM rustlang/rust:nightly-20260726-bookworm-slim AS torrential-build
+FROM rustlang/rust:nightly-bookworm-slim AS torrential-build
 ## libarchive-dev + pkg-config let libarchive3-sys link libarchive dynamically (glibc).
 ## protobuf-compiler is kept for parity (torrential's build.rs uses a vendored protoc).
 # hadolint ignore=DL3008

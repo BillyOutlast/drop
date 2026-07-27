@@ -183,6 +183,7 @@ pub async fn download_game_chunk(
 
         if is_paused(control_flag) {
             download_progress.set(0);
+            disk_progress.set(0);
             return Ok(false);
         }
     }

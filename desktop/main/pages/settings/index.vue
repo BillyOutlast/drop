@@ -38,8 +38,12 @@ defineProps<{}>();
 const autostartEnabled = ref<boolean>(false);
 
 // Load initial state
-const initialAutostart = await invoke<boolean>("get_autostart_enabled");
-autostartEnabled.value = initialAutostart;
+try {
+  const initialAutostart = await invoke<boolean>("get_autostart_enabled");
+  autostartEnabled.value = initialAutostart;
+} catch {
+  // Keep default false if IPC fails
+}
 
 // Watch for changes and update autostart
 watch(autostartEnabled, async (newValue: boolean) => {
