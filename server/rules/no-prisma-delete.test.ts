@@ -29,7 +29,7 @@ ruleTester.run("no-prisma-delete", ruleUnderTest, {
     "prisma.linkedAuthMec.delete({ where: { id } });",
     "prisma.linkedMFAMec.delete({ where: { id } });",
     "prisma.invitation.delete({ where: { id } });",
-    "prisma.apiToken.delete({ where: { id } });",
+    "prisma.aPIToken.delete({ where: { id } });",
     "prisma.certificate.delete({ where: { id } });",
     "prisma.session.delete({ where: { id } });",
 
