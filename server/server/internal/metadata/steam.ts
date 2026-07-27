@@ -1023,10 +1023,11 @@ export class SteamProvider implements MetadataProvider {
   }
 
   private _cleanupBasicFormatting(markdown: string): string {
-    // Clean up spaces/tabs before newlines — split/join avoids regex backtracking (S8786).
+    // Clean up spaces/tabs before newlines — split/join + String.trimEnd
+    // avoids regex backtracking surface (S8786).
     markdown = markdown
       .split("\n")
-      .map((line) => line.replace(/[ \t]+$/, ""))
+      .map((line) => line.trimEnd())
       .join("\n");
 
     // Clean up excessive spacing around punctuation.
