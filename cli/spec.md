@@ -1,6 +1,9 @@
 # Downpour CLI spec
+
 `downpour [command] --opts`
+
 ## Commands:
+
 - new <path/s3 name> <public endpoint> - creates/initalizes a depot at the endpoint. Creates manifest.json and speedtest
 - connect <s3 endpoint> <key> <secret> [name] - connects to an s3 endpoint and saves the endpoint to some sort of credentials file. Name is either as provided or the hostname of the endpoint
 - upload <game id> <localpath> <path/s3 name> - uploads game as described before. Should fail if depot isn't initialized with new from above
