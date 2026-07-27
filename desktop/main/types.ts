@@ -54,7 +54,7 @@ export type GameVersion = {
     launchTemplate: string;
     overrideProtonPath: string;
     overrideHandler: string | undefined;
-    enableUpdates: boolean
+    enableUpdates: boolean;
   };
   setups: Array<{ platform: string }>;
   launches: Array<{ platform: string }>;
@@ -70,13 +70,7 @@ export enum AppStatus {
 }
 
 export type EmptyGameStatusEnum =
-  | "Remote"
-  | "Queued"
-  | "Downloading"
-  | "Validating"
-  | "Updating"
-  | "Uninstalling"
-  | "Running";
+  "Remote" | "Queued" | "Downloading" | "Validating" | "Updating" | "Uninstalling" | "Running";
 
 export enum InstalledType {
   PartiallyInstalled = "PartiallyInstalled",
@@ -105,9 +99,8 @@ export type RawGameStatus = [GameStatus | null, GameStatus | null];
 
 export enum DownloadableType {
   Game = "Game",
+  // fallow-ignore-next-line unused-enum-member
   Tool = "Tool",
-  DLC = "DLC",
-  Mod = "Mod",
 }
 
 export type DownloadableMetadata = {
