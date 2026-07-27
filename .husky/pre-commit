@@ -1,5 +1,7 @@
 # Fallow audit gate
-fallow audit --format json --quiet --explain --gate-marker agent || exit 1
+# Base pinned to https://github.com/BillyOutlast/drop/tree/rebuild so the gate
+# only fails on findings introduced since the remote rebuild branch.
+FALLOW_AUDIT_BASE=origin/rebuild fallow audit --format json --quiet --explain --gate-marker agent || exit 1
 
 # Run prisma generate when schema or proto files changed (needed for typecheck)
 changed_schema=$(git diff --cached --name-only --diff-filter=ACM -- 'server/prisma/schema.prisma' 'server/**/*.proto')
