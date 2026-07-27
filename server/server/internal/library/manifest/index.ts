@@ -1,13 +1,13 @@
 import type { JsonValue } from "@prisma/client/runtime/client";
 import cacheHandler from "../../cache";
 import prisma from "../../db/database";
-import { castManifest, type DropletManifest } from "./utils";
+import { castManifest, type V2Manifest } from "./utils";
 
 export type DownloadManifestDetails = {
   /***
    * Version ID to manifest
    */
-  manifests: { [key: string]: DropletManifest };
+  manifests: { [key: string]: V2Manifest };
   /***
    * File name to version ID
    */
@@ -69,7 +69,7 @@ function buildVersionManifests(
   fileList: Map<string, string>,
   existingChunks: DownloadManifestDetails | undefined,
 ) {
-  const manifests = new Map<string, DropletManifest>();
+  const manifests = new Map<string, V2Manifest>();
   let installSize = 0;
   let downloadSize = 0;
 

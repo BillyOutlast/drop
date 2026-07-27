@@ -21,7 +21,9 @@ import type { Writable } from "node:stream";
 import { Readable } from "node:stream";
 import { getMimeType as getMimeTypeStream } from "stream-mime-type";
 
+/** An object identifier string */
 export type ObjectReference = string;
+// NOSONAR:S6564 - semantic alias for object identifiers across the storage layer
 
 export const objectMetadata = type({
   mime: "string",
