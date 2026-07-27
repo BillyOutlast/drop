@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { castManifest, type V2Manifest } from "../../../server/internal/library/manifest/utils";
+import {
+  castManifest,
+  type V2Manifest,
+} from "../../../server/internal/library/manifest/utils";
 
 describe("castManifest", () => {
   const mockManifest: V2Manifest = {
@@ -8,7 +11,9 @@ describe("castManifest", () => {
     key: [1, 2, 3],
     chunks: {
       chunk1: {
-        files: [{ filename: "test.txt", start: 0, length: 100, permissions: 420 }],
+        files: [
+          { filename: "test.txt", start: 0, length: 100, permissions: 420 },
+        ],
         checksum: "abc123",
         iv: [4, 5, 6],
       },
