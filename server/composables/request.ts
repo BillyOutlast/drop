@@ -28,7 +28,6 @@ interface DropFetch<
   >;
 }
 
- 
 // @ts-expect-error — Nuxt internal type mismatch with $fetch ofetch wrapper
 export const $dropFetch: DropFetch = async (rawRequest, opts) => {
   const requestParts = rawRequest.toString().split("/");
