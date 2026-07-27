@@ -1,11 +1,11 @@
-import { BentoCard } from '@/components/bento-card'
-import { Button } from '@/components/button'
-import { Container } from '@/components/container'
-import { Footer } from '@/components/footer'
-import { Gradient } from '@/components/gradient'
-import { LogoCluster } from '@/components/logo-cluster'
-import { Navbar } from '@/components/navbar'
-import { Heading, Subheading } from '@/components/text'
+import { BentoCard } from "@/components/bento-card";
+import { Button } from "@/components/button";
+import { Container } from "@/components/container";
+import { Footer } from "@/components/footer";
+import { Gradient } from "@/components/gradient";
+import { LogoCluster } from "@/components/logo-cluster";
+import { Navbar } from "@/components/navbar";
+import { Heading, Subheading } from "@/components/text";
 import {
   BuildingStorefrontIcon,
   CloudArrowDownIcon,
@@ -13,13 +13,13 @@ import {
   PencilSquareIcon,
   ServerStackIcon,
   ShieldCheckIcon,
-} from '@heroicons/react/24/solid'
-import type { Metadata } from 'next'
+} from "@heroicons/react/24/solid";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   description:
-    'Drop is an open-source, self-hostabled alternative to platforms like Steam and Epic Games.',
-}
+    "Drop is an open-source, self-hostabled alternative to platforms like Steam and Epic Games.",
+};
 
 function Hero() {
   return (
@@ -32,13 +32,10 @@ function Hero() {
             An open Steam.
           </h1>
           <p className="mt-8 max-w-lg text-xl/7 font-medium text-zinc-100/75 sm:text-2xl/8">
-            Drop is an open-source, self-hosted alternative to platforms like
-            Steam and Epic.
+            Drop is an open-source, self-hosted alternative to platforms like Steam and Epic.
           </p>
           <div className="mt-12 flex flex-col gap-x-6 gap-y-4 sm:flex-row">
-            <Button href="/docs/admin/quickstart">
-              Get started
-            </Button>
+            <Button href="/docs/admin/quickstart">Get started</Button>
             <Button variant="outline" href="/about">
               About
             </Button>
@@ -46,7 +43,7 @@ function Hero() {
         </div>
       </Container>
     </div>
-  )
+  );
 }
 
 function FeatureSection() {
@@ -60,9 +57,8 @@ function FeatureSection() {
           </Heading>
 
           <p className="mt-6 text-lg/8 text-zinc-400">
-            Drop is built from the ground up to be flexible, fast, and
-            beautiful. It&apos;s designed to scale with your library, and handle
-            thousands of games.
+            Drop is built from the ground up to be flexible, fast, and beautiful. It&apos;s designed
+            to scale with your library, and handle thousands of games.
           </p>
         </div>
       </div>
@@ -89,10 +85,10 @@ function FeatureSection() {
                 className="absolute top-1 left-1 size-5 text-blue-600"
               />
               Self-hosted &amp; open-source.
-            </dt>{' '}
+            </dt>{" "}
             <dd className="inline">
-              Run Drop entirely on your own hardware. Your library, your data,
-              your rules &mdash; all under the AGPLv3.
+              Run Drop entirely on your own hardware. Your library, your data, your rules &mdash;
+              all under the AGPLv3.
             </dd>
           </div>
           <div className="relative pl-9">
@@ -102,10 +98,9 @@ function FeatureSection() {
                 className="absolute top-1 left-1 size-5 text-blue-600"
               />
               Rich metadata editing.
-            </dt>{' '}
+            </dt>{" "}
             <dd className="inline">
-              Customise names, descriptions, and icons with full Markdown and
-              image support.
+              Customise names, descriptions, and icons with full Markdown and image support.
             </dd>
           </div>
           <div className="relative pl-9">
@@ -115,10 +110,9 @@ function FeatureSection() {
                 className="absolute top-1 left-1 size-5 text-blue-600"
               />
               Automatic imports.
-            </dt>{' '}
+            </dt>{" "}
             <dd className="inline">
-              Pull cover art and game details straight from IGDB, GiantBomb, and
-              PCGamingWiki.
+              Pull cover art and game details straight from IGDB, GiantBomb, and PCGamingWiki.
             </dd>
           </div>
           <div className="relative pl-9">
@@ -128,10 +122,9 @@ function FeatureSection() {
                 className="absolute top-1 left-1 size-5 text-blue-600"
               />
               A built-in store.
-            </dt>{' '}
+            </dt>{" "}
             <dd className="inline">
-              Let users browse, filter, and collect games through a fully
-              featured store.
+              Let users browse, filter, and collect games through a fully featured store.
             </dd>
           </div>
           <div className="relative pl-9">
@@ -141,10 +134,8 @@ function FeatureSection() {
                 className="absolute top-1 left-1 size-5 text-blue-600"
               />
               Flexible authentication.
-            </dt>{' '}
-            <dd className="inline">
-              Use simple accounts or hook into your existing SSO.
-            </dd>
+            </dt>{" "}
+            <dd className="inline">Use simple accounts or hook into your existing SSO.</dd>
           </div>
           <div className="relative pl-9">
             <dt className="inline font-semibold text-zinc-100">
@@ -153,16 +144,16 @@ function FeatureSection() {
                 className="absolute top-1 left-1 size-5 text-blue-600"
               />
               Native desktop client.
-            </dt>{' '}
+            </dt>{" "}
             <dd className="inline">
-              Download, install, and play your whole library through a
-              cross-platform desktop client.
+              Download, install, and play your whole library through a cross-platform desktop
+              client.
             </dd>
           </div>
         </dl>
       </div>
     </div>
-  )
+  );
 }
 
 function BentoSection() {
@@ -183,7 +174,7 @@ function BentoSection() {
               <div className="bg-position-center h-full w-full grow rounded-lg bg-[url(/screenshots/metadata.webp)] bg-cover bg-no-repeat" />
             </div>
           }
-          fade={['bottom']}
+          fade={["bottom"]}
           className="max-lg:rounded-t-4xl lg:col-span-3 lg:rounded-tl-4xl"
         />
         <BentoCard
@@ -195,7 +186,7 @@ function BentoSection() {
               <div className="bg-position-center h-full w-full grow rounded-lg bg-[url(/screenshots/storepage.png)] bg-cover bg-no-repeat" />
             </div>
           }
-          fade={['bottom']}
+          fade={["bottom"]}
           className="lg:col-span-3 lg:rounded-tr-4xl"
         />
         <BentoCard
@@ -207,7 +198,7 @@ function BentoSection() {
               <div className="bg-position-center h-full w-full grow rounded-lg bg-[url(/screenshots/authentication.png)] bg-cover bg-no-repeat" />
             </div>
           }
-          fade={['bottom']}
+          fade={["bottom"]}
           className="lg:col-span-2 lg:rounded-bl-4xl"
         />
         <BentoCard
@@ -221,7 +212,7 @@ function BentoSection() {
           eyebrow="News"
           title="Keep your users up-to-date with server news"
           description="Admins can write news articles that appear in-browser and client, to keep users up-to-date."
-          fade={['bottom']}
+          fade={["bottom"]}
           graphic={
             <div className="flex h-full w-full items-center justify-center p-4">
               <div className="bg-position-center h-full w-full grow rounded-lg bg-[url(/screenshots/news.png)] bg-cover bg-no-repeat" />
@@ -231,7 +222,7 @@ function BentoSection() {
         />
       </div>
     </Container>
-  )
+  );
 }
 
 export default function Home() {
@@ -246,5 +237,5 @@ export default function Home() {
       </main>
       <Footer />
     </div>
-  )
+  );
 }
