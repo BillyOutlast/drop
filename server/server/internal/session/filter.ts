@@ -11,15 +11,19 @@ export function sessionMatchesFilter(
   session: SessionWithToken,
   options: SessionSearchTerms,
 ): boolean {
-  if (
-    options.userId &&
-    session.authenticated &&
-    session.authenticated.userId !== options.userId
-  ) {
-    return false;
+  if (options.userId) {
+    if (!session.authenticated?.userId) {
+      return false;
+    }
+    if (session.authenticated.userId !== options.userId) {
+      return false;
+    }
   }
 
-  if (options.oidc && session.oidc) {
+  if (options.oidc) {
+    if (!session.oidc) {
+      return false;
+    }
     for (const [key, value] of Object.entries(options.oidc)) {
       if (
         JSON.stringify(
