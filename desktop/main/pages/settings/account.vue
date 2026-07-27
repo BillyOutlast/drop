@@ -1,8 +1,6 @@
 <template>
   <div class="border-b border-zinc-700 py-5">
-    <h3 class="text-base font-semibold font-display leading-6 text-zinc-100">
-      General
-    </h3>
+    <h3 class="text-base font-semibold font-display leading-6 text-zinc-100">General</h3>
   </div>
 
   <div class="mt-5 flex flex-col gap-4">
