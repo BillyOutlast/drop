@@ -65,19 +65,21 @@ export function Team() {
     (async () => {
       const cached = window.localStorage.getItem("team");
       if (cached) {
-        const cachedData = JSON.parse(cached);
-        if (cachedData.created + 1000 * 60 * 60 * 24 * 1 > Date.now()) {
-          setTeam(cachedData.team);
-          return;
-        }
+        try {
+          const cachedData = JSON.parse(cached);
+          if (cachedData?.created + 1000 * 60 * 60 * 24 * 1 > Date.now()) {
+            setTeam(cachedData.team);
+            return;
+          }
+        } catch {}
       }
 
-      const dropTeam: Array<TeamObject> = await (
-        await fetch("https://api.github.com/repos/Drop-OSS/drop/contributors")
-      ).json();
-      const dropAppTeam: Array<TeamObject> = await (
-        await fetch("https://api.github.com/repos/Drop-OSS/drop-app/contributors")
-      ).json();
+      const [dropRes, dropAppRes] = await Promise.all([
+        fetch("https://api.github.com/repos/Drop-OSS/drop/contributors"),
+        fetch("https://api.github.com/repos/Drop-OSS/drop-app/contributors"),
+      ]);
+      const dropTeam: Array<TeamObject> = await dropRes.json();
+      const dropAppTeam: Array<TeamObject> = await dropAppRes.json();
 
       const teamObj: { [key: string]: TeamObject } = {};
       for (const user of [...dropTeam, ...dropAppTeam]) {

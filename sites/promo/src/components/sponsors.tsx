@@ -143,36 +143,38 @@ export function Sponsors() {
   const [sponsors, setSponsors] = useState<Array<Sponsor> | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
-      const cached = window.localStorage.getItem("sponsors");
-      if (cached) {
-        const cachedData = JSON.parse(cached);
-        if (cachedData.created + 1000 * 60 * 60 * 24 * 1 > Date.now()) {
-          setSponsors(cachedData.sponsors);
-          return;
+      try {
+        const cached = window.localStorage.getItem("sponsors");
+        if (cached) {
+          const cachedData = JSON.parse(cached);
+          if (cachedData.created + 1000 * 60 * 60 * 24 * 1 > Date.now()) {
+            if (!cancelled) setSponsors(cachedData.sponsors);
+            return;
+          }
         }
-      }
 
-      const openCollective: Array<{
-        role: "BACKER";
-        image: string;
-        name: string;
-        totalAmountDonated: number;
-      }> = await (await fetch("https://opencollective.com/drop-oss/members/all.json")).json();
+        const openCollective: Array<{
+          role: "BACKER";
+          image: string;
+          name: string;
+          totalAmountDonated: number;
+        }> = await (await fetch("https://opencollective.com/drop-oss/members/all.json")).json();
 
-      const ocSponsors = openCollective
-        .filter((e) => e.role === "BACKER")
-        .sort((a, b) => b.totalAmountDonated - a.totalAmountDonated)
-        .map(
-          (v) =>
-            ({
-              name: v.name,
-              image: v.image ?? "/avatars/sponsor.png",
-              from: "OpenCollective",
-            }) satisfies Sponsor,
-        );
+        const ocSponsors = openCollective
+          .filter((e) => e.role === "BACKER")
+          .sort((a, b) => b.totalAmountDonated - a.totalAmountDonated)
+          .map(
+            (v) =>
+              ({
+                name: v.name,
+                image: v.image ?? "/avatars/sponsor.png",
+                from: "OpenCollective",
+              }) satisfies Sponsor,
+          );
 
-      /*
+        /*
       const octokit = new Octokit({})
       const data: {
         user: {
@@ -210,12 +212,19 @@ export function Sponsors() {
         )
             */
 
-      const githubSponsors: Sponsor[] = [];
+        const githubSponsors: Sponsor[] = [];
 
-      const sponsors = [...githubSponsors, ...ocSponsors];
-      window.localStorage.setItem("sponsors", JSON.stringify({ created: Date.now(), sponsors }));
-      setSponsors(sponsors);
+        const sponsors = [...githubSponsors, ...ocSponsors];
+        window.localStorage.setItem("sponsors", JSON.stringify({ created: Date.now(), sponsors }));
+        if (!cancelled) setSponsors(sponsors);
+      } catch (error) {
+        console.error("Failed to load sponsors:", error);
+        if (!cancelled) setSponsors([]);
+      }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -256,7 +265,7 @@ export function Sponsors() {
           <div className="hidden sm:flex sm:gap-2">
             {sponsors?.map(({ name }, j) => (
               <Headless.Button
-                key={name}
+                key={`${name}-${j}`}
                 onClick={() => scrollTo(j)}
                 data-active={activeIndex === j ? true : undefined}
                 aria-label={`Scroll to sponsorship from ${name}`}
