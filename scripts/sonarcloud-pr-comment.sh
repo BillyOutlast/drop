@@ -71,13 +71,14 @@ log "Fetching unresolved issues from SonarCloud (project: ${SONAR_PROJECT_KEY}).
 
 SONAR_RESPONSE=$(curl -sS -f \
   -H "Authorization: Bearer ${SONAR_TOKEN}" \
-  "${SONAR_API}?componentKeys=${SONAR_PROJECT_KEY}&resolved=false&severities=${SEVERITIES}&ps=${PAGE_SIZE}&p=1") || {
+  "${SONAR_API}?componentKeys=${SONAR_PROJECT_KEY}&resolved=false&severities=${SEVERITIES}&pullRequest=${GITHUB_PR_NUMBER}&ps=${PAGE_SIZE}&p=1") || {
     log "SonarCloud API request failed, skipping comment"
     exit 0
   }
 
 TOTAL=$(echo "$SONAR_RESPONSE" | jq -r '.total // 0')
-log "Found ${TOTAL} unresolved issues (BLOCKER/CRITICAL/MAJOR)"
+TOTAL_PAGES=$(( (TOTAL + PAGE_SIZE - 1) / PAGE_SIZE ))
+log "Found ${TOTAL} unresolved issues across ${TOTAL_PAGES} page(s) (BLOCKER/CRITICAL/MAJOR)"
 
 if [[ "$TOTAL" -eq 0 ]]; then
   log "No unresolved issues — posting success comment"
@@ -86,6 +87,24 @@ if [[ "$TOTAL" -eq 0 ]]; then
     --repo "$GITHUB_REPOSITORY" \
     --body-file - 2>/dev/null || log "Failed to post comment"
   exit 0
+fi
+
+# Fetch remaining pages if needed
+if [[ "$TOTAL_PAGES" -gt 1 ]]; then
+  ALL_ISSUES=$(echo "$SONAR_RESPONSE" | jq '.issues')
+  PAGE=2
+  while [[ "$PAGE" -le "$TOTAL_PAGES" ]]; do
+    log "Fetching page ${PAGE}/${TOTAL_PAGES}..."
+    PAGE_RESPONSE=$(curl -sS -f \
+      -H "Authorization: Bearer ${SONAR_TOKEN}" \
+      "${SONAR_API}?componentKeys=${SONAR_PROJECT_KEY}&resolved=false&severities=${SEVERITIES}&pullRequest=${GITHUB_PR_NUMBER}&ps=${PAGE_SIZE}&p=${PAGE}") || {
+        log "SonarCloud API request failed on page ${PAGE}, skipping remaining pages"
+        break
+      }
+    ALL_ISSUES=$(echo "$ALL_ISSUES $(echo "$PAGE_RESPONSE" | jq '.issues')" | jq -s 'add')
+    PAGE=$((PAGE + 1))
+  done
+  SONAR_RESPONSE=$(echo "$SONAR_RESPONSE" | jq --argjson issues "$ALL_ISSUES" '.issues = $issues')
 fi
 
 # --- Step 2: Group issues by severity ----------------------------------------
@@ -110,7 +129,6 @@ log "Found ${EXISTING_COUNT} existing sonarcloud issues"
 # --- Step 4: Build PR comment ------------------------------------------------
 
 COMMENT_BODY="## SonarCloud Analysis\n\n"
-COMMENT_BODY+="**Quality Gate**: Failed (coverage + security rating)\n\n"
 COMMENT_BODY+="### Summary\n\n"
 COMMENT_BODY+="| Severity | Count |\n"
 COMMENT_BODY+="|----------|-------|\n"
@@ -155,9 +173,9 @@ COMMENT_BODY+="\n### Tracking\n\n"
 
 if [[ "$EXISTING_COUNT" -gt 0 ]]; then
   COMMENT_BODY+="Existing GitHub issues tracking these findings:\n\n"
-  echo "$EXISTING_ISSUES" | jq -r '.[] | "- #\(.number): \(.title)"' | head -10 | while IFS= read -r line; do
+  while IFS= read -r line; do
     COMMENT_BODY+="${line}\n"
-  done
+  done < <(echo "$EXISTING_ISSUES" | jq -r '.[] | "- #\(.number): \(.title)"' | head -10)
 
   if [[ "$EXISTING_COUNT" -gt 10 ]]; then
     COMMENT_BODY+="- ... and $((EXISTING_COUNT - 10)) more\n"

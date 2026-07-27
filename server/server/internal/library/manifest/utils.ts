@@ -21,5 +21,8 @@ export type V2FileEntry = {
 };
 
 export function castManifest(manifest: JsonValue): V2Manifest {
-  return JSON.parse(manifest as string) as V2Manifest;
+  if (typeof manifest === "string") {
+    return JSON.parse(manifest) as V2Manifest;
+  }
+  return manifest as V2Manifest;
 }
