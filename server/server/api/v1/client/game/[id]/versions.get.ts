@@ -8,8 +8,8 @@ import gameSizeManager from "~/server/internal/gamesize";
 type VersionDownloadOption = {
   gameId: string;
   versionId: string;
-  displayName?: string | undefined;
-  versionPath?: string | undefined;
+  displayName?: string;
+  versionPath?: string;
   platform: Platform;
   size: GameVersionSize;
   requiredContent: Array<{
@@ -109,18 +109,18 @@ export default defineClientEventHandler(async (h3) => {
 
         return platformOptions
           .entries()
-          .map(
-            ([platform, requiredContent]) =>
-              ({
-                gameId: v.gameId,
-                versionId: v.versionId,
-                displayName: v.displayName || undefined,
-                versionPath: v.versionPath || undefined,
-                platform,
-                requiredContent,
-                size: size!,
-              }) satisfies VersionDownloadOption,
-          )
+          .map(([platform, requiredContent]) => {
+            const option: VersionDownloadOption = {
+              gameId: v.gameId,
+              versionId: v.versionId,
+              platform,
+              requiredContent,
+              size: size!,
+            };
+            if (v.displayName) option.displayName = v.displayName;
+            if (v.versionPath) option.versionPath = v.versionPath;
+            return option;
+          })
           .toArray();
       }),
     )
