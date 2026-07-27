@@ -16,7 +16,7 @@ import type { AuthenticatorTransportFuture } from "@simplewebauthn/server";
  */
 export async function getRpId() {
   const externalUrl =
-    process.env.WEBAUTHN_DOMAIN ?? (systemConfig.getExternalUrl());
+    process.env.WEBAUTHN_DOMAIN ?? systemConfig.getExternalUrl();
   const externalUrlParsed = new URL(externalUrl);
 
   return externalUrlParsed.hostname;
