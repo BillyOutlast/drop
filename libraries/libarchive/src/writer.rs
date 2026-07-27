@@ -109,38 +109,23 @@ impl Disk {
         let mut bytes: usize = 0;
         let mut write_pending: bool = false;
         loop {
-            {
-                if let Some(entry) = reader.next_header() {
-                    if let Some(pfx) = prefix {
-                        let path = Path::new(pfx).join(entry.pathname());
-                        entry.set_pathname(&path);
-                        if entry.hardlink().is_some() {
-                            let path = Path::new(pfx).join(entry.hardlink().unwrap());
-                            entry.set_link(&path);
-                        }
-                    }
-                    match self.write_header(entry) {
-                        Ok(()) => (),
-                        Err(e) => return Err(e),
-                    }
-                    if entry.size() > 0 {
-                        write_pending = true
-                    }
-                } else {
-                    break;
+            if let Some(entry) = reader.next_header() {
+                if let Some(pfx) = prefix {
+                    Self::apply_entry_prefix(entry, pfx);
                 }
+                self.write_header(entry)?;
+                if entry.size() > 0 {
+                    write_pending = true
+                }
+            } else {
+                break;
             }
             if write_pending {
                 bytes += self.write_data(reader)?;
                 write_pending = false;
             }
         }
-        unsafe {
-            match ffi::archive_write_finish_entry(self.handle()) {
-                ffi::ARCHIVE_OK => Ok(bytes),
-                _ => Err(ArchiveError::from(self as &dyn Handle)),
-            }
-        }
+        self.finish_entry(bytes)
     }
 
     pub fn close(&self) -> ArchiveResult<()> {
@@ -184,6 +169,24 @@ impl Disk {
             match ffi::archive_write_header(self.handle, entry.entry()) {
                 ffi::ARCHIVE_OK => Ok(()),
                 _ => ArchiveResult::from(self as &dyn Handle),
+            }
+        }
+    }
+
+    fn apply_entry_prefix(entry: &mut ReaderEntry, prefix: &str) {
+        let path = Path::new(prefix).join(entry.pathname());
+        entry.set_pathname(&path);
+        if let Some(hardlink) = entry.hardlink() {
+            let path = Path::new(prefix).join(hardlink);
+            entry.set_link(&path);
+        }
+    }
+
+    fn finish_entry(&self, bytes: usize) -> ArchiveResult<usize> {
+        unsafe {
+            match ffi::archive_write_finish_entry(self.handle()) {
+                ffi::ARCHIVE_OK => Ok(bytes),
+                _ => Err(ArchiveError::from(self as &dyn Handle)),
             }
         }
     }

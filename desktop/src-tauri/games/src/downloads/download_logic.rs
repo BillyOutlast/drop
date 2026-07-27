@@ -56,6 +56,20 @@ fn is_paused(control_flag: &DownloadThreadControl) -> bool {
     control_flag.get() == DownloadThreadControlFlag::Stop
 }
 
+fn check_paused(
+    control_flag: &DownloadThreadControl,
+    dl: &ProgressHandle,
+    disk: &ProgressHandle,
+) -> Option<bool> {
+    if is_paused(control_flag) {
+        dl.set(0);
+        disk.set(0);
+        Some(false)
+    } else {
+        None
+    }
+}
+
 async fn fetch_chunk_response(
     game_id: &str,
     version_id: &str,
@@ -94,6 +108,29 @@ async fn handle_non_200_response(
     ))
 }
 
+async fn open_file_handle(
+    should_write: bool,
+    path: &Path,
+    start: u64,
+) -> Result<Option<tokio::fs::File>, ApplicationDownloadError> {
+    if !should_write {
+        return Ok(None);
+    }
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    let mut fh = tokio::fs::OpenOptions::new()
+        .truncate(false)
+        .write(true)
+        .append(false)
+        .create(true)
+        .open(path)
+        .await?;
+    fh.seek(SeekFrom::Start(start.try_into().unwrap()))
+        .await?;
+    Ok(Some(fh))
+}
+
 #[allow(clippy::too_many_arguments)]
 pub async fn download_game_chunk(
     game_id: &str,
@@ -110,10 +147,8 @@ pub async fn download_game_chunk(
     // How much we're writing to disk
     disk_progress: &ProgressHandle,
 ) -> Result<bool, ApplicationDownloadError> {
-    if is_paused(control_flag) {
-        download_progress.set(0);
-        disk_progress.set(0);
-        return Ok(false);
+    if let Some(v) = check_paused(control_flag, download_progress, disk_progress) {
+        return Ok(v);
     }
 
     let response = fetch_chunk_response(game_id, version_id, chunk_id, depot).await?;
@@ -122,10 +157,8 @@ pub async fn download_game_chunk(
         return handle_non_200_response(response).await;
     }
 
-    if is_paused(control_flag) {
-        download_progress.set(0);
-        disk_progress.set(0);
-        return Ok(false);
+    if let Some(v) = check_paused(control_flag, download_progress, disk_progress) {
+        return Ok(v);
     }
 
     let stream = response
@@ -143,24 +176,9 @@ pub async fn download_game_chunk(
             .map(|v| v == version_id)
             .unwrap_or(false);
         let path = base_path.join(file.filename.clone());
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
 
-        let mut file_handle = if should_write {
-            let mut fh = tokio::fs::OpenOptions::new()
-                .truncate(false)
-                .write(true)
-                .append(false)
-                .create(true)
-                .open(&path)
-                .await?;
-            fh.seek(SeekFrom::Start(file.start.try_into().unwrap()))
-                .await?;
-            Some(fh)
-        } else {
-            None
-        };
+        let mut file_handle =
+            open_file_handle(should_write, &path, file.start.try_into().unwrap()).await?;
 
         let mut remaining = file.length;
         while remaining > 0 {
@@ -180,10 +198,8 @@ pub async fn download_game_chunk(
 
         set_file_permissions(file, &path, file_handle)?;
 
-        if is_paused(control_flag) {
-            download_progress.set(0);
-            disk_progress.set(0);
-            return Ok(false);
+        if let Some(v) = check_paused(control_flag, download_progress, disk_progress) {
+            return Ok(v);
         }
     }
 
