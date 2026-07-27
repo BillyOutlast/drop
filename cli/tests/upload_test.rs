@@ -54,8 +54,7 @@ async fn test_dry_run_generates_manifest_without_upload() {
     let dir = tempfile::tempdir().expect("create temp dir");
     let file_path = dir.path().join("asset.bin");
     let mut file = std::fs::File::create(&file_path).expect("create temp file");
-    file.write_all(&[0xABu8; 4096])
-        .expect("write test data");
+    file.write_all(&[0xABu8; 4096]).expect("write test data");
     drop(file);
 
     // When factory = None, `generate_manifest_rusty` reads files, organises
@@ -64,10 +63,10 @@ async fn test_dry_run_generates_manifest_without_upload() {
     let no_factory: Option<&dyn ManifestWriterFactory<Writer = tokio::io::Sink>> = None;
     let manifest = generate_manifest_rusty(
         dir.path(),
-        |_progress: f32| {},          // progress callback (no-op)
-        |_log: String| {},            // log callback (no-op)
+        |_progress: f32| {}, // progress callback (no-op)
+        |_log: String| {},   // log callback (no-op)
         no_factory,
-        None,                         // no concurrency limit
+        None, // no concurrency limit
     )
     .await
     .expect("dry-run manifest generation should succeed");
@@ -161,13 +160,15 @@ fn test_manifest_serde_roundtrip() {
     assert_eq!(manifest.len(), 2);
 
     // Serialize to JSON — this is the format written as manifest.json
-    let json = serde_json::to_string_pretty(&manifest)
-        .expect("serialize DepotManifest to JSON");
+    let json = serde_json::to_string_pretty(&manifest).expect("serialize DepotManifest to JSON");
 
     // Verify JSON structure contains appends
     assert!(json.contains("game-alpha"), "JSON must contain game-alpha");
     assert!(json.contains("game-beta"), "JSON must contain game-beta");
-    assert!(json.contains("None"), "JSON must preserve CompressionOption");
+    assert!(
+        json.contains("None"),
+        "JSON must preserve CompressionOption"
+    );
 
     // Deserialize back and verify identity
     let deserialized: DepotManifest =
