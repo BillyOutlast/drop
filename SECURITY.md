@@ -10,13 +10,13 @@ You should receive an acknowledgement within **48 hours**. If you do not, follow
 
 ## Response Timeline
 
-| Stage | Target |
-|---|---|
-| Acknowledgement | 48 hours |
-| Triage assessment | 5 business days |
-| Fix (critical/high) | 90 days |
-| Fix (moderate/low) | next release cycle |
-| Public disclosure | 30 days after fix release, or sooner if a public PoC emerges |
+| Stage               | Target                                                       |
+| ------------------- | ------------------------------------------------------------ |
+| Acknowledgement     | 48 hours                                                     |
+| Triage assessment   | 5 business days                                              |
+| Fix (critical/high) | 90 days                                                      |
+| Fix (moderate/low)  | next release cycle                                           |
+| Public disclosure   | 30 days after fix release, or sooner if a public PoC emerges |
 
 We coordinate disclosure timing with the reporter. If a vulnerability is being actively exploited in the wild, we will expedite the fix and may disclose earlier.
 
@@ -45,11 +45,11 @@ Vulnerabilities that cannot be fixed (transitive deps with no upstream fix, dev-
 
 ## Supported Versions
 
-| Version | Supported |
-|---|---|
+| Version                   | Supported           |
+| ------------------------- | ------------------- |
 | `develop` branch (latest) | ✅ Security patches |
-| Latest release tag | ✅ Security patches |
-| Older | ❌ No backports |
+| Latest release tag        | ✅ Security patches |
+| Older                     | ❌ No backports     |
 
 We do not backport security fixes to older versions. Upgrade to `develop` or the latest release.
 

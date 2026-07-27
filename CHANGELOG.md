@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - CI workflows for sites/promo, sites/docs, and desktop/main
 - Pre-commit hooks for Rust formatting and fallow gate
 - Reference test for auth route handlers (h3 factory pattern)
@@ -15,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PR and issue templates
 
 ### Fixed
+
 - SonarQube exclusion for Prisma migrations
 - libarchive recursive read_block() converted to iterative loop
 - ESLint no-prisma-delete rule narrowed to entity allowlist
@@ -23,7 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Promise boolean await in session signout
 
 ### Changed
+
 - Migrated partial jsonwebtoken usage to jose
 
 ### Security
+
 - Replaced MD5 with SHA-256 for non-security use cases
