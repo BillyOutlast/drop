@@ -132,7 +132,7 @@ export default function GalleryModal({
             transition
             className="relative m-8 transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in data-closed:sm:translate-y-0 data-closed:sm:scale-95"
           >
-            <img src={img} alt="Gallery image" className="max-h-[90vh] w-full" />
+            <img src={img} alt="" className="max-h-[90vh] w-full" />
             <button
               type="button"
               className="absolute top-0 right-0 m-4 cursor-pointer rounded-xl bg-zinc-900 p-2 text-zinc-100 outline outline-zinc-700 hover:text-zinc-400"
