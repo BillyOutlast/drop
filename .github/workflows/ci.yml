@@ -188,7 +188,10 @@ jobs:
           fail_ci_if_error: false
           flags: server
       - name: Post coverage gaps to PR
-        if: github.event_name == 'pull_request'
+        # Skip silently when CODECOV_TOKEN is unset — the script fails
+        # hard without it (FATAL: CODECOV_TOKEN is not set), and we don't
+        # want a missing secret to block the build.
+        if: github.event_name == 'pull_request' && env.CODECOV_TOKEN != ''
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

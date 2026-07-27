@@ -15,11 +15,22 @@ coverage:
       default:
         target: 80%
         informational: true
-  flags:
-    individual:
-      - name: server
-        paths:
-          - server/
+flag_management:
+  default_rules:
+    carryforward: true
+    statuses:
+      - type: project
+        target: auto
+        threshold: 2%
+        informational: true
+      - type: patch
+        target: 80%
+        informational: true
+  individual_flags:
+    - name: server
+      paths:
+        - server/
+      carryforward: true
 comment:
   layout: "diff, flags, files"
   behavior: default
