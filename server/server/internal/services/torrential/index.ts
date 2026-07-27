@@ -58,11 +58,9 @@ export class TorrentialService extends Service<unknown> {
             logger.info(
               "torrential detected in development mode - building from source",
             );
-            const cargoPaths = [
-              "/usr/local/bin/cargo",
-              "/usr/bin/cargo",
-            ];
-            const cargoPath = cargoPaths.find((p) => fs.existsSync(p)) ?? "cargo";
+            const cargoPaths = ["/usr/local/bin/cargo", "/usr/bin/cargo"];
+            const cargoPath =
+              cargoPaths.find((p) => fs.existsSync(p)) ?? "cargo";
             // sonarcloud-disable-next-line typescript:S4036
             return spawn(
               cargoPath,
@@ -108,9 +106,7 @@ export class TorrentialService extends Service<unknown> {
           }
         }
         if (!torrentialPath) {
-          throw new Error(
-            "torrential not found in any known path",
-          );
+          throw new Error("torrential not found in any known path");
         }
         return spawn(torrentialPath, [], {});
       },

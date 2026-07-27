@@ -3,6 +3,16 @@ fallow audit --format json --quiet --explain --gate-marker agent || exit 1
 
 pnpm --filter drop lint-staged && pnpm --filter drop typecheck
 
+# Check shell scripts
+changed_sh=$(git diff --cached --name-only --diff-filter=ACM -- '*.sh')
+if [ -n "$changed_sh" ]; then
+  if command -v shellcheck >/dev/null 2>&1; then
+    echo "$changed_sh" | xargs shellcheck --severity=warning || exit 1
+  else
+    echo "shellcheck not installed — skipping shell script checks"
+  fi
+fi
+
 # Check Rust formatting on changed .rs files, filtered by workspace
 changed_rs=$(git diff --cached --name-only --diff-filter=ACM -- '*.rs')
 if [ -n "$changed_rs" ]; then

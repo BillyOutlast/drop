@@ -212,9 +212,13 @@ QG_RESPONSE=$(curl -sS -f \
 COMMENT_BODY+="<details>\n<summary>📋 JSON Summary (for AI agents)</summary>\n\n"
 COMMENT_BODY+="\`\`\`json\n"
 
-JSON_SUMMARY=$(echo "$SONAR_RESPONSE" | jq --argjson qg "$(echo "$QG_RESPONSE" | jq '{gateStatus: .projectStatus.status, failedConditions: [.projectStatus.conditions[]? | select(.status == "ERROR") | {metric: .metricKey, actual: .actualValue, threshold: .errorThreshold}]}')" '{
-  project: "'${SONAR_PROJECT_KEY}'",
-  pullRequest: '${GITHUB_PR_NUMBER}',
+JSON_SUMMARY=$(echo "$SONAR_RESPONSE" | jq \
+  --arg project "$SONAR_PROJECT_KEY" \
+  --arg pr "$GITHUB_PR_NUMBER" \
+  --argjson qg "$(echo "$QG_RESPONSE" | jq '{gateStatus: .projectStatus.status, failedConditions: [.projectStatus.conditions[]? | select(.status == "ERROR") | {metric: .metricKey, actual: .actualValue, threshold: .errorThreshold}]}')" \
+  '{
+  project: $project,
+  pullRequest: ($pr | tonumber),
   qualityGate: $qg,
   totalIssues: .total,
   summary: {
@@ -229,7 +233,7 @@ JSON_SUMMARY=$(echo "$SONAR_RESPONSE" | jq --argjson qg "$(echo "$QG_RESPONSE" |
     message: .message,
     component: (.component | split(":") | last),
     line: .line,
-    url: ("https://sonarcloud.io/project/issues?id='${SONAR_PROJECT_KEY}'&issues=" + .key + "&open=" + .key)
+    url: ("https://sonarcloud.io/project/issues?id=" + $project + "&issues=" + .key + "&open=" + .key)
   }]
 }')
 
