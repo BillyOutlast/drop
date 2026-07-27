@@ -240,15 +240,15 @@ export function Sponsors() {
           "[--scroll-padding:max(--spacing(6),calc((100vw-(var(--container-2xl)))/2))] lg:[--scroll-padding:max(--spacing(8),calc((100vw-(var(--container-7xl)))/2))]",
         ])}
       >
-        {sponsors?.map(({ image, name, from }, testimonialIndex) => (
+        {sponsors?.map(({ image, name, from }, i) => (
           <SponsorCard
-            key={testimonialIndex}
+            key={`${name}-${from}`}
             name={name}
             from={from}
             img={image}
             bounds={bounds}
             scrollX={scrollX}
-            onClick={() => scrollTo(testimonialIndex)}
+            onClick={() => scrollTo(i)}
           />
         ))}
         <div className="w-2xl shrink-0 sm:w-216" />
@@ -257,11 +257,11 @@ export function Sponsors() {
         <div className="flex justify-between">
           <CallToAction />
           <div className="hidden sm:flex sm:gap-2">
-            {sponsors?.map(({ name }, i) => (
+            {sponsors?.map(({ name }, j) => (
               <Headless.Button
-                key={i}
-                onClick={() => scrollTo(i)}
-                data-active={activeIndex === i ? true : undefined}
+                key={name}
+                onClick={() => scrollTo(j)}
+                data-active={activeIndex === j ? true : undefined}
                 aria-label={`Scroll to sponsorship from ${name}`}
                 className={clsx(
                   "size-2.5 cursor-pointer rounded-full border border-transparent bg-zinc-600 transition",

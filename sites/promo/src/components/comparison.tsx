@@ -306,8 +306,8 @@ function ProjectCard({ tier }: { readonly tier: (typeof projects)[number] }) {
           <div className="mt-8">
             <h3 className="text-sm/6 font-medium text-zinc-100">Key features:</h3>
             <ul className="mt-3 space-y-3">
-              {tier.highlights.map((props, featureIndex) => (
-                <FeatureItem key={featureIndex} {...props} />
+              {tier.highlights.map((props) => (
+                <FeatureItem key={props.description} {...props} />
               ))}
             </ul>
           </div>
