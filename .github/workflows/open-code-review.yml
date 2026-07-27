@@ -23,8 +23,8 @@ jobs:
           llm_auth_token: ${{ secrets.OCR_LLM_TOKEN }}
           llm_model: ${{ secrets.OCR_LLM_MODEL }}
           llm_use_anthropic: "false"
-          llm_extra_body: "{}"
-          llm_timeout: "120"
+          llm_extra_body: '{"thinking": {"type": "enabled", "budget_tokens": 16000}}'
+          llm_timeout: "300"
           language: "English"
           review_concurrency: "3"
           # Only post new comments; don't delete or modify history
