@@ -69,6 +69,7 @@ if (import.meta.client) {
             v-if="!showSignIn"
             href="/"
             class="text-sm font-semibold leading-7 text-blue-600"
+            :aria-label="$t('errors.backHome')"
           >
             <i18n-t keypath="errors.backHome" tag="span" scope="global">
               <template #arrow>

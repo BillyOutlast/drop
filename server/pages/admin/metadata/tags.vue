@@ -26,7 +26,11 @@
         class="py-2 px-3 inline-flex gap-x-3 bg-zinc-950 ring-1 ring-zinc-800 text-zinc-300"
       >
         {{ tag.name }}
-        <button type="button" @click="() => deleteTag(tagIdx)">
+        <button
+          type="button"
+          aria-label="Delete tag"
+          @click="() => deleteTag(tagIdx)"
+        >
           <TrashIcon
             class="transition size-4 text-zinc-700 hover:text-red-500"
           />

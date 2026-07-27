@@ -107,25 +107,29 @@ impl Disk {
             return Err(ArchiveError::HeaderPosition);
         }
         let mut bytes: usize = 0;
-        let mut write_pending: bool = false;
         loop {
-            if let Some(entry) = reader.next_header() {
-                if let Some(pfx) = prefix {
-                    Self::apply_entry_prefix(entry, pfx);
-                }
-                self.write_header(entry)?;
-                if entry.size() > 0 {
-                    write_pending = true
-                }
+            let needs_data = if let Some(entry) = reader.next_header() {
+                self.should_write_entry_header(entry, prefix)?
             } else {
                 break;
-            }
-            if write_pending {
+            };
+            if needs_data {
                 bytes += self.write_data(reader)?;
-                write_pending = false;
             }
         }
         self.finish_entry(bytes)
+    }
+
+    fn should_write_entry_header(
+        &self,
+        entry: &mut ReaderEntry,
+        prefix: Option<&str>,
+    ) -> ArchiveResult<bool> {
+        if let Some(pfx) = prefix {
+            Self::apply_entry_prefix(entry, pfx);
+        }
+        self.write_header(entry)?;
+        Ok(entry.size() > 0)
     }
 
     pub fn close(&self) -> ArchiveResult<()> {

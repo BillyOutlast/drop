@@ -322,6 +322,7 @@
       v-else-if="currentlySelectedVersion != -1"
       class="inline-flex text-zinc-100 font-display font-semibold items-center gap-x-4"
       aria-live="polite"
+      :aria-label="$t('library.admin.import.version.loadingVersion')"
     >
       {{ $t("library.admin.import.version.loadingVersion") }}
       <svg

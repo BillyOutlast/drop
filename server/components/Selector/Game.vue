@@ -9,6 +9,7 @@
       <ComboboxInput
         class="block flex-1 border-0 py-1.5 pl-2 bg-transparent text-zinc-100 placeholder:text-zinc-400 focus:ring-0 sm:text-sm sm:leading-6"
         placeholder="Start typing..."
+        aria-label="Search games"
         :display-value="(game) => (game as GameMetadataSearchResult)?.name"
         @change="gameSearchQuery = $event.target.value"
         @blur="gameSearchQuery = ''"

@@ -24,8 +24,10 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs::{create_dir_all, remove_file};
+use std::future::Future;
 use std::io;
 use std::path::{Path, PathBuf};
+use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use tauri::AppHandle;
@@ -40,6 +42,9 @@ use super::download_logic::download_game_chunk;
 use super::drop_data::DropData;
 
 static RETRY_COUNT: usize = 3;
+
+type ChunkFuture =
+    Pin<Box<dyn Future<Output = Result<Option<String>, ApplicationDownloadError>> + Send>>;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -83,6 +88,9 @@ async fn process_single_chunk(
     disk_handle: ProgressHandle,
     permit: impl std::ops::Drop,
 ) -> Result<Option<String>, ApplicationDownloadError> {
+    // Wrap in Option so we can drop the permit once and avoid
+    // holding the semaphore slot across retry cycles.
+    let mut permit = Some(permit);
     for i in 0..RETRY_COUNT {
         match download_game_chunk(
             &metadata_id,
@@ -100,7 +108,7 @@ async fn process_single_chunk(
         .await
         {
             Ok(true) => {
-                drop(permit);
+                drop(permit.take());
                 return Ok(Some(chunk_id));
             }
             Ok(false) => return Ok(None),
@@ -110,6 +118,10 @@ async fn process_single_chunk(
                     warn!("retry logic failed, not re-attempting.");
                     return Err(e);
                 }
+                // Free the semaphore slot before retrying — otherwise
+                // the permit is held across network timeouts, starving
+                // other concurrent chunk downloads.
+                drop(permit.take());
             }
         }
     }
@@ -401,6 +413,67 @@ impl GameDownloadAgent {
         Ok(true)
     }
 
+    #[allow(clippy::too_many_arguments)]
+    async fn spawn_chunk_download(
+        &self,
+        version_id: &str,
+        chunk_id: &str,
+        chunk_data: ChunkData,
+        key: [u8; 16],
+        file_list: &HashMap<String, String>,
+        completed_chunks: &HashMap<String, bool>,
+        max_download_threads: usize,
+        chunk_completions: &mut FuturesUnordered<ChunkFuture>,
+        outputs: &mut Vec<String>,
+        index: &mut usize,
+    ) -> Result<(), ApplicationDownloadError> {
+        let dl_handle = ProgressHandle::new(
+            self.download_progress.get(*index),
+            self.download_progress.clone(),
+        );
+        let disk_handle =
+            ProgressHandle::new(self.disk_progress.get(*index), self.disk_progress.clone());
+        *index += 1;
+
+        let chunk_length: usize = chunk_data.files.iter().map(|v| v.length).sum();
+        if *completed_chunks.get(chunk_id).unwrap_or(&false) {
+            dl_handle.skip(chunk_length);
+            disk_handle.skip(chunk_length);
+            return Ok(());
+        }
+
+        let (depot, permit) = self
+            .depot_manager
+            .next_depot(&self.metadata.id, &self.metadata.version)
+            .map_err(ApplicationDownloadError::from)?;
+
+        while chunk_completions.len() >= max_download_threads {
+            Self::collect_output(
+                outputs,
+                chunk_completions
+                    .next()
+                    .await
+                    .expect("max download threads is zero?"),
+            )?;
+        }
+
+        chunk_completions.push(Box::pin(process_single_chunk(
+            self.metadata.id.clone(),
+            version_id.to_string(),
+            chunk_id.to_string(),
+            depot,
+            key,
+            chunk_data,
+            file_list.clone(),
+            self.dropdata.base_path.clone(),
+            self.control_flag.clone(),
+            dl_handle,
+            disk_handle,
+            permit,
+        )));
+        Ok(())
+    }
+
     async fn run(&self) -> Result<bool, ApplicationDownloadError> {
         self.depot_manager.sync_depots().await?;
         info!("synced depots");
@@ -436,53 +509,19 @@ impl GameDownloadAgent {
 
         for (version_id, chunks, key) in manifests_chunks.into_iter() {
             for (chunk_id, chunk_data) in chunks.into_iter() {
-                let dl_handle = ProgressHandle::new(
-                    self.download_progress.get(index),
-                    self.download_progress.clone(),
-                );
-                let disk_handle =
-                    ProgressHandle::new(self.disk_progress.get(index), self.disk_progress.clone());
-                index += 1;
-
-                let chunk_length: usize = chunk_data.files.iter().map(|v| v.length).sum();
-                if *completed_chunks.get(&chunk_id).unwrap_or(&false) {
-                    dl_handle.skip(chunk_length);
-                    disk_handle.skip(chunk_length);
-                    continue;
-                }
-
-                let (depot, permit) = match self
-                    .depot_manager
-                    .next_depot(&self.metadata.id, &self.metadata.version)
-                {
-                    Ok(v) => v,
-                    Err(err) => return Err(err.into()),
-                };
-
-                while chunk_completions.len() >= max_download_threads {
-                    Self::collect_output(
-                        &mut outputs,
-                        chunk_completions
-                            .next()
-                            .await
-                            .expect("max download threads is zero?"),
-                    )?;
-                }
-
-                chunk_completions.push(Box::pin(process_single_chunk(
-                    self.metadata.id.clone(),
-                    version_id.clone(),
-                    chunk_id.clone(),
-                    depot,
-                    key,
+                self.spawn_chunk_download(
+                    &version_id,
+                    &chunk_id,
                     chunk_data,
-                    file_list.clone(),
-                    self.dropdata.base_path.clone(),
-                    self.control_flag.clone(),
-                    dl_handle,
-                    disk_handle,
-                    permit,
-                )));
+                    key,
+                    &file_list,
+                    &completed_chunks,
+                    max_download_threads,
+                    &mut chunk_completions,
+                    &mut outputs,
+                    &mut index,
+                )
+                .await?;
             }
         }
 

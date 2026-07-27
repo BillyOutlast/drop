@@ -72,6 +72,7 @@
       v-else
       class="w-full flex items-center justify-center"
       aria-live="polite"
+      aria-label="Loading"
     >
       <svg
         aria-hidden="true"

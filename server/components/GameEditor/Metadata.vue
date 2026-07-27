@@ -224,6 +224,7 @@
               <output
                 v-else-if="descriptionSaving == DescriptionSavingState.Loading"
                 aria-live="polite"
+                aria-label="Saving"
               >
                 <svg
                   aria-hidden="true"
@@ -247,6 +248,7 @@
 
             <button
               type="button"
+              aria-label="Insert image"
               @click="() => (showAddImageDescriptionModal = true)"
             >
               <PhotoIcon
@@ -256,6 +258,11 @@
 
             <button
               type="button"
+              :aria-label="
+                mobileShowFinalDescription
+                  ? 'Edit description'
+                  : 'Preview description'
+              "
               class="block lg:hidden"
               @click="
                 () => (mobileShowFinalDescription = !mobileShowFinalDescription)

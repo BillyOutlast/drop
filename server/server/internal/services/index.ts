@@ -33,12 +33,12 @@ export type Executor = () => ChildProcess;
 export type Setup = () => Promise<boolean>;
 export type Healthcheck = () => Promise<boolean>;
 export class Service<T> {
-  name: string;
+  readonly name: string;
   private readonly executor: Executor;
   private readonly setup: Setup | undefined;
   private readonly healthcheck: Healthcheck | undefined;
 
-  logger: Logger<never>;
+  readonly logger: Logger<never>;
 
   private currentProcess: ChildProcess | undefined;
 

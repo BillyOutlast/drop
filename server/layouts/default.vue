@@ -4,13 +4,15 @@
     class="flex flex-col w-full min-h-screen bg-zinc-900"
   >
     <LazyUserHeader class="z-50" hydrate-on-idle />
-    <div class="grow flex">
+    <main class="grow flex">
       <NuxtPage />
-    </div>
+    </main>
     <LazyUserFooter class="z-50" hydrate-on-interaction />
   </div>
   <div v-else class="flex flex-col w-full min-h-screen bg-zinc-900">
-    <NuxtPage />
+    <main>
+      <NuxtPage />
+    </main>
     <LazyUserHeaderStoreNav />
   </div>
 </template>

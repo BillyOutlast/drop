@@ -188,6 +188,7 @@
           type="text"
           name="search"
           aria-label="Search games"
+          autocomplete="off"
           class="col-start-1 row-start-1 block w-full rounded-md bg-zinc-900 py-1.5 pl-10 pr-3 text-base text-zinc-100 border-[0px] outline-[0px] placeholder:text-zinc-400 sm:pl-9 sm:text-sm/6"
           :placeholder="$t('library.search')"
         />
@@ -277,6 +278,7 @@
               {{ game.mName }}
               <button
                 type="button"
+                :aria-label="game.featured ? 'Unfeature game' : 'Feature game'"
                 :class="[
                   'rounded-full p-1 shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2',
                   game.featured
@@ -460,7 +462,7 @@
         v-if="gamesLoading"
         class="absolute inset-0 bg-zinc-900/50 flex items-start p-4 justify-center"
       >
-        <output aria-live="polite">
+        <output aria-live="polite" aria-label="Loading">
           <svg
             aria-hidden="true"
             class="size-8 text-transparent animate-spin fill-white"

@@ -4,6 +4,7 @@
       v-for="(_, i) in amount"
       :key="i"
       type="button"
+      :aria-label="`Go to slide ${i + 1}`"
       :class="[
         carousel.currentSlide === i ? 'bg-blue-600 w-6' : 'bg-zinc-700 w-3',
         'transition-all cursor-pointer h-2 rounded-full',

@@ -1,5 +1,5 @@
 <template>
-  <div class="hidden lg:flex bg-zinc-950 flex-row px-12 xl:px-48 py-5">
+  <header class="hidden lg:flex bg-zinc-950 flex-row px-12 xl:px-48 py-5">
     <div class="grow inline-flex items-center gap-x-20">
       <NuxtLink :to="homepageURL">
         <DropWordmark class="h-8" />
@@ -57,9 +57,9 @@
         <UserHeaderUserWidget />
       </ol>
     </div>
-  </div>
+  </header>
 
-  <div
+  <header
     class="sticky lg:hidden top-0 z-40 flex h-16 justify-between items-center gap-x-4 border-b border-zinc-700 bg-zinc-950 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8"
   >
     <NuxtLink :to="homepageURL">
@@ -81,7 +81,7 @@
         </button>
       </div>
     </div>
-  </div>
+  </header>
 
   <TransitionRoot as="template" :show="sidebarOpen">
     <Dialog class="relative z-50 lg:hidden" @close="sidebarOpen = false">

@@ -131,6 +131,41 @@ async fn open_file_handle(
 }
 
 #[allow(clippy::too_many_arguments)]
+async fn process_file_entry(
+    file: &FileEntry,
+    should_write: bool,
+    path: &Path,
+    stream_reader: &mut (impl tokio::io::AsyncRead + Unpin),
+    hasher: &mut sha2::Sha256,
+    cipher: &mut Aes128Ctr64LE,
+    read_buf: &mut [u8],
+    download_progress: &ProgressHandle,
+    disk_progress: &ProgressHandle,
+) -> Result<(), ApplicationDownloadError> {
+    let mut file_handle =
+        open_file_handle(should_write, path, file.start.try_into().unwrap()).await?;
+
+    let mut remaining = file.length;
+    while remaining > 0 {
+        let amount = stream_reader
+            .read(&mut read_buf[0..remaining.min(READ_BUF_LEN)])
+            .await?;
+        download_progress.add(amount);
+        remaining -= amount;
+
+        cipher.apply_keystream(&mut read_buf[0..amount]);
+        hasher.update(&read_buf[0..amount]);
+        if let Some(fh) = &mut file_handle {
+            fh.write_all(&read_buf[0..amount]).await?;
+            disk_progress.add(amount);
+        }
+    }
+
+    set_file_permissions(file, path, file_handle)?;
+    Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
 pub async fn download_game_chunk(
     game_id: &str,
     version_id: &str,
@@ -176,26 +211,18 @@ pub async fn download_game_chunk(
             .unwrap_or(false);
         let path = base_path.join(file.filename.clone());
 
-        let mut file_handle =
-            open_file_handle(should_write, &path, file.start.try_into().unwrap()).await?;
-
-        let mut remaining = file.length;
-        while remaining > 0 {
-            let amount = stream_reader
-                .read(&mut read_buf[0..remaining.min(READ_BUF_LEN)])
-                .await?;
-            download_progress.add(amount);
-            remaining -= amount;
-
-            cipher.apply_keystream(&mut read_buf[0..amount]);
-            hasher.update(&read_buf[0..amount]);
-            if let Some(fh) = &mut file_handle {
-                fh.write_all(&read_buf[0..amount]).await?;
-                disk_progress.add(amount);
-            }
-        }
-
-        set_file_permissions(file, &path, file_handle)?;
+        process_file_entry(
+            file,
+            should_write,
+            &path,
+            &mut stream_reader,
+            &mut hasher,
+            &mut cipher,
+            &mut read_buf,
+            download_progress,
+            disk_progress,
+        )
+        .await?;
 
         if let Some(v) = check_paused(control_flag, download_progress, disk_progress) {
             return Ok(v);
