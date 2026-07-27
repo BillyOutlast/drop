@@ -1,6 +1,11 @@
 import type { SessionProvider, SessionWithToken } from "./types";
 import { sessionMatchesFilter } from "./filter";
 
+/**
+ * Creates an in-memory session provider for storing and managing sessions.
+ *
+ * @returns A session provider backed by an in-memory store
+ */
 export default function createMemorySessionHandler() {
   const sessions = new Map<string, SessionWithToken>();
 

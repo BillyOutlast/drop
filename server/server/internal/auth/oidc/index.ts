@@ -463,6 +463,11 @@ export class OIDCManager {
   }
 }
 
+/**
+ * Loads the OIDC provider configuration from a well-known URL or environment variables.
+ *
+ * @returns The validated OIDC provider configuration.
+ */
 async function loadOIDCConfiguration(): Promise<OIDCConfiguration> {
   const wellKnownUrlString = process.env.OIDC_WELLKNOWN as string | undefined;
   const scopes = process.env.OIDC_SCOPES as string | undefined;
@@ -474,6 +479,14 @@ async function loadOIDCConfiguration(): Promise<OIDCConfiguration> {
   return loadFromEnvVars(scopes);
 }
 
+/**
+ * Loads and validates OIDC provider configuration from a well-known URL.
+ *
+ * @param wellKnownUrlString - The OIDC discovery document URL
+ * @param scopes - Optional comma-separated scopes that override discovered scopes
+ * @returns The validated OIDC provider configuration
+ * @throws If the URL or required configuration is invalid, or if HTTPS is required and unavailable
+ */
 async function loadFromWellKnown(
   wellKnownUrlString: string,
   scopes: string | undefined,
@@ -515,6 +528,13 @@ async function loadFromWellKnown(
   };
 }
 
+/**
+ * Loads the OIDC provider configuration from environment variables.
+ *
+ * @param scopes - Comma-separated scopes to use for OIDC requests
+ * @returns The parsed OIDC configuration
+ * @throws If a required OIDC environment variable is missing
+ */
 function loadFromEnvVars(scopes: string | undefined): OIDCConfiguration {
   const authorizationEndpoint = process.env.OIDC_AUTHORIZATION as
     string | undefined;
@@ -557,6 +577,12 @@ function loadFromEnvVars(scopes: string | undefined): OIDCConfiguration {
   };
 }
 
+/**
+ * Validates that configured OIDC endpoints use HTTPS.
+ *
+ * @param configuration - The OIDC configuration whose endpoint URLs are checked
+ * @throws If a configured endpoint does not use HTTPS
+ */
 function validateOIDCEndpointSecurity(configuration: OIDCConfiguration) {
   const endpoints: OIDCUrlKey[] = [
     "authorization_endpoint",
@@ -574,6 +600,12 @@ function validateOIDCEndpointSecurity(configuration: OIDCConfiguration) {
   }
 }
 
+/**
+ * Determines whether a URL uses HTTPS.
+ *
+ * @param url - The URL to inspect
+ * @returns `true` if the URL uses HTTPS, `false` otherwise.
+ */
 function isHttps(url: URL | string): boolean {
   const parsedUrl = typeof url === "string" ? new URL(url) : url;
   if (parsedUrl.protocol === "https:") return true;

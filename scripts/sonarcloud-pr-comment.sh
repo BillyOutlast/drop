@@ -61,7 +61,7 @@ if ! command -v gh &>/dev/null; then
   exit 1
 fi
 
-# --- Helpers ------------------------------------------------------------------
+# log prints a timestamped message to standard output.
 
 log() { echo "[$(date '+%H:%M:%S')] $*"; }
 

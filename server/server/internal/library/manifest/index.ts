@@ -54,12 +54,12 @@ function buildFileList(
 }
 
 /**
- * Builds manifests for the files selected from an ordered version chain.
+ * Builds filtered manifests and aggregates installation and download sizes for files provided by each version.
  *
- * @param versionOrder - Versions and their droplet manifests, ordered for processing
- * @param fileList - Mapping of filenames to the version that provides them
- * @param existingChunks - Previously generated manifest details used to exclude existing files
- * @returns Filtered manifests and the installation and download sizes
+ * @param versionOrder - Versions to process in order, including their serialized manifests
+ * @param fileList - Mapping of each selected filename to the version that provides it
+ * @param existingChunks - Previously generated manifest details whose files should be excluded
+ * @returns Filtered manifests with the total installation size and download size
  */
 function buildVersionManifests(
   versionOrder: Array<{

@@ -10,6 +10,9 @@ const transition = {
   repeatDelay: 1.25,
 };
 
+/**
+ * Renders concentric animated rings as an SVG background.
+ */
 function Rings() {
   return (
     <svg

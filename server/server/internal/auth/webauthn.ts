@@ -9,8 +9,8 @@ import type { AuthenticatorTransportFuture } from "@simplewebauthn/server";
 /**
  * Resolves the WebAuthn relying party ID from the configured external URL.
  *
- * Falls back to `WEBAUTHN_DOMAIN` env var if set, otherwise reads the
- * system's external URL config.
+ * Uses `WEBAUTHN_DOMAIN` when available and otherwise uses the system's external
+ * URL configuration.
  *
  * @returns The hostname portion of the relying party URL.
  */

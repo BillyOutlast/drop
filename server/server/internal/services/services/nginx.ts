@@ -4,6 +4,11 @@ import { systemConfig } from "../../config/sys-conf";
 import path from "node:path";
 import fs from "node:fs";
 
+/**
+ * Resolves the executable path for the Nginx binary.
+ *
+ * @returns The first existing known Nginx path, or `"nginx"` when no known path exists.
+ */
 function resolveNginxPath(): string {
   const knownPaths = ["/usr/sbin/nginx", "/usr/local/bin/nginx", "/usr/bin/nginx"];
   for (const p of knownPaths) {

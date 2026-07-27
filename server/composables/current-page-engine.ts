@@ -8,6 +8,12 @@ export const useCurrentNavigationIndex = (
 
   const currentNavigation = ref(-1);
 
+  /**
+   * Determines the navigation item matching the current route.
+   *
+   * @param to - The route whose path is matched against the navigation prefixes
+   * @returns The index of the most specific matching navigation item, or `-1` when no item matches
+   */
   function calculateCurrentNavIndex(to: typeof route) {
     const validOptions = navigation
       .map((e, i) => ({ ...e, index: i }))

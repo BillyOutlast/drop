@@ -148,10 +148,11 @@ export default function createDBSessionHandler(): SessionProvider {
 }
 
 /**
- * Walks a JSON object and returns all paths and their corresponding values.
- * @param obj The JSON object to walk.
- * @param basePath The base path to start from (used for recursion).
- * @returns An array of objects containing the path and value.
+ * Enumerates paths and their corresponding leaf values within JSON-compatible data.
+ *
+ * @param obj - The data to traverse.
+ * @param basePath - The path prefix for the returned entries.
+ * @returns The paths and values found beneath the input data.
  */
 function walkJsonPath(
   obj: unknown,
@@ -171,6 +172,13 @@ function walkJsonPath(
   return [];
 }
 
+/**
+ * Collects paths and values for defined elements in an array.
+ *
+ * @param arr - The array to traverse
+ * @param basePath - The path prefix for each array element
+ * @returns Path and value pairs for the array's defined elements
+ */
 function walkArray(
   arr: unknown[],
   basePath: string[],
@@ -184,6 +192,13 @@ function walkArray(
   return results;
 }
 
+/**
+ * Collects paths and primitive values from an object, excluding undefined properties.
+ *
+ * @param obj - The object to traverse
+ * @param basePath - The path prefix for the object's properties
+ * @returns The paths and values found within the object
+ */
 function walkObject(
   obj: Record<string, unknown>,
   basePath: string[],
@@ -196,6 +211,13 @@ function walkObject(
   return results;
 }
 
+/**
+ * Collects a leaf value and its JSON path, expanding nested objects and arrays.
+ *
+ * @param value - The value to collect or expand
+ * @param path - The path associated with the value
+ * @param results - The array to which collected path-value pairs are appended
+ */
 function collectPathValue(
   value: unknown,
   path: string[],

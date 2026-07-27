@@ -1,11 +1,11 @@
 import type { SessionWithToken, SessionSearchTerms } from "./types";
 
 /**
- * Checks if a session matches the given search criteria.
+ * Determines whether a session satisfies all provided search criteria.
  *
- * @param session - The session to check
- * @param options - The search criteria to match against
- * @returns True if the session matches all criteria, false otherwise
+ * @param session - The session to evaluate
+ * @param options - The search criteria to apply
+ * @returns `true` if all specified criteria match the session, `false` otherwise
  */
 export function sessionMatchesFilter(
   session: SessionWithToken,

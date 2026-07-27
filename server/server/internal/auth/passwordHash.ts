@@ -4,9 +4,9 @@ import * as argon2 from "argon2";
 /**
  * Verifies a password against a bcrypt hash.
  *
- * @param password - The plaintext password to verify.
- * @param hash - The bcrypt hash to compare against.
- * @returns Whether the password matches the hash.
+ * @param password - The plaintext password to verify
+ * @param hash - The bcrypt hash to compare against
+ * @returns `true` if the password matches the hash, `false` otherwise
  */
 export async function checkHashBcrypt(password: string, hash: string) {
   return await bcrypt.compare(password, hash);
@@ -27,7 +27,7 @@ export async function createHashArgon2(password: string) {
  *
  * @param password - The plaintext password to verify.
  * @param hash - The Argon2id hash to compare against.
- * @returns Whether the password matches the hash.
+ * @returns `true` if the password matches the hash, `false` otherwise.
  */
 export async function checkHashArgon2(password: string, hash: string) {
   return await argon2.verify(hash, password);
