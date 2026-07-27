@@ -5,12 +5,12 @@ Snapshot only — no gates, no thresholds.
 
 ## Summary (server — `server/server/` backend only)
 
-| Metric | Value |
-|---|---|
+| Metric     | Value  |
+| ---------- | ------ |
 | Statements | 28.06% |
-| Branches | 22.09% |
-| Functions | 35.48% |
-| Lines | 29.32% |
+| Branches   | 22.09% |
+| Functions  | 35.48% |
+| Lines      | 29.32% |
 
 ## Detail
 
