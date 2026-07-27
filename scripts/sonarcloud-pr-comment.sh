@@ -132,7 +132,7 @@ COMMENT_BODY+="### Top Issues\n\n"
 COMMENT_BODY+="| File | Line | Rule | Severity |\n"
 COMMENT_BODY+="|------|------|------|----------|\n"
 
-echo "$SONAR_RESPONSE" | jq -r '
+TOP_ISSUES=$(echo "$SONAR_RESPONSE" | jq -r '
   .issues
   | sort_by(
       if .severity == "BLOCKER" then 0
@@ -143,9 +143,13 @@ echo "$SONAR_RESPONSE" | jq -r '
   | .[0:5]
   | .[]
   | "| \(.component | split(":") | last) | \(.line // "-") | \(.rule | split(":") | last) | \(.severity) |"
-' | while IFS= read -r line; do
-  COMMENT_BODY+="${line}\n"
-done
+' 2>/dev/null || echo "")
+
+if [[ -n "$TOP_ISSUES" ]]; then
+  COMMENT_BODY+="${TOP_ISSUES}\n"
+else
+  COMMENT_BODY+="| No issues found | - | - | - |\n"
+fi
 
 COMMENT_BODY+="\n### Tracking\n\n"
 
