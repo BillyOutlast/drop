@@ -61,23 +61,16 @@
         <p class="mt-6 text-base leading-7 text-zinc-400">
           {{ $t("auth.callback.requestedAccess", { name: clientData.name }) }}
         </p>
-        <form
-          action="/api/v1/client/callback"
-          method="post"
-          class="mt-10 gap-x-6"
-        >
+        <form class="mt-10 gap-x-6" @submit.prevent="authorize_wrapper()">
           <input
             id="client-id"
-            type="text"
-            class="hidden"
+            type="hidden"
             name="id"
             :value="clientId"
-            aria-label="Client identifier"
           />
           <button
-            type="button"
+            type="submit"
             class="rounded-md bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-            @click="() => authorize_wrapper()"
           >
             {{ $t("auth.callback.authorize") }}
           </button>
