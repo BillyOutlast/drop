@@ -1,5 +1,5 @@
 import tailwindcss from "@tailwindcss/vite";
-import { execSync, execFileSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import module from "node:module";
