@@ -126,8 +126,7 @@ async fn open_file_handle(
         .create(true)
         .open(path)
         .await?;
-    fh.seek(SeekFrom::Start(start.try_into().unwrap()))
-        .await?;
+    fh.seek(SeekFrom::Start(start)).await?;
     Ok(Some(fh))
 }
 
