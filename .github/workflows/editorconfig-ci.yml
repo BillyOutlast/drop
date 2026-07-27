@@ -2,9 +2,9 @@ name: EditorConfig CI
 
 on:
   push:
-    branches: [develop]
+    branches: [rebuild]
   pull_request:
-    branches: [develop]
+    branches: [rebuild]
   workflow_dispatch:
 
 permissions:

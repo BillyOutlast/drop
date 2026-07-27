@@ -2,13 +2,13 @@ name: OSV-Scanner
 
 on:
   pull_request:
-    branches: ["develop"]
+    branches: ["rebuild"]
   merge_group:
-    branches: ["develop"]
+    branches: ["rebuild"]
   schedule:
     - cron: "26 14 * * 5"
   push:
-    branches: ["develop"]
+    branches: ["rebuild"]
 
 permissions:
   contents: read

@@ -2,7 +2,7 @@ name: E2E
 
 on:
   push:
-    branches: [develop]
+    branches: [rebuild]
     paths:
       - "server/**"
       - ".github/workflows/e2e.yml"
@@ -11,7 +11,7 @@ on:
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
   pull_request:
-    branches: [develop]
+    branches: [rebuild]
     paths:
       - "server/**"
       - ".github/workflows/e2e.yml"
