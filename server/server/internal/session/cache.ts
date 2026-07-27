@@ -63,5 +63,3 @@ export default function createCacheSessionProvider() {
 
   return memoryProvider;
 }
-
-
