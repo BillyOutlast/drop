@@ -103,7 +103,11 @@ runs:
       uses: taiki-e/install-action@cargo-llvm-cov
 
     - name: Generate code coverage
-      continue-on-error: true
+      # Was continue-on-error: true — switched to false so coverage
+      # failures surface in CI. Codecov upload below still uses
+      # fail_ci_if_error: false, so generation failure is visible
+      # but won't block the pipeline.
+      continue-on-error: false
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |

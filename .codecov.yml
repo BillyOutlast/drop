@@ -15,7 +15,7 @@ coverage:
         target: 80%
         informational: true
 
-# PR comments disabled for now: solo dev, low PR traffic, low signal at 32 tests.
+# PR comments disabled: solo dev, low PR traffic. Revisit when team >1 (currently 176 vitest tests + 16 cargo tests).
 comment: false
 
 # Group admin paths that should not count toward coverage.
