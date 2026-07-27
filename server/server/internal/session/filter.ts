@@ -16,10 +16,9 @@ function matchesOidc(session: SessionWithToken, oidc: OIDCData): boolean {
   return true;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function matchesData(
   session: SessionWithToken,
-  data: Record<string, any>,
+  data: Record<string, unknown>,
 ): boolean {
   for (const [key, value] of Object.entries(data)) {
     if (JSON.stringify(session.data[key]) !== JSON.stringify(value)) {
