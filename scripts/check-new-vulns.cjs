@@ -5,7 +5,9 @@
 // Behavior:
 //   - Missing or unparseable audit JSON → exit 0 (assume tool flaked, do
 //     not fail the workflow on infra noise). A noisy log line is emitted.
-//   - Risk register missing or malformed → exit 0 (same reason).
+//   - Risk register missing or unparseable → exit 0 (same reason). This
+//     avoids the failure mode where an empty `known` set causes every
+//     advisory to be flagged as new.
 //   - New (un-registered) advisory found → exit 1, log each one.
 //   - All advisories in register or no advisories → exit 0.
 //
@@ -30,17 +32,21 @@ const path = require("path");
 // fallow-ignore-next-line complexity
 function parseArgs(argv) {
   const args = {};
+  const nextArg = (i) => (i < argv.length ? argv[i] : null);
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === "--format") args.format = argv[++i];
-    else if (a === "--json") args.json = argv[++i];
-    else if (a === "--register") args.register = argv[++i];
-    else if (a === "--ignored")
-      args.ignored = argv[++i]
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
-    else if (a === "--min-severity") args.minSeverity = argv[++i];
+    if (a === "--format") args.format = nextArg(++i);
+    else if (a === "--json") args.json = nextArg(++i);
+    else if (a === "--register") args.register = nextArg(++i);
+    else if (a === "--ignored") {
+      const val = nextArg(++i);
+      args.ignored = val
+        ? val
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+    } else if (a === "--min-severity") args.minSeverity = nextArg(++i);
     else if (a === "--help" || a === "-h") {
       console.log(
         fs.readFileSync(__filename, "utf8").split("\n").slice(0, 25).join("\n"),
@@ -66,20 +72,28 @@ function readJson(path) {
 // We deliberately avoid a full YAML parser (no extra deps in CI). Format is
 // stable: each entry has `advisory: GHSA-...` or `advisory: RUSTSEC-...` on
 // its own line. Comment lines and unrelated fields are ignored.
+//
+// Returns { known, loaded } where `loaded` is false when the file is
+// missing OR unparseable. A loaded-but-empty-known (file exists but no
+// `advisory:` entries matched) is treated as loaded: true — the caller can
+// still proceed with an empty known set and will correctly flag every
+// advisory as new.
 function readKnownAdvisories(path) {
-  const known = new Set();
+  let known = new Set();
+  let loaded = false;
   try {
-    if (!fs.existsSync(path)) return known;
+    if (!fs.existsSync(path)) return { known, loaded: false };
     const text = fs.readFileSync(path, "utf8");
     const re = /^\s*advisory:\s*(\S+)\s*$/gm;
     let m;
     while ((m = re.exec(text)) !== null) {
       known.add(m[1]);
     }
+    loaded = true;
   } catch (e) {
-    // Swallow — caller treats empty known set as "register unavailable".
+    return { known: new Set(), loaded: false };
   }
-  return known;
+  return { known, loaded };
 }
 
 function severityRank(s) {
@@ -106,14 +120,17 @@ function extractPnpm(data, minSeverity) {
 function extractCargo(data, minSeverity) {
   const vulns = (data.vulnerabilities && data.vulnerabilities.list) || [];
   const minRank = severityRank(minSeverity);
-  return vulns
-    .filter((v) => severityRank(v.advisory.severity) >= minRank)
-    .map((v) => ({
-      id: v.advisory.id,
-      module: v.package.name,
-      severity: v.advisory.severity,
-      title: v.advisory.title,
-    }));
+  return (
+    vulns
+      .filter((v) => v.advisory && severityRank(v.advisory.severity) >= minRank)
+      // fallow-ignore-next-line complexity
+      .map((v) => ({
+        id: v.advisory.id ?? "unknown",
+        module: v.package && v.package.name ? v.package.name : "unknown",
+        severity: v.advisory.severity ?? "unknown",
+        title: v.advisory.title ?? "unknown",
+      }))
+  );
 }
 
 // fallow-ignore-next-line complexity
@@ -158,7 +175,19 @@ function main() {
       ? extractPnpm(loaded.data, minSeverity)
       : extractCargo(loaded.data, minSeverity);
 
-  const known = readKnownAdvisories(registerPath);
+  // Distinguish "register loaded but empty" from "register could not be
+  // loaded" so we don't flag every advisory as new when the file is
+  // genuinely missing or unparseable (infra noise).
+  const { known, loaded: registerAvailable } =
+    readKnownAdvisories(registerPath);
+
+  if (!registerAvailable) {
+    console.warn(
+      `[check-new-vulns] risk register unavailable at ${registerPath}; treating as no known advisories (infra noise, not a failure).`,
+    );
+    process.exit(0);
+  }
+
   const newOnes = all.filter((a) => !ignored.has(a.id) && !known.has(a.id));
 
   if (newOnes.length > 0) {

@@ -135,11 +135,16 @@ runs:
       run: cargo audit --json > /tmp/cargo-audit.json 2>/dev/null || true
 
     - name: Check for new Rust advisories
-      if: always()
+      # Run on success or failure of the audit step, but not on cancel.
+      # Use --min-severity high for cargo to catch DoS-class advisories
+      # (RUSTSEC-2026-0194/0195 in quick-xml are severity "high"); the
+      # script handles missing/empty/malformed JSON and missing risk
+      # register gracefully (exits 0 with a warning in both cases).
+      if: success() || failure()
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
         node scripts/check-new-vulns.cjs \
           --format cargo \
           --json /tmp/cargo-audit.json \
-          --min-severity critical
+          --min-severity high
