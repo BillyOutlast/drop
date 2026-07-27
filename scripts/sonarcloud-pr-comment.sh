@@ -113,18 +113,34 @@ BLOCKER_COUNT=$(echo "$SONAR_RESPONSE" | jq '[.issues[] | select(.severity == "B
 CRITICAL_COUNT=$(echo "$SONAR_RESPONSE" | jq '[.issues[] | select(.severity == "CRITICAL")] | length')
 MAJOR_COUNT=$(echo "$SONAR_RESPONSE" | jq '[.issues[] | select(.severity == "MAJOR")] | length')
 
-# --- Step 3: Fetch existing GitHub issues with sonarcloud label ---------------
+# --- Step 3: Build current finding keys set -----------------------------------
+
+CURRENT_KEYS=$(echo "$SONAR_RESPONSE" | jq -c '[.issues[].key] | unique')
+log "Current finding keys: $(echo "$CURRENT_KEYS" | jq 'length') unique keys"
+
+# --- Step 4: Fetch existing GitHub issues and match to current findings -------
 
 log "Fetching existing GitHub issues with 'sonarcloud' label..."
 EXISTING_ISSUES=$(gh issue list \
   --repo "$GITHUB_REPOSITORY" \
   --label sonarcloud \
   --state open \
-  --json number,title,labels \
+  --json number,title,body \
   --limit 100 2>/dev/null || echo "[]")
 
 EXISTING_COUNT=$(echo "$EXISTING_ISSUES" | jq 'length')
 log "Found ${EXISTING_COUNT} existing sonarcloud issues"
+
+MATCHED_ISSUES=$(echo "$EXISTING_ISSUES" | jq -c --argjson currentKeys "$CURRENT_KEYS" '
+  [.[] | select(
+    (.body // "") as $b |
+    ($b | capture("sonarcloud-keys:\\s*(?<keys>[A-Za-z0-9,._-]+)"; "i").keys // "" | split(",") | map(gsub("^\\s+|\\s+$"; ""))) as $issueKeys |
+    ($currentKeys - ($currentKeys - $issueKeys)) | length > 0
+  ) | {number: .number, title: .title}]
+')
+
+MATCHED_COUNT=$(echo "$MATCHED_ISSUES" | jq 'length')
+log "Matched ${MATCHED_COUNT} issues to current findings"
 
 # --- Step 4: Build PR comment ------------------------------------------------
 
@@ -171,17 +187,17 @@ fi
 
 COMMENT_BODY+="\n### Tracking\n\n"
 
-if [[ "$EXISTING_COUNT" -gt 0 ]]; then
+if [[ "$MATCHED_COUNT" -gt 0 ]]; then
   COMMENT_BODY+="Existing GitHub issues tracking these findings:\n\n"
   while IFS= read -r line; do
     COMMENT_BODY+="${line}\n"
-  done < <(echo "$EXISTING_ISSUES" | jq -r '.[] | "- #\(.number): \(.title)"' | head -10)
+  done < <(echo "$MATCHED_ISSUES" | jq -r '.[] | "- #\(.number): \(.title)"' | head -10)
 
-  if [[ "$EXISTING_COUNT" -gt 10 ]]; then
-    COMMENT_BODY+="- ... and $((EXISTING_COUNT - 10)) more\n"
+  if [[ "$MATCHED_COUNT" -gt 10 ]]; then
+    COMMENT_BODY+="- ... and $((MATCHED_COUNT - 10)) more\n"
   fi
 else
-  COMMENT_BODY+="No existing GitHub issues found. Run \`./scripts/sonarcloud-sync.sh\` to create tracking issues.\n"
+  COMMENT_BODY+="No existing GitHub issues found for these findings. Run \`./scripts/sonarcloud-sync.sh\` to create tracking issues.\n"
 fi
 
 COMMENT_BODY+="\n---\n\n"
