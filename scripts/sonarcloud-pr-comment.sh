@@ -158,7 +158,7 @@ if [[ "$EXISTING_COUNT" -gt 0 ]]; then
   echo "$EXISTING_ISSUES" | jq -r '.[] | "- #\(.number): \(.title)"' | head -10 | while IFS= read -r line; do
     COMMENT_BODY+="${line}\n"
   done
-  
+
   if [[ "$EXISTING_COUNT" -gt 10 ]]; then
     COMMENT_BODY+="- ... and $((EXISTING_COUNT - 10)) more\n"
   fi
