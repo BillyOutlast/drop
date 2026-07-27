@@ -102,14 +102,11 @@ jobs:
         if: always()
         run: |
           pnpm audit --audit-level=critical --json > /tmp/audit.json 2>/dev/null || true
-          node -e "
-            const a = require('/tmp/audit.json');
-            const ignored = ['GHSA-mp2f-45pm-3cg9'];
-            const advisories = a.advisories ? Object.values(a.advisories) : [];
-            const critical = advisories.filter(v => v.severity === 'critical' && !ignored.includes(v.github_advisory_id));
-            critical.forEach(v => console.error('NEW CRITICAL:', v.github_advisory_id, v.module_name, v.title));
-            process.exit(critical.length > 0 ? 1 : 0);
-          "
+          node scripts/check-new-vulns.cjs \
+            --format pnpm \
+            --json /tmp/audit.json \
+            --ignored GHSA-mp2f-45pm-3cg9 \
+            --min-severity critical
       - name: Typecheck
         working-directory: server
         run: pnpm run typecheck
