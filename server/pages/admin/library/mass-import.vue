@@ -5,10 +5,11 @@
         <h1
           class="inline-flex items-center gap-x-2 text-base font-semibold text-white"
         >
-          <WrenchScrewdriverIcon class="size-6" /> Mass Import Tool
+          <WrenchScrewdriverIcon class="size-6" />
+          {{ $t("admin.massImport.title") }}
         </h1>
         <p class="mt-2 text-sm text-zinc-300">
-          Quickly import a large amount of versions at once.
+          {{ $t("admin.massImport.description") }}
         </p>
       </div>
       <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
@@ -17,7 +18,7 @@
           :disabled="!hasSelected"
           @click="triggerImport"
         >
-          Import &rarr;
+          {{ $t("admin.massImport.importButton") }}
         </LoadingButton>
       </div>
     </div>
@@ -67,25 +68,25 @@
                     scope="col"
                     class="w-full py-3.5 pr-3 text-left text-sm font-semibold text-white whitespace-nowrap"
                   >
-                    Name
+                    {{ $t("admin.massImport.name") }}
                   </th>
                   <th
                     scope="col"
                     class="px-3 py-3.5 text-left text-sm font-semibold text-white whitespace-nowrap"
                   >
-                    Type
+                    {{ $t("admin.massImport.type") }}
                   </th>
                   <th
                     scope="col"
                     class="px-3 py-3.5 text-left text-sm font-semibold text-white whitespace-nowrap"
                   >
-                    Display Name
+                    {{ $t("admin.massImport.displayName") }}
                   </th>
                   <th
                     scope="col"
                     class="px-3 py-3.5 text-left text-sm font-semibold text-white whitespace-nowrap"
                   >
-                    Setup Mode
+                    {{ $t("admin.massImport.setupMode") }}
                   </th>
                 </tr>
               </thead>
@@ -237,17 +238,14 @@
                     <DialogTitle
                       as="h3"
                       class="text-base font-semibold text-white"
-                      >This tool is basic.</DialogTitle
+                      >{{ $t("admin.massImport.warningTitle") }}</DialogTitle
                     >
                     <div class="mt-2">
                       <p class="text-sm text-zinc-400">
-                        While it is useful to import a lot of versions at once,
-                        this tool is designed for migrating from other projects,
-                        rather than building your Drop library from scratch.
+                        {{ $t("admin.massImport.warningBody") }}
 
                         <span class="text-sm text-zinc-100 font-bold">
-                          It is missing functionality present in the normal
-                          import wizard.
+                          {{ $t("admin.massImport.warningMissing") }}
                         </span>
                       </p>
                     </div>
@@ -259,7 +257,7 @@
                     class="inline-flex w-full justify-center rounded-md bg-zinc-800 px-3 py-2 text-sm font-semibold text-white hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-800"
                     @click="open = false"
                   >
-                    Accept
+                    {{ $t("admin.massImport.accept") }}
                   </button>
                 </div>
               </DialogPanel>

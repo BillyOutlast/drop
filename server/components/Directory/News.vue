@@ -99,11 +99,12 @@
           <h3 class="relative text-sm font-medium text-zinc-100">
             {{ article.title }}
           </h3>
-          <!-- eslint-disable-next-line vue/no-v-html micromark sanitizes output -->
+          <!-- eslint-disable vue/no-v-html -->
           <p
             class="relative mt-1 text-xs text-zinc-400 line-clamp-2"
             v-html="formatExcerpt(article.description)"
           />
+          <!-- eslint-enable vue/no-v-html -->
           <div
             class="relative mt-2 flex items-center gap-x-2 text-xs text-zinc-500"
           >
