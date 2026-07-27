@@ -14,6 +14,7 @@ jobs:
   review:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: alibaba/open-code-review@0ced7165718725e15223c3e5a506df7b7e9de51f # v1.7.17
         with:
