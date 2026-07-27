@@ -212,7 +212,7 @@ QG_RESPONSE=$(curl -sS -f \
 log "Fetching files needing coverage..."
 COVERAGE_RESPONSE=$(curl -sS -f \
   -H "Authorization: Bearer ${SONAR_TOKEN}" \
-  "https://sonarcloud.io/api/measures/component_tree?component=${SONAR_PROJECT_KEY}&metricKeys=uncovered_lines,coverage,lines_to_cover&qualifiers=FIL&s=metric&asc=true&ps=15" 2>/dev/null || echo '{"components":[]}')
+  "https://sonarcloud.io/api/measures/component_tree?component=${SONAR_PROJECT_KEY}&metricKeys=new_coverage,new_uncovered_lines&qualifiers=FIL&ps=15&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"components":[]}')
 
 COMMENT_BODY+="<details>\n<summary>📋 JSON Summary (for AI agents)</summary>\n\n"
 COMMENT_BODY+="\`\`\`json\n"
@@ -221,7 +221,7 @@ JSON_SUMMARY=$(echo "$SONAR_RESPONSE" | jq \
   --arg project "$SONAR_PROJECT_KEY" \
   --arg pr "$GITHUB_PR_NUMBER" \
   --argjson qg "$(echo "$QG_RESPONSE" | jq '{gateStatus: .projectStatus.status, failedConditions: [.projectStatus.conditions[]? | select(.status == "ERROR") | {metric: .metricKey, actual: .actualValue, threshold: .errorThreshold}]}')" \
-  --argjson coverage "$(echo "$COVERAGE_RESPONSE" | jq '[.components[]? | {file: (.path // .name), coverage: (.measures[]? | select(.metric == "coverage") | .value // "0.0"), uncovered: (.measures[]? | select(.metric == "uncovered_lines") | .value // "0")}]')" \
+  --argjson coverage "$(echo "$COVERAGE_RESPONSE" | jq '[.components[]? | {file: (.path // .name), coverage: (.measures[]? | select(.metric == "new_coverage") | .value // "0.0"), uncovered: (.measures[]? | select(.metric == "new_uncovered_lines") | .value // "0")}]')" \
   '{
   project: $project,
   pullRequest: ($pr | tonumber),
