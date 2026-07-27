@@ -14,14 +14,14 @@ trap cleanup EXIT
 
 echo "Running vitest coverage..."
 pnpm --filter drop coverage 2>&1 | tee "$TMPFILE" > /dev/null || {
-  echo "ERROR: coverage run failed"
+  echo "ERROR: coverage run failed" >&2
   exit 1
 }
 
 # vitest text reporter prints a table; the "All files" row is the summary.
 SUMMARY=$(grep "All files" "$TMPFILE" | tail -1 || true)
 if [[ -z "$SUMMARY" ]]; then
-  echo "ERROR: could not find 'All files' row in coverage output"
+  echo "ERROR: could not find 'All files' row in coverage output" >&2
   exit 1
 fi
 
