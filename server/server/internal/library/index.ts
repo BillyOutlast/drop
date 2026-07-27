@@ -651,7 +651,6 @@ class LibraryManager {
 
           if (version.type === "depot") {
             // SAFETY: we can only reach this if the type is depot and identifier is valid
-            // eslint-disable-next-line drop/no-prisma-delete
             await prisma.unimportedGameVersion.delete({
               where: {
                 id: version.identifier,

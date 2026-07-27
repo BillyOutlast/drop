@@ -2,16 +2,27 @@ import type { TSESLint } from "@typescript-eslint/utils";
 
 const blacklistedFunctions = new Set(["delete", "deleteMany"]);
 
-// Models where hard-delete is correct (join tables, auth tokens, ephemeral data)
+// Models where hard-delete is correct (join tables, auth tokens, ephemeral data, no deletedAt column)
 const allowedModels = new Set([
+  "aPIToken",
+  "certificate",
+  "collection",
+  "collectionEntry",
+  "company",
   "companyGame",
+  "game",
+  "gameAgeRating",
   "gameTag",
+  "gameVersion",
+  "invitation",
+  "library",
   "linkedAuthMec",
   "linkedMFAMec",
-  "invitation",
-  "apiToken",
-  "certificate",
+  "notification",
+  "objectHash",
+  "saveSlot",
   "session",
+  "unimportedGameVersion",
 ]);
 
 export default {
