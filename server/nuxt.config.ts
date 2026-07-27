@@ -32,6 +32,7 @@ const commitHash =
   process.env.BUILD_GIT_REF ??
   execFileSync("git", ["rev-parse", "--short", "HEAD"], {
     encoding: "utf-8",
+    env: { ...process.env, PATH: process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin" },
   }).trim();
 
 console.log(`Drop ${dropVersion} #${commitHash}`);

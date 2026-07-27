@@ -58,14 +58,11 @@ export class TorrentialService extends Service<unknown> {
             logger.info(
               "torrential detected in development mode - building from source",
             );
-            let cargoPath = "cargo";
-            try {
-              cargoPath = execSync("which cargo", { encoding: "utf-8" }).trim();
-            } catch (e) {
-              logger.warn(
-                `could not locate cargo via which: ${(e as Error).message}`,
-              );
-            }
+            const cargoPaths = [
+              "/usr/local/bin/cargo",
+              "/usr/bin/cargo",
+            ];
+            const cargoPath = cargoPaths.find((p) => fs.existsSync(p)) ?? "cargo";
             // sonarcloud-disable-next-line typescript:S4036
             return spawn(
               cargoPath,
@@ -78,7 +75,7 @@ export class TorrentialService extends Service<unknown> {
               {
                 env: {
                   ...process.env,
-                  PATH: "/usr/local/bin:/usr/bin:/bin",
+                  PATH: process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin",
                 },
               },
             );
