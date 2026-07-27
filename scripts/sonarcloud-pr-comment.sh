@@ -186,7 +186,40 @@ fi
 
 COMMENT_BODY+="\n---\n\n"
 COMMENT_BODY+="*Full analysis: [SonarCloud Dashboard](https://sonarcloud.io/project/overview?id=${SONAR_PROJECT_KEY})*\n"
-COMMENT_BODY+="*To create tracking issues: \`./scripts/sonarcloud-sync.sh --backfill\`*"
+COMMENT_BODY+="*To create tracking issues: \`./scripts/sonarcloud-sync.sh --backfill\`*\n\n"
+
+log "Fetching quality gate status..."
+QG_RESPONSE=$(curl -sS -f \
+  -H "Authorization: Bearer ${SONAR_TOKEN}" \
+  "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${SONAR_PROJECT_KEY}&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"projectStatus":{"status":"UNKNOWN","conditions":[]}}')
+
+COMMENT_BODY+="<details>\n<summary>📋 JSON Summary (for AI agents)</summary>\n\n"
+COMMENT_BODY+="\`\`\`json\n"
+
+JSON_SUMMARY=$(echo "$SONAR_RESPONSE" | jq --argjson qg "$(echo "$QG_RESPONSE" | jq '{gateStatus: .projectStatus.status, failedConditions: [.projectStatus.conditions[]? | select(.status == "ERROR") | {metric: .metricKey, actual: .actualValue, threshold: .errorThreshold}]}')" '{
+  project: "'${SONAR_PROJECT_KEY}'",
+  pullRequest: '${GITHUB_PR_NUMBER}',
+  qualityGate: $qg,
+  totalIssues: .total,
+  summary: {
+    blocker: [.issues[] | select(.severity == "BLOCKER")] | length,
+    critical: [.issues[] | select(.severity == "CRITICAL")] | length,
+    major: [.issues[] | select(.severity == "MAJOR")] | length
+  },
+  issues: [.issues[] | {
+    key: .key,
+    rule: .rule,
+    severity: .severity,
+    message: .message,
+    component: (.component | split(":") | last),
+    line: .line,
+    url: ("https://sonarcloud.io/project/issues?id='${SONAR_PROJECT_KEY}'&issues=" + .key + "&open=" + .key)
+  }]
+}')
+
+COMMENT_BODY+="${JSON_SUMMARY}\n"
+COMMENT_BODY+="\`\`\`\n\n"
+COMMENT_BODY+="</details>"
 
 # --- Step 5: Post comment to PR ----------------------------------------------
 
