@@ -12,7 +12,7 @@ class ApplicationConfiguration {
 
     const deepAppConfigCopy: Omit<ApplicationSettingsModel, "timestamp"> & {
       timestamp?: Date;
-    } = JSON.parse(JSON.stringify(this.currentApplicationSettings));
+    } = structuredClone(this.currentApplicationSettings);
 
     delete deepAppConfigCopy["timestamp"];
 
