@@ -337,7 +337,7 @@ export class PCGamingWikiProvider implements MetadataProvider {
     if (websiteStr === undefined || websiteStr === null) return "";
 
     // string comes in format: "[https://www.gamesci.com.cn www.gamesci.com.cn]"
-    return websiteStr.replaceAll(/\[|]/g, "").split(" ")[0] ?? "";
+    return websiteStr.replaceAll(/[\[\]]/g, "").split(" ")[0] ?? "";
   }
 
   private compileTags(game: PCGamingWikiGame): string[] {

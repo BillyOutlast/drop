@@ -1,6 +1,7 @@
 use std::{
     fs::{self, File},
     io::Read,
+    path::Path,
     sync::LazyLock,
     time::Duration,
 };
@@ -36,6 +37,30 @@ pub static DROP_APP_HANDLE: LazyLock<Mutex<Option<AppHandle>>> = LazyLock::new(|
 
 struct AutoOfflineMiddleware;
 
+async fn transition_online(app_handle: &tauri::AppHandle, url: &url::Url) {
+    let state = app_handle.state::<std::sync::nonpoison::Mutex<AppState>>();
+    let state_lock = state.try_lock();
+    if let Ok(mut state_lock) = state_lock {
+        if state_lock.status == AppStatus::Offline {
+            state_lock.status = AppStatus::SignedIn;
+            app_handle
+                .emit("update_state", &*state_lock)
+                .expect("failed to emit state update");
+        }
+    } else {
+        warn!("failed to lock app state - {}", url.as_str());
+    }
+}
+
+async fn transition_offline(app_handle: &tauri::AppHandle) {
+    let state = app_handle.state::<std::sync::nonpoison::Mutex<AppState>>();
+    let mut state_lock = state.lock();
+    state_lock.status = AppStatus::Offline;
+    app_handle
+        .emit("update_state", &*state_lock)
+        .expect("failed to emit state update");
+}
+
 #[async_trait::async_trait]
 impl Middleware for AutoOfflineMiddleware {
     async fn handle(
@@ -49,106 +74,85 @@ impl Middleware for AutoOfflineMiddleware {
         match res {
             Ok(res) => {
                 tauri::async_runtime::spawn(async move {
-                    let lock = DROP_APP_HANDLE.lock().await;
-                    if let Some(app_handle) = &*lock {
-                        let state = app_handle.state::<std::sync::nonpoison::Mutex<AppState>>();
-                        let state_lock = state.try_lock();
-                        if let Ok(mut state_lock) = state_lock {
-                            if state_lock.status == AppStatus::Offline {
-                                state_lock.status = AppStatus::SignedIn;
-                                app_handle
-                                    .emit("update_state", &*state_lock)
-                                    .expect("failed to emit state update");
-                            }
-                        } else {
-                            warn!("failed to lock app state - {}", url.as_str());
-                        }
-                    };
+                    let handle = DROP_APP_HANDLE.lock().await;
+                    if let Some(app_handle) = &*handle {
+                        transition_online(app_handle, &url).await;
+                    }
                 });
-
                 Ok(res)
             }
-            Err(err) => match err {
-                Error::Middleware(error) => Err(Error::Middleware(error)),
-                Error::Reqwest(error) => {
+            Err(err) => {
+                if let Error::Reqwest(ref error) = err {
                     if error.is_connect() {
-                        // Spawn to defer this action - the state will most likely be locked
                         tauri::async_runtime::spawn(async move {
-                            let lock = DROP_APP_HANDLE.lock().await;
-                            if let Some(app_handle) = &*lock {
-                                let state =
-                                    app_handle.state::<std::sync::nonpoison::Mutex<AppState>>();
-                                let mut state_lock = state.lock();
-                                state_lock.status = AppStatus::Offline;
-                                app_handle
-                                    .emit("update_state", &*state_lock)
-                                    .expect("failed to emit state update");
-                            };
+                            let handle = DROP_APP_HANDLE.lock().await;
+                            if let Some(app_handle) = &*handle {
+                                transition_offline(app_handle).await;
+                            }
                         });
-                    };
-                    Err(Error::Reqwest(error))
+                    }
                 }
-            },
+                Err(err)
+            }
         }
+    }
+}
+
+fn process_cert_file(path: &Path, certs: &mut Vec<Certificate>) {
+    let mut buf = Vec::new();
+    let mut file = match File::open(path) {
+        Ok(f) => f,
+        Err(e) => {
+            warn!("Failed to open file at {} with error {}", path.display(), e);
+            return;
+        }
+    };
+    file.read_to_end(&mut buf).unwrap_or_else(|e| {
+        panic!(
+            "Failed to read to end of certificate file {} with error {}",
+            path.display(),
+            e
+        )
+    });
+
+    match Certificate::from_pem_bundle(&buf) {
+        Ok(certificates) => {
+            let count_before = certs.len();
+            certs.extend(certificates);
+            info!(
+                "added {} certificate(s) from {}",
+                certs.len() - count_before,
+                path.file_name().unwrap().to_string_lossy()
+            );
+        }
+        Err(e) => warn!(
+            "Invalid certificate file {} with error {}",
+            path.display(),
+            e
+        ),
     }
 }
 
 fn fetch_certificates() -> Vec<Certificate> {
     let certificate_dir = DATA_ROOT_DIR.join("certificates");
-
     let mut certs = Vec::new();
-    match fs::read_dir(certificate_dir) {
-        Ok(c) => {
-            for entry in c {
-                match entry {
-                    Ok(c) => {
-                        let mut buf = Vec::new();
-                        match File::open(c.path()) {
-                            Ok(f) => f,
-                            Err(e) => {
-                                warn!(
-                                    "Failed to open file at {} with error {}",
-                                    c.path().display(),
-                                    e
-                                );
-                                continue;
-                            }
-                        }
-                        .read_to_end(&mut buf)
-                        .unwrap_or_else(|e| {
-                            panic!(
-                                "Failed to read to end of certificate file {} with error {}",
-                                c.path().display(),
-                                e
-                            )
-                        });
 
-                        match Certificate::from_pem_bundle(&buf) {
-                            Ok(certificates) => {
-                                for cert in certificates {
-                                    certs.push(cert);
-                                }
-                                info!(
-                                    "added {} certificate(s) from {}",
-                                    certs.len(),
-                                    c.file_name().display()
-                                );
-                            }
-                            Err(e) => warn!(
-                                "Invalid certificate file {} with error {}",
-                                c.path().display(),
-                                e
-                            ),
-                        }
-                    }
-                    Err(_) => todo!(),
-                }
-            }
-        }
+    let dir = match fs::read_dir(certificate_dir) {
+        Ok(d) => d,
         Err(e) => {
             debug!("not loading certificates due to error: {e}");
+            return certs;
         }
     };
+
+    for entry in dir {
+        let entry = match entry {
+            Ok(e) => e,
+            Err(_) => continue,
+        };
+        process_cert_file(&entry.path(), &mut certs);
+    }
+
     certs
 }
 

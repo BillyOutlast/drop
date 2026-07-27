@@ -201,10 +201,151 @@ pub fn custom_panic_handler(e: &PanicHookInfo) -> Option<()> {
     Some(())
 }
 
+fn setup_tray(app: &tauri::App, menu: &tauri::menu::Menu<tauri::Wry>) {
+    let tray = TrayIconBuilder::new()
+        .icon(
+            app.default_window_icon()
+                .expect("Failed to get default window icon")
+                .clone(),
+        )
+        .menu(menu)
+        .on_menu_event(|app, event| match event.id.as_ref() {
+            "open" => {
+                app.webview_windows()
+                    .get("frontend")
+                    .expect("Failed to get webview")
+                    .show()
+                    .expect("Failed to show window");
+            }
+            "quit" => {
+                app.exit(0);
+            }
+            _ => {
+                warn!("menu event not handled: {:?}", event.id);
+            }
+        })
+        .build(app);
+
+    if let Err(e) = tray {
+        warn!("failed to set up system tray icon, disabling tray: {e}");
+        TRAY_DISABLED.store(true, Ordering::Relaxed);
+    }
+}
+
+fn check_tray_support() {
+    if env::var("NO_TRAY_ICON").is_ok_and(|value| value.to_lowercase() == "true") {
+        TRAY_DISABLED.store(true, Ordering::Relaxed);
+    } else if !tray_icon_supported() {
+        warn!("appindicator library not available at runtime, disabling system tray icon");
+        TRAY_DISABLED.store(true, Ordering::Relaxed);
+    }
+}
+
+fn build_menu(app: &tauri::App) -> tauri::menu::Menu<tauri::Wry> {
+    let open_menu_item = MenuItem::with_id(app, "open", "Open", true, None::<&str>)
+        .expect("Failed to generate open menu item");
+
+    let sep = PredefinedMenuItem::separator(app).expect("Failed to generate menu separator item");
+
+    let quit_menu_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)
+        .expect("Failed to generate quit menu item");
+
+    Menu::with_items(app, &[&open_menu_item, &sep, &quit_menu_item])
+        .expect("Failed to generate menu")
+}
+
+fn setup_deep_link_handler(handle: tauri::AppHandle) {
+    tauri::AppHandle::clone(&handle)
+        .deep_link()
+        .on_open_url(move |event| {
+            debug!("handling drop:// url");
+            let binding = event.urls();
+            let url = match binding.first() {
+                Some(url) => url,
+                None => {
+                    warn!("No value recieved from deep link. Is this a drop server?");
+                    return;
+                }
+            };
+            if let Some("handshake") = url.host_str() {
+                tauri::async_runtime::spawn(recieve_handshake(
+                    handle.clone(),
+                    url.path().to_string(),
+                ));
+            }
+        });
+}
+
+fn check_corrupted_database(app: &tauri::App) {
+    let mut db_handle = borrow_db_mut_checked();
+    if let Some(original) = db_handle.prev_database.take() {
+        let canonicalised = match original.canonicalize() {
+            Ok(o) => o,
+            Err(_) => original,
+        };
+        warn!(
+            "Database corrupted. Original file at {}",
+            canonicalised.display()
+        );
+        app.dialog()
+            .message(format!(
+                "Database corrupted. A copy has been saved at: {}",
+                canonicalised.display()
+            ))
+            .title("Database corrupted")
+            .show(|_| {});
+    }
+}
+
+async fn initialize_app(app: &mut tauri::App<tauri::Wry>, handle: tauri::AppHandle) {
+    let state = setup(handle.clone()).await;
+    info!("initialized drop client");
+    app.manage(Mutex::new(state));
+
+    {
+        let mut app_handle_lock = DROP_APP_HANDLE.lock().await;
+        app_handle_lock.replace(handle.clone());
+    };
+
+    {
+        use tauri_plugin_deep_link::DeepLinkExt;
+        let _ = app.deep_link().register_all();
+        debug!("registered all pre-defined deep links");
+    }
+
+    let handle_clone = app.handle().clone();
+    let width = 1536.0;
+    let height = 864.0;
+
+    let main_window = WindowBuilder::new(&handle_clone, "main")
+        .title("Drop Desktop App")
+        .min_inner_size(1000.0, 500.0)
+        .inner_size(width, height)
+        .decorations(false)
+        .shadow(false)
+        .build()
+        .expect("failed to build main window");
+
+    main_window
+        .add_child(
+            WebviewBuilder::new("frontend", WebviewUrl::App("main".into())).auto_resize(),
+            LogicalPosition::new(0., 0.),
+            LogicalSize::new(width, height),
+        )
+        .expect("failed to create frontend webview");
+
+    setup_deep_link_handler(handle);
+    check_tray_support();
+
+    let menu = build_menu(app);
+    run_on_tray(|| setup_tray(app, &menu));
+    check_corrupted_database(app);
+
+    tokio::spawn(async move { scheduler_task().await });
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // let global_span = span!(Level::TRACE, "global_span");
-    // let _enter = global_span.enter();
     std::panic::set_hook(Box::new(|e| {
         let _ = custom_panic_handler(e);
         println!("{e}");
@@ -287,153 +428,7 @@ pub fn run() {
         ))
         .setup(|app| {
             let handle = app.handle().clone();
-
-            tauri::async_runtime::block_on(async move {
-                let state = setup(handle.clone()).await;
-                info!("initialized drop client");
-                app.manage(Mutex::new(state));
-
-                let global_app_handle = handle;
-                {
-                    let mut app_handle_lock = DROP_APP_HANDLE.lock().await;
-                    app_handle_lock.replace(global_app_handle);
-                };
-
-                {
-                    use tauri_plugin_deep_link::DeepLinkExt;
-                    let _ = app.deep_link().register_all();
-                    debug!("registered all pre-defined deep links");
-                }
-
-                let handle = app.handle().clone();
-
-                let width = 1536.0;
-                let height = 864.0;
-
-                let main_window = WindowBuilder::new(&handle, "main")
-                    .title("Drop Desktop App")
-                    .min_inner_size(1000.0, 500.0)
-                    .inner_size(width, height)
-                    .decorations(false)
-                    .shadow(false)
-                    .build()
-                    .expect("failed to build main window");
-
-                main_window
-                    .add_child(
-                        WebviewBuilder::new("frontend", WebviewUrl::App("main".into()))
-                            .auto_resize(),
-                        LogicalPosition::new(0., 0.),
-                        LogicalSize::new(width, height),
-                    )
-                    .expect("failed to create frontend webview");
-
-                app.deep_link().on_open_url(move |event| {
-                    debug!("handling drop:// url");
-                    let binding = event.urls();
-                    let url = match binding.first() {
-                        Some(url) => url,
-                        None => {
-                            warn!("No value recieved from deep link. Is this a drop server?");
-                            return;
-                        }
-                    };
-                    if let Some("handshake") = url.host_str() {
-                        tauri::async_runtime::spawn(recieve_handshake(
-                            handle.clone(),
-                            url.path().to_string(),
-                        ));
-                    }
-                });
-                let open_menu_item = MenuItem::with_id(app, "open", "Open", true, None::<&str>)
-                    .expect("Failed to generate open menu item");
-
-                let sep = PredefinedMenuItem::separator(app)
-                    .expect("Failed to generate menu separator item");
-
-                let quit_menu_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)
-                    .expect("Failed to generate quit menu item");
-
-                let menu = Menu::with_items(
-                    app,
-                    &[
-                        &open_menu_item,
-                        &sep,
-                        /*
-                        &MenuItem::with_id(app, "show_library", "Library", true, None::<&str>)?,
-                        &MenuItem::with_id(app, "show_settings", "Settings", true, None::<&str>)?,
-                        &PredefinedMenuItem::separator(app)?,
-                         */
-                        &quit_menu_item,
-                    ],
-                )
-                .expect("Failed to generate menu");
-
-                if env::var("NO_TRAY_ICON").is_ok_and(|value| value.to_lowercase() == "true") {
-                    TRAY_DISABLED.store(true, Ordering::Relaxed);
-                } else if !tray_icon_supported() {
-                    warn!(
-                        "appindicator library not available at runtime, disabling system tray icon"
-                    );
-                    TRAY_DISABLED.store(true, Ordering::Relaxed);
-                }
-
-                run_on_tray(|| {
-                    let tray = TrayIconBuilder::new()
-                        .icon(
-                            app.default_window_icon()
-                                .expect("Failed to get default window icon")
-                                .clone(),
-                        )
-                        .menu(&menu)
-                        .on_menu_event(|app, event| match event.id.as_ref() {
-                            "open" => {
-                                app.webview_windows()
-                                    .get("frontend")
-                                    .expect("Failed to get webview")
-                                    .show()
-                                    .expect("Failed to show window");
-                            }
-                            "quit" => {
-                                app.exit(0);
-                            }
-
-                            _ => {
-                                warn!("menu event not handled: {:?}", event.id);
-                            }
-                        })
-                        .build(app);
-
-                    if let Err(e) = tray {
-                        warn!("failed to set up system tray icon, disabling tray: {e}");
-                        TRAY_DISABLED.store(true, Ordering::Relaxed);
-                    }
-                });
-
-                {
-                    let mut db_handle = borrow_db_mut_checked();
-                    if let Some(original) = db_handle.prev_database.take() {
-                        let canonicalised = match original.canonicalize() {
-                            Ok(o) => o,
-                            Err(_) => original,
-                        };
-                        warn!(
-                            "Database corrupted. Original file at {}",
-                            canonicalised.display()
-                        );
-                        app.dialog()
-                            .message(format!(
-                                "Database corrupted. A copy has been saved at: {}",
-                                canonicalised.display()
-                            ))
-                            .title("Database corrupted")
-                            .show(|_| {});
-                    }
-                }
-
-                tokio::spawn(async move { scheduler_task().await });
-            });
-
+            tauri::async_runtime::block_on(initialize_app(app, handle));
             Ok(())
         })
         .register_asynchronous_uri_scheme_protocol("object", move |_ctx, request, responder| {
