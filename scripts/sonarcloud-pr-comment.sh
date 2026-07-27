@@ -71,7 +71,7 @@ log "Fetching unresolved issues from SonarCloud (project: ${SONAR_PROJECT_KEY}).
 
 SONAR_RESPONSE=$(curl -sS -f \
   -H "Authorization: Bearer ${SONAR_TOKEN}" \
-  "${SONAR_API}?componentKeys=${SONAR_PROJECT_KEY}&resolved=false&severities=${SEVERITIES}&ps=${PAGE_SIZE}&p=1") || {
+  "${SONAR_API}?componentKeys=${SONAR_PROJECT_KEY}&resolved=false&severities=${SEVERITIES}&ps=${PAGE_SIZE}&p=1&pullRequest=${GITHUB_PR_NUMBER}") || {
     log "SonarCloud API request failed, skipping comment"
     exit 0
   }
@@ -97,7 +97,7 @@ if [[ "$TOTAL_PAGES" -gt 1 ]]; then
     log "Fetching page ${PAGE}/${TOTAL_PAGES}..."
     PAGE_RESPONSE=$(curl -sS -f \
       -H "Authorization: Bearer ${SONAR_TOKEN}" \
-      "${SONAR_API}?componentKeys=${SONAR_PROJECT_KEY}&resolved=false&severities=${SEVERITIES}&ps=${PAGE_SIZE}&p=${PAGE}") || {
+      "${SONAR_API}?componentKeys=${SONAR_PROJECT_KEY}&resolved=false&severities=${SEVERITIES}&ps=${PAGE_SIZE}&p=${PAGE}&pullRequest=${GITHUB_PR_NUMBER}") || {
         log "SonarCloud API request failed on page ${PAGE}, skipping remaining pages"
         break
       }
