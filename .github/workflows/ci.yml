@@ -134,9 +134,11 @@ jobs:
   test:
     name: Test + Coverage
     runs-on: ubuntu-latest
-    # Coverage is measurement-only at this stage. No thresholds, no gates.
+    # Coverage is measurement-only at 29.32% server backend baseline.
+    # No thresholds, no gates. Rust workspaces use reusable rust-ci action
+    # which also uploads per-workspace lcov to Codecov.
     # Add a `coverage:check` script with thresholds once coverage matures
-    # past ~30% on the server business-logic modules.
+    # past ~40% on server business-logic modules.
     steps:
       - name: Check out the repo
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4

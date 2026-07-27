@@ -130,7 +130,7 @@ For non-skill agents, treat the task map below as the local onboarding source: r
 - `.husky/pre-commit` (root, ACTIVE): runs `pnpm --filter drop lint-staged && pnpm --filter drop typecheck`
 - `--filter drop` = `server/` (filter targets the `drop` package name; see `server/package.json`).
 - lint-staged patterns: `*.{ts,vue,json,css,scss,yaml,yml,md,mjs,cjs}` → eslint --fix + prettier --write. `*.rs` → `cargo fmt -- <file>`.
-- **Note:** Pre-commit does NOT run tests. Tests are slow + stateful; run `pnpm --filter drop test` manually before pushing.
+- **Note:** Pre-commit does NOT run tests. Tests are slow + stateful. Pre-push runs incremental tests (`pnpm --filter drop test:changed`). Full suite runs in CI.
 
 ## Common Gotchas
 
@@ -167,7 +167,7 @@ Before batch commits: `pnpm --filter drop lint:fix` from repo root.
 | `desktop/src-tauri/database/` | 6 cargo                | `cargo test -p database`                         |
 | `server/test/e2e/`            | 1 smoke                | `pnpm --filter drop test:e2e` (needs dev server) |
 
-Coverage 1.17% lines / 2.09% funcs (server, no gates). See `docs/coverage-baseline-2026-07-26.md`.
+Coverage 29.32% lines / 22.09% branches (server backend, no gates). Run `bash scripts/gen-coverage-report.sh` for fresh baseline; see `docs/coverage-baseline-*.md`. Type coverage: 98.27% (`pnpm --filter drop coverage:type`).
 
 Bugs caught during this sequence: `prioritylist.ts:34` (`a.priority == a.priority`); `database/Cargo.toml` missing `serde/derive` (53 errs); `cli/` binary-only, no `lib.rs`.
 
@@ -216,7 +216,7 @@ Captured at PR #22 (https://github.com/BillyOutlast/drop/pull/22) close-out. **R
 | Item                               | Trigger                  | Why deferred                                                                                                                                                                                                                                                                                                                                                   |
 | ---------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Codecov test-results reporting     | Coverage >30%            | JUnit analytics produce zero signal at 176 tests. Use `codecov-action@v5` with `report_type: test_results` (NOT `codecov/test-results-action@v1` which is DEPRECATED).                                                                                                                                                                                         |
-| `.codecov.yml` with `target: auto` | Coverage >30%            | At 1.17% baseline, ANY new uncovered code drops percentage and blocks every PR. Contradicts current "no gates" policy.                                                                                                                                                                                                                                         |
+| `.codecov.yml` with `target: auto` | Coverage >30%            | At 29.32% server backend baseline, any new uncovered code could drop percentage under threshold. Use `target: auto, threshold: 2%` first as `informational: true`. |
 | gitleaks-action v2→v3 migration    | Pre-Sept 2026            | v2 uses Node 20; GitHub deprecates Node 20 default in Sept 2026. Also unlocks v3's native fork-PR base-SHA resolution.                                                                                                                                                                                                                                         |
 | SonarCloud C rating fix            | Ongoing                  | 109 open issues tracked via GitHub labels. Use `gh issue list --repo BillyOutlast/drop --label sonarcloud` to query. Fix batches by category (a11y, vue, react, code-quality).                                                                                                                                                                                 |
 | `noUncheckedIndexedAccess` enable  | After latent-error fixup | 30+ latent TS errors in `server/api/v1/{admin/import/massversion, auth/mfa/webauthn, auth/passkey}/`, `server/internal/{auth/totp, clients/event-handler, metadata/pcgamingwiki, system-data/index, utils/prioritylist}.ts`. Each requires explicit `if (!arr[i]) return` guard.                                                                               |
