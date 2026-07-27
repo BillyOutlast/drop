@@ -1,4 +1,4 @@
-import { spawn, execSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { Service } from "..";
 import { systemConfig } from "../../config/sys-conf";
 import path from "node:path";
