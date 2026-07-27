@@ -1,16 +1,12 @@
 <template>
   <div class="border-b border-zinc-700 py-5">
-    <h3 class="text-base font-semibold font-display leading-6 text-zinc-100">
-      General
-    </h3>
+    <h3 class="text-base font-semibold font-display leading-6 text-zinc-100">General</h3>
   </div>
 
   <div class="mt-5 space-y-8">
     <div class="flex flex-row items-center justify-between">
       <div>
-        <h3 class="text-sm font-medium leading-6 text-zinc-100">
-          Start with system
-        </h3>
+        <h3 class="text-sm font-medium leading-6 text-zinc-100">Start with system</h3>
         <p class="mt-1 text-sm leading-6 text-zinc-400">
           Drop will automatically start when you log into your computer
         </p>
@@ -42,9 +38,8 @@ defineProps<{}>();
 const autostartEnabled = ref<boolean>(false);
 
 // Load initial state
-invoke("get_autostart_enabled").then((enabled) => {
-  autostartEnabled.value = enabled as boolean;
-});
+const initialAutostart = await invoke<boolean>("get_autostart_enabled");
+autostartEnabled.value = initialAutostart;
 
 // Watch for changes and update autostart
 watch(autostartEnabled, async (newValue: boolean) => {
