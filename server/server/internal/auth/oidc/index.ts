@@ -102,6 +102,7 @@ const OIDCLogoutTokenV1 = type({
   iat: "number",
   jti: "string",
   events: type({
+    // NOSONAR:S5332 - OIDC standard schema URI, not an HTTP endpoint
     "http://schemas.openid.net/event/backchannel-logout": "object",
   }),
   sid: "string?", // session ID
