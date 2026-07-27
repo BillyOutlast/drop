@@ -8,7 +8,6 @@ on:
       - ".github/workflows/desktop-ci.yml"
       - "pnpm-workspace.yaml"
       - "package.json"
-      - "pnpm-lock.yaml"
   pull_request:
     branches: [rebuild, develop]
     paths:
@@ -16,7 +15,6 @@ on:
       - ".github/workflows/desktop-ci.yml"
       - "pnpm-workspace.yaml"
       - "package.json"
-      - "pnpm-lock.yaml"
   workflow_dispatch:
 
 permissions:

@@ -130,8 +130,18 @@ function main() {
     process.exit(2);
   }
 
+  // Default register path: GITHUB_WORKSPACE (repo root) when available,
+  // falling back to process.cwd()/security/. Composite actions like
+  // rust-ci set working-directory to a sub-crate (cli/, desktop/src-tauri/),
+  // so process.cwd() alone would silently miss the register and flag every
+  // advisory as new.
   const registerPath =
-    args.register || path.join(process.cwd(), "security", "risk-register.yaml");
+    args.register ||
+    path.join(
+      process.env.GITHUB_WORKSPACE || process.cwd(),
+      "security",
+      "risk-register.yaml",
+    );
   const ignored = new Set(args.ignored || []);
 
   const loaded = readJson(args.json);
