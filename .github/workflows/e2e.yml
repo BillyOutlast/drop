@@ -61,7 +61,7 @@ jobs:
       # Playwright config sets webServer.command = "pnpm dev", so the
       # dev server is auto-spawned. No explicit start needed.
       - name: Install Playwright browsers
-        run: pnpm --ignore-scripts exec playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Run E2E tests
         run: pnpm run test:e2e
