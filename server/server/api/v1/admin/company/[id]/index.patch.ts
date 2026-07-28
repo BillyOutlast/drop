@@ -10,7 +10,12 @@ export default defineEventHandler(async (h3) => {
     throw createError({ statusCode: 400, message: "Invalid request body" });
   const id = getRouterParam(h3, "id")!;
 
-  const allowedFields = new Set(["name", "description", "website"]);
+  const allowedFields = new Set([
+    "mName",
+    "mShortDescription",
+    "mDescription",
+    "mWebsite",
+  ]);
   const restOfTheBody = Object.fromEntries(
     Object.entries(body).filter(([key]) => allowedFields.has(key)),
   );

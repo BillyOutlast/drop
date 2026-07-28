@@ -97,7 +97,7 @@ ENV PORT=4000
 
 # Create runtime directories and set ownership before dropping root
 RUN mkdir -p /data/nginx /data/objects /library && \
-    chown -R node:node /data /library
+    chown -R node:node /data /library /app /pnpm
 
 # Run as non-root user for security
 USER node

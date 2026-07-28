@@ -275,7 +275,7 @@ export default defineNuxtConfig({
       },
       strictTransportSecurity: { maxAge: 31536000, includeSubdomains: true },
     },
-    rateLimiter: { tokensPerInterval: 10, interval: 60000 },
+    rateLimiter: { tokensPerInterval: 30, interval: 60000 },
     xssValidator: false,
     requestSizeLimiter: {
       maxRequestSizeInBytes: 10485760,

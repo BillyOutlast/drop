@@ -11,14 +11,16 @@ export default defineEventHandler(async (h3) => {
   const id = getRouterParam(h3, "id")!;
 
   const allowedFields = new Set([
-    "name",
-    "description",
-    "slug",
-    "coverId",
-    "backgroundId",
-    "iconId",
-    "headerId",
-    "companyId",
+    "mName",
+    "mShortDescription",
+    "mDescription",
+    "mReleased",
+    "mIconObjectId",
+    "mBannerObjectId",
+    "mCoverObjectId",
+    "mImageCarouselObjectIds",
+    "mImageLibraryObjectIds",
+    "featured",
   ]);
   const restOfTheBody = Object.fromEntries(
     Object.entries(body).filter(([key]) => allowedFields.has(key)),
