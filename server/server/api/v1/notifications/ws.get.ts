@@ -44,7 +44,10 @@ export default defineWebSocketHandler({
         // Keep connection open — client may send token via message
       }
     } catch (error) {
-      logger.error({ error }, `WebSocket open auth error for peer ${peer.id}`);
+      logger.error(
+        { error: (error as Error)?.message },
+        `WebSocket open auth error for peer ${peer.id}`,
+      );
       peer.send("unauthenticated");
     }
   },
@@ -70,7 +73,7 @@ export default defineWebSocketHandler({
       return;
     } catch (error) {
       logger.warn(
-        { error },
+        { error: (error as Error)?.message },
         `WebSocket message auth error for peer ${peer.id}`,
       );
       peer.send("unauthenticated");
