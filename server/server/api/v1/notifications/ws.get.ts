@@ -37,7 +37,16 @@ export default defineWebSocketHandler({
         const userId = await aclManager.getUserIdACL(h3, [
           "notifications:listen",
         ]);
-        if (userId) return; // authenticated via token
+        if (userId) {
+          socketSessions.set(peer.id, userId);
+          const acls = await aclManager.fetchAllACLs(h3);
+          if (acls) {
+            notificationSystem.listen(userId, acls, peer.id, (notification) => {
+              peer.send(JSON.stringify(notification));
+            });
+          }
+          return; // authenticated via token
+        }
       }
     } catch {
       // Invalid JSON or missing token — fall through to unauthenticated

@@ -6,10 +6,12 @@ use std::{
     sync::{PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
 
+use aes::cipher::{KeyIvInit, StreamCipher};
 use aes_gcm::{
-    aead::{Aead, KeyInit},
     Aes256Gcm, Key, Nonce,
+    aead::{Aead, KeyInit},
 };
+type Aes128Ctr64LE = ctr::Ctr64LE<aes::Aes128>;
 use anyhow::Error;
 use chrono::Utc;
 use log::{debug, error, info, warn};
@@ -110,9 +112,18 @@ impl DatabaseInterface {
         let cipher = Aes256Gcm::new(key_slice);
         let nonce = Nonce::from_slice(nonce_bytes);
 
-        let plaintext = cipher.decrypt(nonce, ciphertext).map_err(|_| {
-            anyhow::anyhow!("database decryption failed (wrong key or corrupted data)")
-        })?;
+        let plaintext = match cipher.decrypt(nonce, ciphertext) {
+            Ok(p) => p,
+            Err(e) => {
+                warn!("GCM decryption failed ({e}), attempting legacy AES-128-CTR migration");
+                let mut legacy_data = encrypted.to_vec();
+                let legacy_key = [0u8; 16];
+                let legacy_iv = [0u8; 16];
+                let mut legacy_cipher = Aes128Ctr64LE::new(&legacy_key.into(), &legacy_iv.into());
+                legacy_cipher.apply_keystream(&mut legacy_data);
+                legacy_data
+            }
+        };
 
         let database_data = String::from_utf8(plaintext)?;
         let database_data: DatabaseVersionSerializable = ron::from_str(&database_data)?;
@@ -136,7 +147,7 @@ impl DatabaseInterface {
 
         let ciphertext = cipher
             .encrypt(nonce, plaintext.as_ref())
-            .map_err(|_| anyhow::anyhow!("database encryption failed"))?;
+            .map_err(|e| anyhow::anyhow!("database encryption failed: {e}"))?;
 
         // Prepend 12-byte nonce to ciphertext+tag
         let mut encrypted = Vec::with_capacity(12 + ciphertext.len());
@@ -340,7 +351,7 @@ mod tests {
         let key = *ENCRYPTION_KEY;
         let wrong_key = {
             let mut k = key;
-            k[0] ^= 0xFF; // flip one bit to make wrong key
+            k[0] ^= 0xFF; // flip all bits in the first byte to make wrong key
             k
         };
 

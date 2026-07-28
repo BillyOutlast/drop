@@ -29,5 +29,12 @@ export const NGINX_SERVICE = new Service(
     return spawn(nginxPath, ["-c", nginxConfig, "-p", nginxPrefix]);
   },
   undefined,
-  async () => await $fetch(`http://127.0.0.1:8080/`),
+  async () => {
+    try {
+      await $fetch(`http://127.0.0.1:8080/`);
+      return true;
+    } catch {
+      return false;
+    }
+  },
 );

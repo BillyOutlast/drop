@@ -64,6 +64,7 @@ pub fn generate_client_certificate(
     // Returns certificate, then private key
     Ok(vec![certificate.pem(), key_pair.serialize_pem()])
 }
+
 pub fn sign_nonce(private_key: String, nonce: String) -> Result<String, Error> {
     let rng = SystemRandom::new();
 
