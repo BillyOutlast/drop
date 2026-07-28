@@ -11,12 +11,12 @@ APPIMAGE=$(ls ./src-tauri/target/release/bundle/appimage/*.AppImage)
 
 # strip binary
 APPIMAGE_UNPACK="./squashfs-root"
-find $APPIMAGE_UNPACK -type f -exec strip -s {} \;
+find "$APPIMAGE_UNPACK" -type f -exec strip -s {} \;
 
 APPIMAGETOOL=$(echo "obsolete-appimagetool-$ARCH.AppImage")
 curl --proto '=https' -fsSLo "$APPIMAGETOOL" "https://github.com/AppImage/AppImageKit/releases/download/13/$APPIMAGETOOL"
-chmod +x $APPIMAGETOOL
+chmod +x "$APPIMAGETOOL"
 
-APPIMAGE_OUTPUT=$(./$APPIMAGETOOL $APPIMAGE_UNPACK | grep ".AppImage" | grep squashfs-root | awk '{ print $6 }')
+APPIMAGE_OUTPUT=$(./"$APPIMAGETOOL" "$APPIMAGE_UNPACK" | grep ".AppImage" | grep squashfs-root | awk '{ print $6 }')
 
-mv $APPIMAGE_OUTPUT "$APPIMAGE"
+mv "$APPIMAGE_OUTPUT" "$APPIMAGE"

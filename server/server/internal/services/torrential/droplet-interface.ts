@@ -224,8 +224,15 @@ class DropletInterfaceManager {
         }
         if (opts.callbackType && callbacks.type !== opts.callbackType)
           return undefined;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await opts.run(message, callbacks as any);
+        if (opts.callbackType) {
+          // Runtime guard validates callbackType match above;
+          // Extract<C, {type: CT}> cannot narrow conditional generics
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await opts.run(message, callbacks as any);
+        } else {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await opts.run(message, callbacks as any);
+        }
         return undefined;
       },
     } satisfies QueryProcessor<T, K, V>;
@@ -261,11 +268,11 @@ class DropletInterfaceManager {
 
     return await new Promise((resolve, reject) => {
       this.callbacks.set(messageId, {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        type: callbackType as any,
+        type: callbackType,
         resolve,
         reject,
-      });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
     });
   }
 

@@ -23,6 +23,5 @@ export function defineQueryProcessor<
   K extends TorrentialBoundType,
   V extends Message,
 >(opts: QueryProcessor<T, K, V>) {
-  // TORRENTIAL_SERVICE.queryProcessors.set(opts.queryType, opts as any);
   return opts;
 }

@@ -27,6 +27,7 @@ FROM rustlang/rust:nightly-bookworm-slim AS torrential-build
 ## libarchive-dev + pkg-config let libarchive3-sys link libarchive dynamically (glibc).
 ## protobuf-compiler is kept for parity (torrential's build.rs uses a vendored protoc).
 # hadolint ignore=DL3008
+USER root
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libarchive-dev \
     pkg-config \
@@ -43,6 +44,7 @@ ENV NODE_ENV=production
 ENV NUXT_TELEMETRY_DISABLED=1
 
 ## add git so drop can determine its git ref at build
+USER root
 RUN apt-get update && apt-get install -y --no-install-recommends git \
     && rm -rf /var/lib/apt/lists/*
 
@@ -71,6 +73,7 @@ ENV NUXT_TELEMETRY_DISABLED=1
 # fails with EACCES. With it gone, resolution falls through to the `torrential`
 # binary installed on PATH (/usr/bin/torrential) below.
 # hadolint ignore=DL3008
+USER root
 RUN rm -rf /app/torrential && \
     apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \

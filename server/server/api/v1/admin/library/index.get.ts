@@ -106,9 +106,9 @@ export default defineEventHandler(async (h3) => {
     ...filters,
   });
 
-  // Safety: the type is defined as a union between the where and count args
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const count = await prisma.game.count({ ...(filters as any) });
+  const count = await prisma.game.count({
+    ...(filters as Prisma.GameCountArgs),
+  });
 
   return { results, count };
 });

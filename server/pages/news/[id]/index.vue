@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/no-v-html -->
 <template>
   <div>
     <div v-if="article" class="px-4 sm:px-6 lg:px-8">
@@ -104,9 +103,11 @@ if (!article.value)
     fatal: true,
   });
 
+const { sanitize } = useSanitize();
+
 // Render markdown content
 const renderedContent = computed(() => {
-  return micromark(article.value?.content ?? "");
+  return sanitize(micromark(article.value?.content ?? ""));
 });
 
 const formatDate = (date: string) => {

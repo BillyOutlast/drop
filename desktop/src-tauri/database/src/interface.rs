@@ -6,21 +6,23 @@ use std::{
     sync::{PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
 
-use aes::cipher::{KeyIvInit as _, StreamCipher as _};
+use aes_gcm::{
+    aead::{Aead, KeyInit},
+    Aes256Gcm, Key, Nonce,
+};
 use anyhow::Error;
 use chrono::Utc;
 use log::{debug, error, info, warn};
+use rand::RngCore;
 use url::Url;
 
 use crate::{
-    db::{DATA_ROOT_DIR, DB, KEY_IV},
+    db::{DATA_ROOT_DIR, DB, ENCRYPTION_KEY},
     models::{
         self,
         data::{Database, DatabaseVersionSerializable},
     },
 };
-
-type Aes128Ctr64LE = ctr::Ctr64LE<aes::Aes128>;
 
 pub struct DatabaseInterface {
     data: RwLock<models::data::Database>,
@@ -97,13 +99,22 @@ impl DatabaseInterface {
         if !db_path.exists() {
             return Ok(None);
         };
-        let mut database_data = std::fs::read(db_path)?;
-        let (key, iv) = *KEY_IV;
-        let mut cipher = Aes128Ctr64LE::new(&key.into(), &iv.into());
-        cipher.apply_keystream(&mut database_data);
+        let encrypted = std::fs::read(db_path)?;
+        if encrypted.len() < 12 {
+            anyhow::bail!("database file too short (missing nonce)");
+        }
 
-        let database_data = String::from_utf8(database_data)?;
+        let (nonce_bytes, ciphertext) = encrypted.split_at(12);
+        let key = *ENCRYPTION_KEY;
+        let key_slice = Key::<Aes256Gcm>::from_slice(&key);
+        let cipher = Aes256Gcm::new(key_slice);
+        let nonce = Nonce::from_slice(nonce_bytes);
 
+        let plaintext = cipher.decrypt(nonce, ciphertext).map_err(|_| {
+            anyhow::anyhow!("database decryption failed (wrong key or corrupted data)")
+        })?;
+
+        let database_data = String::from_utf8(plaintext)?;
         let database_data: DatabaseVersionSerializable = ron::from_str(&database_data)?;
         Ok(Some(DatabaseInterface {
             data: RwLock::new(database_data.0),
@@ -113,13 +124,26 @@ impl DatabaseInterface {
 
     pub fn create_at_path(db_path: &Path, database: Database) -> Result<DatabaseInterface, Error> {
         let database = DatabaseVersionSerializable(database);
-        let mut database_data = ron::to_string(&database)?.into_bytes();
+        let plaintext = ron::to_string(&database)?.into_bytes();
 
-        let (key, iv) = *KEY_IV;
-        let mut cipher = Aes128Ctr64LE::new(&key.into(), &iv.into());
-        cipher.apply_keystream(&mut database_data);
+        let key = *ENCRYPTION_KEY;
+        let key_slice = Key::<Aes256Gcm>::from_slice(&key);
+        let cipher = Aes256Gcm::new(key_slice);
 
-        std::fs::write(db_path, database_data)?;
+        let mut nonce_bytes = [0u8; 12];
+        rand::rng().fill_bytes(&mut nonce_bytes);
+        let nonce = Nonce::from_slice(&nonce_bytes);
+
+        let ciphertext = cipher
+            .encrypt(nonce, plaintext.as_ref())
+            .map_err(|_| anyhow::anyhow!("database encryption failed"))?;
+
+        // Prepend 12-byte nonce to ciphertext+tag
+        let mut encrypted = Vec::with_capacity(12 + ciphertext.len());
+        encrypted.extend_from_slice(&nonce_bytes);
+        encrypted.extend_from_slice(&ciphertext);
+
+        std::fs::write(db_path, encrypted)?;
         Ok(DatabaseInterface {
             data: RwLock::new(database.0),
             path: db_path.to_path_buf(),
@@ -247,5 +271,100 @@ pub fn borrow_db_mut_checked<'a>() -> DBWrite<'a> {
             error!("database borrow mut failed with error {e}");
             panic!("database borrow mut failed with error {e}");
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_encrypt_decrypt_roundtrip() {
+        let key = *ENCRYPTION_KEY;
+        let plaintext = b"Hello, world! This is a test of AES-256-GCM encryption.";
+
+        let key_slice = Key::<Aes256Gcm>::from_slice(&key);
+        let cipher = Aes256Gcm::new(key_slice);
+
+        let mut nonce_bytes = [0u8; 12];
+        rand::rng().fill_bytes(&mut nonce_bytes);
+        let nonce = Nonce::from_slice(&nonce_bytes);
+        let ciphertext = cipher
+            .encrypt(nonce, plaintext.as_ref())
+            .expect("encryption should succeed");
+
+        // Recombine as stored on disk: [12-byte nonce][ciphertext+tag]
+        let mut combined = Vec::with_capacity(12 + ciphertext.len());
+        combined.extend_from_slice(&nonce_bytes);
+        combined.extend_from_slice(&ciphertext);
+
+        let (stored_nonce, stored_ct) = combined.split_at(12);
+        let nonce = Nonce::from_slice(stored_nonce);
+        let decrypted = cipher
+            .decrypt(nonce, stored_ct)
+            .expect("decryption should succeed");
+
+        assert_eq!(decrypted, plaintext);
+    }
+
+    #[test]
+    fn test_encrypt_different_nonce_per_call() {
+        let key = *ENCRYPTION_KEY;
+        let key_slice = Key::<Aes256Gcm>::from_slice(&key);
+        let cipher = Aes256Gcm::new(key_slice);
+        let plaintext = b"deterministic plaintext";
+
+        let mut results = std::collections::HashSet::new();
+        for _ in 0..10 {
+            let mut nonce_bytes = [0u8; 12];
+            rand::rng().fill_bytes(&mut nonce_bytes);
+            let nonce = Nonce::from_slice(&nonce_bytes);
+            let ct = cipher
+                .encrypt(nonce, plaintext.as_ref())
+                .expect("encryption should succeed");
+            let mut combined = Vec::with_capacity(12 + ct.len());
+            combined.extend_from_slice(&nonce_bytes);
+            combined.extend_from_slice(&ct);
+            results.insert(combined);
+        }
+
+        assert_eq!(
+            results.len(),
+            10,
+            "each encryption should produce unique ciphertext (different nonce)"
+        );
+    }
+
+    #[test]
+    fn test_decrypt_wrong_key_fails() {
+        let key = *ENCRYPTION_KEY;
+        let wrong_key = {
+            let mut k = key;
+            k[0] ^= 0xFF; // flip one bit to make wrong key
+            k
+        };
+
+        let plaintext = b"secret data";
+        let key_slice = Key::<Aes256Gcm>::from_slice(&key);
+        let cipher = Aes256Gcm::new(key_slice);
+
+        let mut nonce_bytes = [0u8; 12];
+        rand::rng().fill_bytes(&mut nonce_bytes);
+        let nonce = Nonce::from_slice(&nonce_bytes);
+        let ct = cipher
+            .encrypt(nonce, plaintext.as_ref())
+            .expect("encryption should succeed");
+
+        let mut combined = Vec::with_capacity(12 + ct.len());
+        combined.extend_from_slice(&nonce_bytes);
+        combined.extend_from_slice(&ct);
+
+        let wrong_key_slice = Key::<Aes256Gcm>::from_slice(&wrong_key);
+        let wrong_cipher = Aes256Gcm::new(wrong_key_slice);
+        let (stored_nonce, stored_ct) = combined.split_at(12);
+        let nonce = Nonce::from_slice(stored_nonce);
+        let result = wrong_cipher.decrypt(nonce, stored_ct);
+
+        assert!(result.is_err(), "wrong key should fail decryption");
     }
 }

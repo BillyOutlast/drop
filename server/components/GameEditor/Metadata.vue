@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/no-v-html -->
 <template>
   <div v-if="game!">
     <div class="grow flex flex-col xl:flex-row gap-y-8">
@@ -799,8 +798,9 @@ function coreMetadataUpdate_wrapper() {
     });
 }
 
+const { sanitize } = useSanitize();
 const descriptionHTML = computed(() =>
-  micromark(game.value?.mDescription ?? ""),
+  sanitize(micromark(game.value?.mDescription ?? "")),
 );
 const descriptionEditor = ref<HTMLTextAreaElement | undefined>();
 // 0 is not loading

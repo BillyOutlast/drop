@@ -923,10 +923,8 @@ export class SteamProvider implements MetadataProvider {
   }
 
   private _convertBasicHtmlElements(markdown: string): string {
-    // Remove HTML comments (loop to handle nested/malformed comments)
-    while (/<!--/.test(markdown)) {
-      markdown = markdown.replace(/<!--[\s\S]*?-->/g, "");
-    }
+    // Remove HTML comments
+    markdown = markdown.replace(/<!--[\s\S]*?-->/g, "");
 
     // Convert the bullet points and tabs to markdown list format
     markdown = markdown.replace(/•\s*\t+/g, "\n- ");

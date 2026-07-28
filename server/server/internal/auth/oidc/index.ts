@@ -13,6 +13,7 @@ import * as jose from "jose";
 import sessionHandler from "../../session";
 import type { SessionSearchTerms } from "../../session/types";
 import { queryParamBuilder } from "../../utils/query";
+import type { Prisma } from "~/prisma/client/client";
 
 // PENDING(sonar): monitor authentik issue #8751 for simplified OIDC setup - deferred, upstream-dependent
 
@@ -393,8 +394,7 @@ export class OIDCManager {
             },
           },
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        credentials: creds as any, // Prisma converts this to the Json type for us
+        credentials: creds as unknown as Prisma.InputJsonValue, // Prisma converts this to the Json type for us
       },
       include: {
         user: true,

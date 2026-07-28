@@ -27,6 +27,24 @@ export default defineWebSocketHandler({
       peer.send(JSON.stringify(notification));
     });
   },
+  async message(peer, msg) {
+    try {
+      const data = JSON.parse(msg.toString());
+      if (data.token) {
+        const h3 = {
+          headers: new Headers({ Authorization: `Bearer ${data.token}` }),
+        };
+        const userId = await aclManager.getUserIdACL(h3, [
+          "notifications:listen",
+        ]);
+        if (userId) return; // authenticated via token
+      }
+    } catch {
+      // Invalid JSON or missing token — fall through to unauthenticated
+    }
+    peer.send("unauthenticated");
+  },
+
   async close(peer, _details) {
     const userId = socketSessions.get(peer.id);
     if (!userId) {

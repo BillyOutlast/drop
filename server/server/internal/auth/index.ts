@@ -26,8 +26,8 @@ class AuthManager {
       try {
         const object = await init();
         if (!object) break;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (this.authProviders as any)[key] = object;
+        this.authProviders[key as keyof typeof this.authProviders] =
+          object as never;
         logger.info(`enabled auth: ${key}`);
       } catch (e) {
         logger.warn(

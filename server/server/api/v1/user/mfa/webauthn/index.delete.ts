@@ -2,7 +2,7 @@ import { aclManager } from "~/server/internal/acls";
 import { type } from "arktype";
 import { readDropValidatedBody, throwingArktype } from "~/server/arktype";
 import prisma from "~/server/internal/db/database";
-import { MFAMec } from "~/prisma/client/client";
+import { MFAMec, type Prisma } from "~/prisma/client/client";
 import type { WebAuthNv1Credentials } from "~/server/internal/auth/webauthn";
 
 const WebAuthnDelete = type({
@@ -41,9 +41,7 @@ export default defineEventHandler(async (h3) => {
       },
     },
     data: {
-      // This works, I don't know why the types don't line up
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      credentials: credentials as any,
+      credentials: credentials as unknown as Prisma.InputJsonValue,
     },
   });
 });

@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/no-v-html -->
 <template>
   <div
     class="mx-auto w-full relative flex flex-col justify-center pt-72 overflow-hidden"
@@ -136,9 +135,11 @@ const game = computed(() => {
   return rawGame;
 });
 
+const { sanitize } = useSanitize();
+
 // Convert markdown to HTML
 const descriptionHTML = computed(() =>
-  micromark(game.value.mDescription ?? ""),
+  sanitize(micromark(game.value.mDescription ?? "")),
 );
 </script>
 

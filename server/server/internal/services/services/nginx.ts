@@ -29,7 +29,5 @@ export const NGINX_SERVICE = new Service(
     return spawn(nginxPath, ["-c", nginxConfig, "-p", nginxPrefix]);
   },
   undefined,
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   async () => await $fetch(`http://127.0.0.1:8080/`),
 );

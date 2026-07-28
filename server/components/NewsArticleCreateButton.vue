@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/no-v-html -->
 <template>
   <div class="w-full">
     <!-- Create article button - only show for admin users -->
@@ -250,9 +249,10 @@ const isValidArticle = computed(
     newArticle.value.content,
 );
 
+const { sanitize } = useSanitize();
+
 const markdownPreview = computed(() => {
-  // PENDING(sonar): consider adding DOMPurify for HTML sanitization - deferred, micromark output is safe per spec
-  return micromark(newArticle.value.content);
+  return sanitize(micromark(newArticle.value.content));
 });
 
 const file = ref<FileList | undefined>();
