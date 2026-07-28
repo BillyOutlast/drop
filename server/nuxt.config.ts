@@ -279,7 +279,7 @@ export default defineNuxtConfig({
     xssValidator: false,
     requestSizeLimiter: {
       maxRequestSizeInBytes: 10485760,
-      maxUploadFileRequestInBytes: 12582912,
+      maxUploadFileRequestInBytes: 10485760,
       throwError: true,
     },
   },

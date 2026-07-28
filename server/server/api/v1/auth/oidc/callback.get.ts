@@ -66,7 +66,15 @@ export default defineEventHandler(async (h3) => {
 
   if (result.options.redirect) {
     const requestOrigin = getRequestURL(h3).origin;
-    const redirectUrl = new URL(result.options.redirect, requestOrigin);
+    let redirectUrl: URL;
+    try {
+      redirectUrl = new URL(result.options.redirect, requestOrigin);
+    } catch {
+      throw createError({
+        statusCode: 400,
+        message: "Invalid redirect URL",
+      });
+    }
     if (redirectUrl.origin !== requestOrigin) {
       throw createError({
         statusCode: 400,
