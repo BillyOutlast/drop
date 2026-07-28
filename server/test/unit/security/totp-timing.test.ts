@@ -94,7 +94,7 @@ describe("TOTP Timing-Safe Comparison", () => {
       },
     } as never);
     vi.mocked(prisma.linkedMFAMec.findUnique).mockResolvedValue({
-      credentials: { secret: "dGVzdC1zZWNyZXQ=" },
+      credentials: { secret: "test-secret-value-not-real" },
     } as never);
     vi.mocked(readDropValidatedBody).mockResolvedValue({ code: "123456" });
 
@@ -120,7 +120,7 @@ describe("TOTP Timing-Safe Comparison", () => {
       },
     } as never);
     vi.mocked(prisma.linkedMFAMec.findUnique).mockResolvedValue({
-      credentials: { secret: "dGVzdC1zZWNyZXQ=" },
+      credentials: { secret: "test-secret-value-not-real" },
     } as never);
     vi.mocked(readDropValidatedBody).mockResolvedValue({ code: "000000" });
     vi.mocked(totp).mockResolvedValue("654321");
@@ -145,7 +145,7 @@ describe("TOTP Timing-Safe Comparison", () => {
       },
     } as never);
     vi.mocked(prisma.linkedMFAMec.findUnique).mockResolvedValue({
-      credentials: { secret: "dGVzdC1zZWNyZXQ=" },
+      credentials: { secret: "test-secret-value-not-real" },
     } as never);
     vi.mocked(readDropValidatedBody).mockResolvedValue({ code: "12345" });
 
