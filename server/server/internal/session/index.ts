@@ -271,7 +271,13 @@ export class SessionHandler {
   private createSessionCookie(h3: H3Event, expiresAt: Date) {
     const token = randomUUID();
     // PENDING(sonar): consider switching to JWTs for session tokens - deferred, significant refactoring needed
-    setCookie(h3, dropTokenCookieName, token, { expires: expiresAt });
+    setCookie(h3, dropTokenCookieName, token, {
+      expires: expiresAt,
+      httpOnly: true,
+      secure: getRequestURL(h3).protocol === "https:",
+      sameSite: "lax",
+      path: "/",
+    });
     return token;
   }
 }

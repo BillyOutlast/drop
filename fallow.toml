@@ -8,5 +8,14 @@ ignorePatterns = [
   "server/server/internal/__generated__/**",
 ]
 
+ignoreDependencies = [
+  # otp-io is a production dependency used by the server; referenced in tests
+  "otp-io",
+  # arktype is used across the server codebase; not listed individually
+  "arktype",
+  # file-type-mime is used by objectHandler and handleFileUpload
+  "file-type-mime",
+]
+
 [audit]
 gate = "new-only"
