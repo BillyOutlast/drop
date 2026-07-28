@@ -100,7 +100,9 @@ describe("handleFileUpload", () => {
       vi.fn().mockResolvedValue([
         {
           filename: "photo.jpg",
-          data: Buffer.from("jpeg-data"),
+          data: Buffer.from([
+            0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46,
+          ]),
           type: "image/jpeg",
         },
       ]),
@@ -116,7 +118,7 @@ describe("handleFileUpload", () => {
       vi.fn().mockResolvedValue([
         {
           filename: "doc.pdf",
-          data: Buffer.from("pdf-data"),
+          data: Buffer.from("%PDF-1.4 dummy pdf content"),
           type: "application/pdf",
         },
       ]),
@@ -130,8 +132,16 @@ describe("handleFileUpload", () => {
     vi.stubGlobal(
       "readMultipartFormData",
       vi.fn().mockResolvedValue([
-        { filename: "a.jpg", data: Buffer.from("a"), type: "image/jpeg" },
-        { filename: "b.jpg", data: Buffer.from("b"), type: "image/jpeg" },
+        {
+          filename: "a.jpg",
+          data: Buffer.from([0xff, 0xd8, 0xff, 0xe0]),
+          type: "image/jpeg",
+        },
+        {
+          filename: "b.jpg",
+          data: Buffer.from([0xff, 0xd8, 0xff, 0xe0]),
+          type: "image/jpeg",
+        },
       ]),
     );
 
