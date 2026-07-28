@@ -23,10 +23,11 @@ function validateFile(entry: {
   if (entry.data.length > MAX_FILE_SIZE) {
     throw createError({
       statusCode: 400,
-      message: `File ${entry.filename} exceeds maximum size of 10MB`,
+      message: `File ${entry.filename} exceeds maximum size of 10 MiB`,
     });
   }
-  if (!entry.type || !ALLOWED_MIME_TYPES.has(entry.type)) {
+  const mimeType = entry.type?.toLowerCase();
+  if (!mimeType || !ALLOWED_MIME_TYPES.has(mimeType)) {
     throw createError({
       statusCode: 400,
       message: `File type ${entry.type ?? "unknown"} is not allowed`,
@@ -34,6 +35,20 @@ function validateFile(entry: {
   }
 }
 
+/**
+ * Parses a multipart form upload, storing files and collecting metadata fields.
+ *
+ * Files are stored through an ObjectTransactionalHandler so the caller can
+ * commit or rollback via the returned `pull`/`dump` handles. Non-file form
+ * entries are collected as metadata key/value pairs.
+ *
+ * @param h3 - The incoming H3 event containing the multipart form data.
+ * @param metadata - Key/value metadata attached to each stored file object.
+ * @param permissions - ACL permissions assigned to each stored file object.
+ * @param max - Maximum number of files to accept (<= 0 means unlimited).
+ * @returns A tuple of [file IDs, metadata options, pull handle, dump handle],
+ *   or undefined when the request body contains no multipart data.
+ */
 export async function handleFileUpload(
   h3: H3Event<EventHandlerRequest>,
   metadata: { [key: string]: string },
