@@ -224,15 +224,10 @@ class DropletInterfaceManager {
         }
         if (opts.callbackType && callbacks.type !== opts.callbackType)
           return undefined;
-        if (opts.callbackType) {
-          // Runtime guard validates callbackType match above;
-          // Extract<C, {type: CT}> cannot narrow conditional generics
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await opts.run(message, callbacks as any);
-        } else {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await opts.run(message, callbacks as any);
-        }
+        // Runtime guard validates callbackType above;
+        // Extract<C, {type: CT}> cannot narrow conditional generics
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await opts.run(message, callbacks as any);
         return undefined;
       },
     } satisfies QueryProcessor<T, K, V>;
