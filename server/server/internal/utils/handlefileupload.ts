@@ -28,13 +28,12 @@ function validateFile(entry: {
     });
   }
   // Use content-based MIME detection (magic bytes) instead of trusting
-  // the client-provided Content-Type, which can be spoofed.
+  // the client-provided Content-Type, which can be spoofed. Reject when
+  // magic bytes cannot be determined — never fall back to client input.
   const detectedMime = getMimeTypeBuffer(
     new Uint8Array(entry.data).buffer,
   )?.mime;
-  const clientMime = entry.type?.toLowerCase();
-  const effectiveMime = detectedMime ?? clientMime;
-  if (!effectiveMime || !ALLOWED_MIME_TYPES.has(effectiveMime)) {
+  if (!detectedMime || !ALLOWED_MIME_TYPES.has(detectedMime)) {
     throw createError({
       statusCode: 400,
       message: `File type ${entry.type ?? "unknown"} is not allowed`,
