@@ -41,7 +41,12 @@ export default defineWebSocketHandler({
       if (!authenticated) {
         logger.warn(`WebSocket auth failed for peer ${peer.id}`);
         peer.send("unauthenticated");
-        // Keep connection open — client may send token via message
+        // Allow grace period for token-based re-auth, then close
+        setTimeout(() => {
+          if (!socketSessions.has(peer.id)) {
+            peer.close();
+          }
+        }, 10_000);
       }
     } catch (error) {
       logger.error(
@@ -68,6 +73,10 @@ export default defineWebSocketHandler({
       // Non-token message from authenticated peer — ignore
       if (socketSessions.has(peer.id)) return;
       // Non-token message from unauthenticated peer — close
+      logger.warn(
+        { peerId: peer.id },
+        "Closing unauthenticated WebSocket: non-token message before auth",
+      );
       peer.send("unauthenticated");
       peer.close();
       return;

@@ -106,7 +106,7 @@ export const useSanitize = () => {
     DOMPurify.sanitize(html ?? "", {
       ALLOWED_TAGS,
       ALLOWED_ATTR,
-      ALLOWED_URI_REGEXP: /^(?:(?:https?|ftp|mailto):|\/)/i,
+      ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|\/)/i,
     });
 
   return { sanitize };
