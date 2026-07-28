@@ -22,7 +22,7 @@ export default defineEventHandler(async (h3) => {
     "mImageLibraryObjectIds",
     "featured",
   ]);
-  const restOfTheBody = Object.fromEntries(
+  const sanitizedData = Object.fromEntries(
     Object.entries(body).filter(([key]) => allowedFields.has(key)),
   );
 
@@ -31,7 +31,7 @@ export default defineEventHandler(async (h3) => {
       where: {
         id: id,
       },
-      data: restOfTheBody,
+      data: sanitizedData,
       // I would put a select here, but it would be based on the body, and muck up the types
     })
   ).at(0);

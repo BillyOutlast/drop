@@ -1,4 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import aclManager from "../../../server/internal/acls";
+import prisma from "../../../server/internal/db/database";
 
 vi.mock("../../../server/internal/acls", () => ({
   default: {
@@ -17,9 +19,6 @@ vi.mock("../../../server/internal/db/database", () => ({
   },
 }));
 
-import aclManager from "../../../server/internal/acls";
-import prisma from "../../../server/internal/db/database";
-
 describe("Mass Assignment Prevention", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -28,13 +27,16 @@ describe("Mass Assignment Prevention", () => {
 
   describe("Company PATCH", () => {
     it("only allows whitelisted fields", async () => {
-      vi.stubGlobal("readBody", vi.fn().mockResolvedValue({
-        mName: "Valid Name",
-        mWebsite: "https://example.com",
-        id: "should-be-removed",
-        createdAt: "should-be-removed",
-        adminField: "should-be-removed",
-      }));
+      vi.stubGlobal(
+        "readBody",
+        vi.fn().mockResolvedValue({
+          mName: "Valid Name",
+          mWebsite: "https://example.com",
+          id: "should-be-removed",
+          createdAt: "should-be-removed",
+          adminField: "should-be-removed",
+        }),
+      );
       vi.stubGlobal("getRouterParam", vi.fn().mockReturnValue("company-1"));
       vi.stubGlobal("createError", (opts: unknown) => {
         throw opts;
@@ -90,12 +92,15 @@ describe("Mass Assignment Prevention", () => {
 
   describe("Game PATCH", () => {
     it("only allows whitelisted fields", async () => {
-      vi.stubGlobal("readBody", vi.fn().mockResolvedValue({
-        mName: "Valid Game",
-        mDescription: "A game",
-        id: "should-be-removed",
-        libraryId: "should-be-removed",
-      }));
+      vi.stubGlobal(
+        "readBody",
+        vi.fn().mockResolvedValue({
+          mName: "Valid Game",
+          mDescription: "A game",
+          id: "should-be-removed",
+          libraryId: "should-be-removed",
+        }),
+      );
       vi.stubGlobal("getRouterParam", vi.fn().mockReturnValue("game-1"));
       vi.stubGlobal("createError", (opts: unknown) => {
         throw opts;

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { handleFileUpload } from "../../../server/internal/utils/handlefileupload";
 
 vi.mock("../../../server/internal/objects/transactional", () => ({
   ObjectTransactionalHandler: class {
@@ -8,9 +9,7 @@ vi.mock("../../../server/internal/objects/transactional", () => ({
   },
 }));
 
-import { handleFileUpload } from "../../../server/internal/utils/handlefileupload";
-
-const createMockH3 = (formData: unknown[]) =>
+const createMockH3 = () =>
   ({
     node: { req: {} },
   }) as never;
@@ -21,8 +20,11 @@ describe("handleFileUpload", () => {
   });
 
   it("returns undefined when no multipart data", async () => {
-    vi.stubGlobal("readMultipartFormData", vi.fn().mockResolvedValue(undefined));
-    const result = await handleFileUpload(createMockH3([]), {}, []);
+    vi.stubGlobal(
+      "readMultipartFormData",
+      vi.fn().mockResolvedValue(undefined),
+    );
+    const result = await handleFileUpload(createMockH3(), {}, []);
     expect(result).toBeUndefined();
   });
 
@@ -41,7 +43,9 @@ describe("handleFileUpload", () => {
       throw opts;
     });
 
-    await expect(handleFileUpload(createMockH3([]), {}, [])).rejects.toMatchObject({
+    await expect(
+      handleFileUpload(createMockH3(), {}, []),
+    ).rejects.toMatchObject({
       statusCode: 400,
     });
   });
@@ -61,7 +65,9 @@ describe("handleFileUpload", () => {
       throw opts;
     });
 
-    await expect(handleFileUpload(createMockH3([]), {}, [])).rejects.toMatchObject({
+    await expect(
+      handleFileUpload(createMockH3(), {}, []),
+    ).rejects.toMatchObject({
       statusCode: 400,
     });
   });
@@ -81,7 +87,9 @@ describe("handleFileUpload", () => {
       throw opts;
     });
 
-    await expect(handleFileUpload(createMockH3([]), {}, [])).rejects.toMatchObject({
+    await expect(
+      handleFileUpload(createMockH3(), {}, []),
+    ).rejects.toMatchObject({
       statusCode: 400,
     });
   });
@@ -98,7 +106,7 @@ describe("handleFileUpload", () => {
       ]),
     );
 
-    const result = await handleFileUpload(createMockH3([]), {}, []);
+    const result = await handleFileUpload(createMockH3(), {}, []);
     expect(result).toBeDefined();
   });
 
@@ -114,7 +122,7 @@ describe("handleFileUpload", () => {
       ]),
     );
 
-    const result = await handleFileUpload(createMockH3([]), {}, []);
+    const result = await handleFileUpload(createMockH3(), {}, []);
     expect(result).toBeDefined();
   });
 
@@ -127,7 +135,7 @@ describe("handleFileUpload", () => {
       ]),
     );
 
-    const result = await handleFileUpload(createMockH3([]), {}, [], 1);
+    const result = await handleFileUpload(createMockH3(), {}, [], 1);
     expect(result).toBeDefined();
   });
 });

@@ -15,7 +15,7 @@ export const SharedRegisterValidator = type({
 
 const CreateUserValidator = SharedRegisterValidator.and({
   invitation: "string",
-  password: "string >= 8 & string <= 128",
+  password: "string>=8&string<=128",
   "displayName?": "string | undefined",
 }).configure(throwingArktype);
 
