@@ -1,6 +1,7 @@
 import type { EventHandlerRequest, H3Event } from "h3";
 import type { Dump, Pull } from "../objects/transactional";
 import { ObjectTransactionalHandler } from "../objects/transactional";
+import { parse as getMimeTypeBuffer } from "file-type-mime";
 
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
@@ -26,8 +27,14 @@ function validateFile(entry: {
       message: `File ${entry.filename} exceeds maximum size of 10 MiB`,
     });
   }
-  const mimeType = entry.type?.toLowerCase();
-  if (!mimeType || !ALLOWED_MIME_TYPES.has(mimeType)) {
+  // Use content-based MIME detection (magic bytes) instead of trusting
+  // the client-provided Content-Type, which can be spoofed.
+  const detectedMime = getMimeTypeBuffer(
+    new Uint8Array(entry.data).buffer,
+  )?.mime;
+  const clientMime = entry.type?.toLowerCase();
+  const effectiveMime = detectedMime ?? clientMime;
+  if (!effectiveMime || !ALLOWED_MIME_TYPES.has(effectiveMime)) {
     throw createError({
       statusCode: 400,
       message: `File type ${entry.type ?? "unknown"} is not allowed`,

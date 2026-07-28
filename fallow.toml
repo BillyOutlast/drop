@@ -13,6 +13,8 @@ ignoreDependencies = [
   "otp-io",
   # arktype is used across the server codebase; not listed individually
   "arktype",
+  # file-type-mime is used by objectHandler and handleFileUpload
+  "file-type-mime",
 ]
 
 [audit]
