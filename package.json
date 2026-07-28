@@ -11,8 +11,5 @@
   },
   "scripts": {
     "prepare": "husky"
-  },
-  "allowScripts": {
-    "file:../server": true
   }
 }
