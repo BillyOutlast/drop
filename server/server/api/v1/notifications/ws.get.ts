@@ -10,6 +10,8 @@ const socketSessions = new Map<string, string>();
 const AUTH_GRACE_PERIOD_MS = 10_000;
 // Track pending auth timeouts keyed by peer ID so they can be cleared on re-auth
 const authTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+// Track peers currently being authenticated to prevent race between open and message handlers
+const pendingAuth = new Set<string>();
 
 async function authenticatePeer(
   peer: { id: string; send: (data: string) => void },
@@ -38,6 +40,7 @@ async function authenticatePeer(
 
 export default defineWebSocketHandler({
   async open(peer) {
+    pendingAuth.add(peer.id);
     try {
       const authenticated = await authenticatePeer(
         peer,
@@ -61,9 +64,13 @@ export default defineWebSocketHandler({
         `WebSocket open auth error for peer ${peer.id}`,
       );
       peer.send("unauthenticated");
+    } finally {
+      pendingAuth.delete(peer.id);
     }
   },
   async message(peer, msg) {
+    // Ignore messages while open handler is still authenticating
+    if (pendingAuth.has(peer.id)) return;
     try {
       const data = JSON.parse(msg.toString());
       if (data.token) {

@@ -97,6 +97,7 @@ function registerHooks(): void {
 // DOMPurify hooks are additive — this allows re-registration on next useSanitize().
 export function resetHooks(): void {
   hooksRegistered = false;
+  DOMPurify.removeAllHooks();
 }
 
 export const useSanitize = () => {
