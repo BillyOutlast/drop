@@ -14,10 +14,12 @@ if [ -z "${REMOTE_BASE}" ] || [ "${REMOTE_BASE#origin/}" = "${CURRENT_BRANCH}" ]
 fi
 
 if command -v ocr >/dev/null 2>&1 && git rev-parse --quiet --verify "${REMOTE_BASE}" >/dev/null 2>&1; then
-  OCR_LOG="$(mktemp /tmp/ocr-pre-push.XXXXXX)"
-  printf '\n:: Starting OpenCodeReview against %s (non-blocking)...\n' "${REMOTE_BASE}"
-  nohup ocr review --from "${REMOTE_BASE}" --to HEAD --audience agent --exclude 'pnpm-lock.yaml,Cargo.lock' >"${OCR_LOG}" 2>&1 &
-  printf '   Review running in background — check %s later.\n' "${OCR_LOG}"
+  printf '\n:: Running OpenCodeReview against %s (blocking)...\n' "${REMOTE_BASE}"
+  ocr review --from "${REMOTE_BASE}" --to HEAD --audience agent --exclude 'pnpm-lock.yaml,Cargo.lock' || {
+    rc=$?
+    printf '\n⚠️  OCR found issues (exit %d). Fix before pushing, or use --no-verify to skip.\n' "$rc"
+    exit "$rc"
+  }
 elif ! command -v ocr >/dev/null 2>&1; then
   printf ':: ocr CLI not found — skipping OpenCodeReview gate\n'
 else
