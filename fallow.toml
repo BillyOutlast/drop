@@ -8,5 +8,10 @@ ignorePatterns = [
   "server/server/internal/__generated__/**",
 ]
 
+ignoreDependencies = [
+  # otp-io is a production dependency used by the server; referenced in tests
+  "otp-io",
+]
+
 [audit]
 gate = "new-only"
