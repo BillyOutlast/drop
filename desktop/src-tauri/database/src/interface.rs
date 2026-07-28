@@ -30,6 +30,35 @@ use crate::{
 const MAGIC_V2: &[u8; 4] = b"DMS2"; // AES-256-GCM (current)
 const MAGIC_V1: &[u8; 4] = b"DMS1"; // Legacy AES-128-CTR
 
+/// Encrypt `plaintext` with AES-256-GCM, returning `[MAGIC_V2][12-byte nonce][ciphertext+tag]`.
+fn encrypt_database(key: &[u8; 32], plaintext: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
+    let key_slice = Key::<Aes256Gcm>::from_slice(key);
+    let cipher = Aes256Gcm::new(key_slice);
+    let mut nonce_bytes = [0u8; 12];
+    rand::rng().fill_bytes(&mut nonce_bytes);
+    let nonce = Nonce::from_slice(&nonce_bytes);
+    let ciphertext = cipher
+        .encrypt(nonce, plaintext.as_ref())
+        .map_err(|e| anyhow::anyhow!("encryption failed: {e}"))?;
+    let mut result = Vec::with_capacity(4 + 12 + ciphertext.len());
+    result.extend_from_slice(MAGIC_V2);
+    result.extend_from_slice(&nonce_bytes);
+    result.extend_from_slice(&ciphertext);
+    Ok(result)
+}
+
+/// Decrypt data produced by `encrypt_database`.
+fn decrypt_database(key: &[u8; 32], encrypted: &[u8]) -> Result<Vec<u8>, anyhow::Error> {
+    let key_slice = Key::<Aes256Gcm>::from_slice(key);
+    let cipher = Aes256Gcm::new(key_slice);
+    let payload = &encrypted[4..];
+    let (nonce_bytes, ciphertext) = payload.split_at(12);
+    let nonce = Nonce::from_slice(nonce_bytes);
+    cipher
+        .decrypt(nonce, ciphertext)
+        .map_err(|e| anyhow::anyhow!("decryption failed: {e}"))
+}
+
 pub struct DatabaseInterface {
     data: RwLock<models::data::Database>,
     path: PathBuf,
@@ -114,16 +143,7 @@ impl DatabaseInterface {
         let payload = &encrypted[4..];
 
         let plaintext = if magic == MAGIC_V2.as_slice() {
-            if payload.len() < 12 {
-                anyhow::bail!("v2 database file too short (missing nonce)");
-            }
-            let (nonce_bytes, ciphertext) = payload.split_at(12);
-            let key = *ENCRYPTION_KEY;
-            let key_slice = Key::<Aes256Gcm>::from_slice(&key);
-            let cipher = Aes256Gcm::new(key_slice);
-            let nonce = Nonce::from_slice(nonce_bytes);
-            cipher
-                .decrypt(nonce, ciphertext)
+            decrypt_database(&*ENCRYPTION_KEY, payload)
                 .map_err(|e| anyhow::anyhow!("v2 database decryption failed: {e}"))?
         } else {
             // Legacy AES-128-CTR format (V1 or pre-versioned).
@@ -157,23 +177,8 @@ impl DatabaseInterface {
         let database = DatabaseVersionSerializable(database);
         let plaintext = ron::to_string(&database)?.into_bytes();
 
-        let key = *ENCRYPTION_KEY;
-        let key_slice = Key::<Aes256Gcm>::from_slice(&key);
-        let cipher = Aes256Gcm::new(key_slice);
-
-        let mut nonce_bytes = [0u8; 12];
-        rand::rng().fill_bytes(&mut nonce_bytes);
-        let nonce = Nonce::from_slice(&nonce_bytes);
-
-        let ciphertext = cipher
-            .encrypt(nonce, plaintext.as_ref())
+        let encrypted = encrypt_database(&*ENCRYPTION_KEY, plaintext)
             .map_err(|e| anyhow::anyhow!("database encryption failed: {e}"))?;
-
-        // Write: [4-byte magic V2][12-byte nonce][ciphertext+tag]
-        let mut encrypted = Vec::with_capacity(4 + 12 + ciphertext.len());
-        encrypted.extend_from_slice(MAGIC_V2);
-        encrypted.extend_from_slice(&nonce_bytes);
-        encrypted.extend_from_slice(&ciphertext);
 
         std::fs::write(db_path, encrypted)?;
         Ok(DatabaseInterface {
@@ -314,56 +319,22 @@ mod tests {
     fn test_encrypt_decrypt_roundtrip() {
         let key = *ENCRYPTION_KEY;
         let plaintext = b"Hello, world! This is a test of AES-256-GCM encryption.";
-
-        let key_slice = Key::<Aes256Gcm>::from_slice(&key);
-        let cipher = Aes256Gcm::new(key_slice);
-
-        let mut nonce_bytes = [0u8; 12];
-        rand::rng().fill_bytes(&mut nonce_bytes);
-        let nonce = Nonce::from_slice(&nonce_bytes);
-        let ciphertext = cipher
-            .encrypt(nonce, plaintext.as_ref())
-            .expect("encryption should succeed");
-
-        // Recombine as stored on disk: [4-byte magic][12-byte nonce][ciphertext+tag]
-        let mut combined = Vec::with_capacity(4 + 12 + ciphertext.len());
-        combined.extend_from_slice(MAGIC_V2);
-        combined.extend_from_slice(&nonce_bytes);
-        combined.extend_from_slice(&ciphertext);
-
-        // Read: skip magic, read nonce
-        let payload = &combined[4..];
-        let (stored_nonce, stored_ct) = payload.split_at(12);
-        let nonce = Nonce::from_slice(stored_nonce);
-        let decrypted = cipher
-            .decrypt(nonce, stored_ct)
-            .expect("decryption should succeed");
-
+        let encrypted =
+            encrypt_database(&key, plaintext.to_vec()).expect("encryption should succeed");
+        let decrypted = decrypt_database(&key, &encrypted).expect("decryption should succeed");
         assert_eq!(decrypted, plaintext);
     }
 
     #[test]
     fn test_encrypt_different_nonce_per_call() {
         let key = *ENCRYPTION_KEY;
-        let key_slice = Key::<Aes256Gcm>::from_slice(&key);
-        let cipher = Aes256Gcm::new(key_slice);
         let plaintext = b"deterministic plaintext";
-
         let mut results = std::collections::HashSet::new();
         for _ in 0..10 {
-            let mut nonce_bytes = [0u8; 12];
-            rand::rng().fill_bytes(&mut nonce_bytes);
-            let nonce = Nonce::from_slice(&nonce_bytes);
-            let ct = cipher
-                .encrypt(nonce, plaintext.as_ref())
-                .expect("encryption should succeed");
-            let mut combined = Vec::with_capacity(4 + 12 + ct.len());
-            combined.extend_from_slice(MAGIC_V2);
-            combined.extend_from_slice(&nonce_bytes);
-            combined.extend_from_slice(&ct);
-            results.insert(combined);
+            let encrypted =
+                encrypt_database(&key, plaintext.to_vec()).expect("encryption should succeed");
+            results.insert(encrypted);
         }
-
         assert_eq!(
             results.len(),
             10,
@@ -376,33 +347,13 @@ mod tests {
         let key = *ENCRYPTION_KEY;
         let wrong_key = {
             let mut k = key;
-            k[0] ^= 0xFF; // flip all bits in the first byte to make wrong key
+            k[0] ^= 0xFF;
             k
         };
-
         let plaintext = b"secret data";
-        let key_slice = Key::<Aes256Gcm>::from_slice(&key);
-        let cipher = Aes256Gcm::new(key_slice);
-
-        let mut nonce_bytes = [0u8; 12];
-        rand::rng().fill_bytes(&mut nonce_bytes);
-        let nonce = Nonce::from_slice(&nonce_bytes);
-        let ct = cipher
-            .encrypt(nonce, plaintext.as_ref())
-            .expect("encryption should succeed");
-
-        let mut combined = Vec::with_capacity(4 + 12 + ct.len());
-        combined.extend_from_slice(MAGIC_V2);
-        combined.extend_from_slice(&nonce_bytes);
-        combined.extend_from_slice(&ct);
-
-        let wrong_key_slice = Key::<Aes256Gcm>::from_slice(&wrong_key);
-        let wrong_cipher = Aes256Gcm::new(wrong_key_slice);
-        let payload = &combined[4..];
-        let (stored_nonce, stored_ct) = payload.split_at(12);
-        let nonce = Nonce::from_slice(stored_nonce);
-        let result = wrong_cipher.decrypt(nonce, stored_ct);
-
+        let encrypted =
+            encrypt_database(&key, plaintext.to_vec()).expect("encryption should succeed");
+        let result = decrypt_database(&wrong_key, &encrypted);
         assert!(result.is_err(), "wrong key should fail decryption");
     }
 }

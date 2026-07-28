@@ -26,8 +26,11 @@ class AuthManager {
       try {
         const object = await init();
         if (!object) break;
-        this.authProviders[key as keyof typeof this.authProviders] =
-          object as never;
+        if (key === AuthMec.Simple) {
+          this.authProviders[AuthMec.Simple] = object as boolean;
+        } else if (key === AuthMec.OpenID) {
+          this.authProviders[AuthMec.OpenID] = object as OIDCManager | undefined;
+        }
         logger.info(`enabled auth: ${key}`);
       } catch (e) {
         logger.warn(

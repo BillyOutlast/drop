@@ -101,7 +101,7 @@
           </h3>
           <p
             class="relative mt-1 text-xs text-zinc-400 line-clamp-2"
-            v-html="formatExcerpt(article.description)"
+            v-html="excerptCache.get(article.id) ?? ''"
           />
           <div
             class="relative mt-2 flex items-center gap-x-2 text-xs text-zinc-500"
@@ -151,9 +151,14 @@ const toggleTag = (tag: string) => {
 };
 
 const { sanitize } = useSanitize();
-const formatExcerpt = (excerpt: string) => {
-  return sanitize(micromark(excerpt));
-};
+const excerptCache = computed(() => {
+  if (!news.value) return new Map<string, string>();
+  const map = new Map<string, string>();
+  for (const article of news.value) {
+    map.set(article.id, sanitize(micromark(article.description)));
+  }
+  return map;
+});
 
 const filteredArticles = computed(() => {
   if (!news.value) return [];

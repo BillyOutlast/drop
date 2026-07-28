@@ -70,6 +70,7 @@
       </div>
 
       <!-- Article content - markdown -->
+      <!-- eslint-disable-next-line vue/no-v-html -- sanitized via DOMPurify -->
       <div
         class="mx-auto prose prose-blue prose-invert prose-lg"
         v-html="renderedContent"

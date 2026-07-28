@@ -91,6 +91,7 @@ export default defineWebSocketHandler({
           return;
         }
         // Token auth failed — close connection
+        logger.warn(`WebSocket token auth failed for peer ${peer.id}`);
         peer.send("unauthenticated");
         peer.close();
         return;

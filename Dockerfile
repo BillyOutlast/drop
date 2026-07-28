@@ -33,6 +33,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     pkg-config \
     protobuf-compiler \
     && rm -rf /var/lib/apt/lists/*
+# hadolint ignore=DL3002
+USER nobody
 WORKDIR /build
 COPY . .
 RUN cargo build --locked --release --manifest-path ./torrential/Cargo.toml
@@ -47,6 +49,8 @@ ENV NUXT_TELEMETRY_DISABLED=1
 USER root
 RUN apt-get update && apt-get install -y --no-install-recommends git \
     && rm -rf /var/lib/apt/lists/*
+# hadolint ignore=DL3002
+USER node
 
 ## copy deps and rest of project files
 COPY . .
