@@ -17,11 +17,11 @@
 import { type } from "arktype";
 import { parse as getMimeTypeBuffer } from "file-type-mime";
 import type pino from "pino";
-import type { Writable } from "stream";
-import { Readable } from "stream";
+import type { Writable } from "node:stream";
+import { Readable } from "node:stream";
 import { getMimeType as getMimeTypeStream } from "stream-mime-type";
 
-export type ObjectReference = string;
+/** An object identifier string */
 
 export const objectMetadata = type({
   mime: "string",
@@ -50,33 +50,31 @@ export type Source = Readable | Buffer;
 export abstract class ObjectBackend {
   // Interface functions, not designed to be called directly.
   // They don't check permissions to provide any utilities
-  abstract fetch(id: ObjectReference): Promise<Source | undefined>;
-  abstract write(id: ObjectReference, source: Source): Promise<boolean>;
-  abstract startWriteStream(id: ObjectReference): Promise<Writable | undefined>;
+  abstract fetch(id: string): Promise<Source | undefined>;
+  abstract write(id: string, source: Source): Promise<boolean>;
+  abstract startWriteStream(id: string): Promise<Writable | undefined>;
   abstract create(
     id: string,
     source: Source,
     metadata: ObjectMetadata,
-  ): Promise<ObjectReference | undefined>;
+  ): Promise<string | undefined>;
   abstract createWithWriteStream(
     id: string,
     metadata: ObjectMetadata,
   ): Promise<Writable | undefined>;
-  abstract delete(id: ObjectReference): Promise<boolean>;
-  abstract fetchMetadata(
-    id: ObjectReference,
-  ): Promise<ObjectMetadata | undefined>;
+  abstract delete(id: string): Promise<boolean>;
+  abstract fetchMetadata(id: string): Promise<ObjectMetadata | undefined>;
   abstract writeMetadata(
-    id: ObjectReference,
+    id: string,
     metadata: ObjectMetadata,
   ): Promise<boolean>;
-  abstract fetchHash(id: ObjectReference): Promise<string | undefined>;
+  abstract fetchHash(id: string): Promise<string | undefined>;
   abstract listAll(): Promise<string[]>;
   abstract cleanupMetadata(taskLogger: pino.Logger): Promise<void>;
 }
 
 export class ObjectHandler {
-  private backend: ObjectBackend;
+  private readonly backend: ObjectBackend;
 
   constructor(backend: ObjectBackend) {
     this.backend = backend;
@@ -131,7 +129,7 @@ export class ObjectHandler {
 
   // We only need one permission, so find instead of filter is faster
   private hasAnyPermissions(permissions: string[], userId?: string) {
-    return !!permissions.find((e) => {
+    return permissions.some((e) => {
       if (userId !== undefined && e.startsWith(userId)) return true;
       if (userId !== undefined && e.startsWith("internal")) return true;
       if (e.startsWith("anonymous")) return true;
@@ -150,8 +148,9 @@ export class ObjectHandler {
         })
         // Strip IDs from permissions
         .map((e) => e.split(":").at(1))
+        .filter((e): e is string => e !== undefined)
         // Map to priority according to array
-        .map((e) => ObjectPermissionPriority.findIndex((c) => c === e))
+        .map((e) => ObjectPermissionPriority.indexOf(e as ObjectPermission))
     );
   }
 
@@ -161,7 +160,7 @@ export class ObjectHandler {
    * @param userId user to check, or act as anon user
    * @returns
    */
-  async fetchWithPermissions(id: ObjectReference, userId?: string) {
+  async fetchWithPermissions(id: string, userId?: string) {
     const metadata = await this.backend.fetchMetadata(id);
     if (!metadata) return;
 
@@ -183,7 +182,7 @@ export class ObjectHandler {
    * @param id object id
    * @returns
    */
-  async fetchHash(id: ObjectReference) {
+  async fetchHash(id: string) {
     return await this.backend.fetchHash(id);
   }
 
@@ -200,7 +199,7 @@ export class ObjectHandler {
    * And if we actually have permission to write, it fetches it then.
    */
   async writeWithPermissions(
-    id: ObjectReference,
+    id: string,
     sourceFetcher: () => Promise<Source>,
     userId?: string,
   ) {
@@ -210,13 +209,12 @@ export class ObjectHandler {
     const permissions = this.fetchPermissions(metadata.permissions, userId);
 
     const requiredPermissionIndex = 1;
-    const hasPermission =
-      permissions.find((e) => e >= requiredPermissionIndex) != undefined;
+    const hasPermission = permissions.some((e) => e >= requiredPermissionIndex);
 
     if (!hasPermission) return false;
 
     const source = await sourceFetcher();
-    // TODO: prevent user from overwriting existing object
+    // PENDING(sonar): add check to prevent user from overwriting existing object - deferred, needs idempotency design
     const result = await this.backend.write(id, source);
 
     return result;
@@ -228,15 +226,14 @@ export class ObjectHandler {
    * @param userId user to check, or act as anon user
    * @returns
    */
-  async deleteWithPermission(id: ObjectReference, userId?: string) {
+  async deleteWithPermission(id: string, userId?: string) {
     const metadata = await this.backend.fetchMetadata(id);
     if (!metadata) return false;
 
     const permissions = this.fetchPermissions(metadata.permissions, userId);
 
     const requiredPermissionIndex = 2;
-    const hasPermission =
-      permissions.find((e) => e >= requiredPermissionIndex) != undefined;
+    const hasPermission = permissions.some((e) => e >= requiredPermissionIndex);
 
     if (!hasPermission) return false;
 
@@ -249,7 +246,7 @@ export class ObjectHandler {
    * @param id
    * @returns
    */
-  async deleteAsSystem(id: ObjectReference) {
+  async deleteAsSystem(id: string) {
     return await this.backend.delete(id);
   }
 

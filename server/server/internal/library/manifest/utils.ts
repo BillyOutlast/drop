@@ -1,7 +1,5 @@
 import type { JsonValue } from "@prisma/client/runtime/client";
 
-export type DropletManifest = V2Manifest;
-
 export type V2Manifest = {
   version: "2";
   size: number;
@@ -22,6 +20,9 @@ export type V2FileEntry = {
   permissions: number;
 };
 
-export function castManifest(manifest: JsonValue): DropletManifest {
-  return JSON.parse(manifest as string) as DropletManifest;
+export function castManifest(manifest: JsonValue): V2Manifest {
+  if (typeof manifest === "string") {
+    return JSON.parse(manifest) as V2Manifest;
+  }
+  return manifest as V2Manifest;
 }

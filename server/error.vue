@@ -62,13 +62,14 @@ if (import.meta.client) {
         <p class="mt-6 text-base leading-7 text-zinc-400">
           {{ $t("errors.occurred") }}
         </p>
-        <!-- <p>{{ error. }}</p> -->
+
         <div class="mt-10">
           <!-- clearError is inconsistent so reload app to clear erro -->
           <a
             v-if="!showSignIn"
             href="/"
             class="text-sm font-semibold leading-7 text-blue-600"
+            :aria-label="$t('errors.backHome')"
           >
             <i18n-t keypath="errors.backHome" tag="span" scope="global">
               <template #arrow>
@@ -78,6 +79,7 @@ if (import.meta.client) {
           </a>
           <button
             v-else
+            type="button"
             class="text-sm font-semibold leading-7 text-blue-600"
             @click="signIn"
           >

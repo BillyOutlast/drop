@@ -1,15 +1,14 @@
-import { Container } from '@/components/container'
-import { Footer } from '@/components/footer'
-import { Gallery } from '@/components/gallery-modal'
-import { GradientBackground } from '@/components/gradient'
-import { Navbar } from '@/components/navbar'
-import type { Metadata } from 'next'
+import { Container } from "@/components/container";
+import { Footer } from "@/components/footer";
+import { Gallery } from "@/components/gallery-modal";
+import { GradientBackground } from "@/components/gradient";
+import { Navbar } from "@/components/navbar";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Gallery',
-  description: 'A collection of screenshots, across all components of Drop.',
-}
-
+  title: "Gallery",
+  description: "A collection of screenshots, across all components of Drop.",
+};
 
 export default function About() {
   return (
@@ -21,5 +20,5 @@ export default function About() {
       <Gallery />
       <Footer />
     </main>
-  )
+  );
 }

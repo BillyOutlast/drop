@@ -7,7 +7,7 @@ interface PriorityTagged<T> {
 }
 
 export class PriorityList<T> {
-  private source: Array<PriorityTagged<T>> = [];
+  private readonly source: Array<PriorityTagged<T>> = [];
   private cachedSorted: Array<T> | undefined;
 
   push(item: T, priority: number = 0) {
@@ -30,8 +30,8 @@ export class PriorityList<T> {
     }
 
     const sorted = this.source
-      .sort((a, b) => {
-        if (a.priority == a.priority) {
+      .toSorted((a, b) => {
+        if (a.priority == b.priority) {
           return a.addedIndex - b.addedIndex;
         }
 
@@ -44,7 +44,9 @@ export class PriorityList<T> {
   }
 
   find(predicate: (value: T, index: number, obj: T[]) => boolean) {
-    return this.source.map((e) => e.object).find(predicate);
+    return this.source
+      .map((e) => e.object)
+      .find((value, index, obj) => predicate(value, index, obj));
   }
 }
 
@@ -53,8 +55,8 @@ type IndexableProperty<T> = keyof FilterConditionally<
   (() => string) | string
 >;
 export class PriorityListIndexed<T> extends PriorityList<T> {
-  private indexName: IndexableProperty<T>;
-  private indexMap = new Map<string, T>();
+  private readonly indexName: IndexableProperty<T>;
+  private readonly indexMap = new Map<string, T>();
 
   constructor(indexName: IndexableProperty<T>) {
     super();
@@ -80,6 +82,9 @@ export class PriorityListIndexed<T> extends PriorityList<T> {
 
   override pop(position?: number): PriorityTagged<T> {
     const value = super.pop(position);
+    if (!value) {
+      throw new Error("PriorityList: pop() on empty list");
+    }
 
     const index = this.getIndex(value.object);
     this.indexMap.delete(index);

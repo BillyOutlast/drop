@@ -6,9 +6,17 @@ import { createHash } from "node:crypto";
 import cosekey from "parse-cosekey";
 import type { AuthenticatorTransportFuture } from "@simplewebauthn/server";
 
+/**
+ * Resolves the WebAuthn relying party ID from the configured external URL.
+ *
+ * Falls back to `WEBAUTHN_DOMAIN` env var if set, otherwise reads the
+ * system's external URL config.
+ *
+ * @returns The hostname portion of the relying party URL.
+ */
 export async function getRpId() {
   const externalUrl =
-    process.env.WEBAUTHN_DOMAIN ?? (await systemConfig.getExternalUrl());
+    process.env.WEBAUTHN_DOMAIN ?? systemConfig.getExternalUrl();
   const externalUrlParsed = new URL(externalUrl);
 
   return externalUrlParsed.hostname;
@@ -42,6 +50,18 @@ const AuthData = type({
   authData: "TypedArray.Uint8",
 });
 
+/**
+ * Parses and validates a WebAuthn passkey creation (registration) response.
+ *
+ * Decodes the client data and attestation object, verifies the challenge
+ * matches, confirms the relying party ID hash, and extracts the credential
+ * ID and JWK public key.
+ *
+ * @param clientDataString - Base64-encoded client data JSON from the browser.
+ * @param attestationObjectString - Base64-encoded CBOR attestation object.
+ * @param challenge - The original challenge string issued during registration.
+ * @returns The hex credential ID and JWK public key for the new passkey.
+ */
 export async function parseAndValidatePasskeyCreation(
   clientDataString: string,
   attestationObjectString: string,

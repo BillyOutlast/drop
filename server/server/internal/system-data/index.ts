@@ -1,4 +1,4 @@
-import os from "os";
+import os from "node:os";
 
 export type SystemData = {
   totalRam: number;
@@ -7,7 +7,11 @@ export type SystemData = {
   cpuCores: number;
 };
 
-// See https://github.com/oscmejia/os-utils/blob/master/lib/osutils.js
+/**
+ * Aggregates CPU idle and total time counters across all CPU cores.
+ *
+ * @returns The aggregated idle and total CPU times.
+ */
 function getCPUInfo() {
   const cpus = os.cpus();
 
@@ -18,12 +22,14 @@ function getCPUInfo() {
   let irq = 0;
 
   for (const cpu in cpus) {
-    if (!Object.prototype.hasOwnProperty.call(cpus, cpu)) continue;
-    user += cpus[cpu].times.user;
-    nice += cpus[cpu].times.nice;
-    sys += cpus[cpu].times.sys;
-    irq += cpus[cpu].times.irq;
-    idle += cpus[cpu].times.idle;
+    if (!Object.hasOwn(cpus, cpu)) continue;
+    const cpuTimes = cpus[cpu]?.times;
+    if (!cpuTimes) continue;
+    user += cpuTimes.user;
+    nice += cpuTimes.nice;
+    sys += cpuTimes.sys;
+    irq += cpuTimes.irq;
+    idle += cpuTimes.idle;
   }
 
   const total = user + nice + sys + idle + irq;
@@ -36,7 +42,7 @@ function getCPUInfo() {
 
 class SystemManager {
   // userId to acl to listenerId
-  private listeners = new Map<
+  private readonly listeners = new Map<
     string,
     Map<string, { callback: (systemData: SystemData) => void }>
   >();

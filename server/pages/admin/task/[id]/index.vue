@@ -68,7 +68,12 @@
       </div>
       <ProgressBar :percentage="task.progress" />
     </div>
-    <div v-else role="status" class="w-full flex items-center justify-center">
+    <output
+      v-else
+      class="w-full flex items-center justify-center"
+      aria-live="polite"
+      aria-label="Loading"
+    >
       <svg
         aria-hidden="true"
         class="size-8 text-transparent animate-spin fill-white"
@@ -86,7 +91,7 @@
         />
       </svg>
       <span class="sr-only">{{ $t("common.srLoading") }}</span>
-    </div>
+    </output>
   </div>
 </template>
 

@@ -445,8 +445,11 @@ export class SteamProvider implements MetadataProvider {
 
     const ageRatings = this._extractAgeRatings(webAppDetails?.ratings);
     if (ageRatings.length > 0) {
+      const ratingsList = ageRatings
+        .map((r) => `${r.organization}: ${r.rating}`)
+        .join(", ");
       context?.logger.info(
-        `Found ${ageRatings.length} age ratings: ${ageRatings.map((r) => `${r.organization}: ${r.rating}`).join(", ")}`,
+        `Found ${ageRatings.length} age ratings: ${ratingsList}`,
       );
     }
 
@@ -593,23 +596,21 @@ export class SteamProvider implements MetadataProvider {
     let titleMatch = ogTitleRegex.exec(html);
     titleMatch ??= titleTagRegex.exec(html);
 
-    return titleMatch && titleMatch[1]
+    return titleMatch?.[1]
       ? this._decodeHtmlEntities(titleMatch[1])
       : undefined;
   }
 
   private _extractDescription(html: string): string | undefined {
     const ogDescRegex =
-      /<meta\s+property\s*=\s*"(?:og:description|twitter:description)"\s+content\s*=\s*"([^"]+)"\s*\/?>/i;
+      /<meta\s+property\s*=\s*["'](?:og|twitter):description["']\s+content\s*=\s*["']([^"']+)["']\s*\/?>/i;
     const nameDescRegex =
-      /<meta\s+name\s*=\s*"(?:Description|description)"\s+content\s*=\s*"([^"]+)"\s*\/?>/i;
+      /<meta\s+name\s*=\s*["']description["']\s+content\s*=\s*["']([^"']+)["']\s*\/?>/i;
 
     let descMatch = ogDescRegex.exec(html);
     descMatch ??= nameDescRegex.exec(html);
 
-    return descMatch && descMatch[1]
-      ? this._decodeHtmlEntities(descMatch[1])
-      : undefined;
+    return descMatch?.[1] ? this._decodeHtmlEntities(descMatch[1]) : undefined;
   }
 
   private _extractImage(html: string): string | undefined {
@@ -626,9 +627,9 @@ export class SteamProvider implements MetadataProvider {
 
   private _extractUrl(html: string): string | undefined {
     const curatorUrlRegex =
-      /<a[^>]*class\s*=\s*["'][^"']*curator_url[^"']*["'][^>]*href\s*=\s*["']https:\/\/steamcommunity\.com\/linkfilter\/\?u=([^"'&]+)["']/i;
+      /<a[^>]*class\s*=\s*"[^"]*curator_url[^"]*"[^>]*href\s*=\s*"https:\/\/steamcommunity\.com\/linkfilter\/\?u=([^"&]+)"/i;
     const linkfilterRegex =
-      /<a[^>]*href\s*=\s*["']https:\/\/steamcommunity\.com\/linkfilter\/\?u=([^"'&]+)["'][^>]*(?:target=["']_blank["']|rel=["'][^"']*["'])/i;
+      /<a[^>]*href\s*=\s*"https:\/\/steamcommunity\.com\/linkfilter\/\?u=([^"&]+)"[^>]*(?:target="_blank"|rel="[^"]*")/i;
 
     let curatorUrlMatch = curatorUrlRegex.exec(html);
     curatorUrlMatch ??= linkfilterRegex.exec(html);
@@ -644,19 +645,31 @@ export class SteamProvider implements MetadataProvider {
   }
 
   private _extractBanner(html: string): string | undefined {
-    const bannerRegex =
-      /background-image:\s*url\(['"]([^'"]*(?:\/clan\/\d+|\/app\/\d+|background|header)[^'"]*)\??[^'"]*['"][^}]*\)/i;
-    const backgroundImageRegex =
-      /style\s*=\s*["'][^"']*background-image:\s*url\(([^)]+)\)[^"']*/i;
+    // Two-step to avoid super-linear backtracking in single regex (S8786).
+    const urlRegex = /background-image:\s*url\(\s*['"]?([^'")\s]+)['"]?\s*\)/gi;
+    const bannerUrlRegex = /\/(?:clan|app)\/\d+|background|header/i;
 
-    let bannerMatch = bannerRegex.exec(html);
-    bannerMatch ??= backgroundImageRegex.exec(html);
+    let bannerUrl: string | undefined;
+    for (const match of html.matchAll(urlRegex)) {
+      const candidate = match[1];
+      if (!candidate) continue;
+      if (bannerUrlRegex.test(candidate)) {
+        bannerUrl = candidate;
+        break;
+      }
+    }
 
-    if (!bannerMatch) return undefined;
-    if (!bannerMatch[1]) return undefined;
+    if (!bannerUrl) {
+      const backgroundImageRegex =
+        /style\s*=\s*["'][^"']*background-image:\s*url\(([^)]+)\)[^"']*/i;
+      const bgMatch = backgroundImageRegex.exec(html);
+      if (bgMatch?.[1]) {
+        bannerUrl = bgMatch[1].replace(/['"]/g, "");
+      }
+    }
 
-    let bannerUrl = bannerMatch[1].replace(/['"]/g, "");
-    // Clean up the URL
+    if (!bannerUrl) return undefined;
+
     if (bannerUrl.includes("?")) {
       bannerUrl = bannerUrl.split("?")[0]!;
     }
@@ -665,16 +678,18 @@ export class SteamProvider implements MetadataProvider {
 
   private _decodeHtmlEntities(text: string): string {
     return text
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
+      .replaceAll("&nbsp;", " ")
+      .replaceAll("&lt;", "<")
+      .replaceAll("&gt;", ">")
+      .replaceAll("&quot;", '"')
+      .replaceAll("&#39;", "'")
       .replace(/&#x([0-9A-Fa-f]+);/g, (_, hex) =>
-        String.fromCharCode(parseInt(hex, 16)),
+        String.fromCodePoint(Number.parseInt(hex, 16)),
       )
-      .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)));
+      .replaceAll("&amp;", "&")
+      .replace(/&#(\d+);/g, (_, dec) =>
+        String.fromCodePoint(Number.parseInt(dec, 10)),
+      );
   }
 
   private async _fetchGameDetails(
@@ -686,7 +701,7 @@ export class SteamProvider implements MetadataProvider {
     const searchParams = new URLSearchParams({
       input_json: JSON.stringify({
         ids: gameIds.map((id) => ({
-          appid: parseInt(id),
+          appid: Number.parseInt(id),
         })),
         context: {
           language,
@@ -908,14 +923,16 @@ export class SteamProvider implements MetadataProvider {
   }
 
   private _convertBasicHtmlElements(markdown: string): string {
-    // Remove HTML comments
-    markdown = markdown.replace(/<!--[\s\S]*?-->/g, "");
+    // Remove HTML comments (loop to handle nested/malformed comments)
+    while (/<!--/.test(markdown)) {
+      markdown = markdown.replace(/<!--[\s\S]*?-->/g, "");
+    }
 
     // Convert the bullet points and tabs to markdown list format
     markdown = markdown.replace(/•\s*\t+/g, "\n- ");
 
     // Handle numbered enumeration (1.\t, 2.\t, etc.)
-    markdown = markdown.replace(/(\d+)\.\s*\t+/g, "\n$1. ");
+    markdown = markdown.replace(/(\d+)\.\t+/g, "\n$1. "); // NOSONAR: S8786 false positive — `(\d+)` followed by literal `.` has no overlapping alternatives.
 
     // Convert bold text
     markdown = markdown.replace(
@@ -927,7 +944,7 @@ export class SteamProvider implements MetadataProvider {
     markdown = markdown.replace(
       /<h([1-6])(?:\s+class="bb_tag")?[^>]*>(.*?)<\/h[1-6]>/gi,
       (_, level, content) => {
-        const headerLevel = "#".repeat(parseInt(level));
+        const headerLevel = "#".repeat(Number.parseInt(level));
         const cleanContent = this._stripHtmlTags(content).trim();
         return cleanContent ? `\n\n${headerLevel} ${cleanContent}\n\n` : "";
       },
@@ -1006,11 +1023,15 @@ export class SteamProvider implements MetadataProvider {
   }
 
   private _cleanupBasicFormatting(markdown: string): string {
-    // Clean up spaces before newlines
-    markdown = markdown.replace(/ +\n/g, "\n");
+    // Clean up spaces/tabs before newlines — split/join + String.trimEnd
+    // avoids regex backtracking surface (S8786).
+    markdown = markdown
+      .split("\n")
+      .map((line) => line.trimEnd())
+      .join("\n");
 
-    // Clean up excessive spacing around punctuation
-    markdown = markdown.replace(/\s+([.,!?;:])/g, "$1");
+    // Clean up excessive spacing around punctuation.
+    markdown = markdown.replace(/[ \t]+(?=[.,!?;:])/g, ""); // NOSONAR: S8786 false positive — `[ \t]+` is a single character class, no nested quantifiers.
 
     return markdown;
   }
@@ -1104,12 +1125,12 @@ export class SteamProvider implements MetadataProvider {
 
   private _stripHtmlTags(html: string): string {
     return html
-      .replace(/<[^>]*>/g, "")
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'");
+      .replace(/<[^>]{0,1000}>/g, "")
+      .replaceAll("&nbsp;", " ")
+      .replaceAll("&lt;", "<")
+      .replaceAll("&gt;", ">")
+      .replaceAll("&quot;", '"')
+      .replaceAll("&#39;", "'")
+      .replaceAll("&amp;", "&");
   }
 }

@@ -114,6 +114,7 @@
             >
               <button
                 v-if="editSource"
+                type="button"
                 class="text-blue-500 hover:text-blue-400"
                 @click="() => editSource(sourceIdx)"
               >
@@ -125,6 +126,7 @@
 
               <button
                 v-if="deleteSource"
+                type="button"
                 class="text-red-500 hover:text-red-400"
                 @click="() => deleteSource(sourceIdx)"
               >

@@ -1,11 +1,11 @@
 <template>
-  <div
-    class="mx-auto w-full relative flex flex-col justify-center pt-72 overflow-hidden"
-  >
+  <div class="mx-auto w-full relative flex flex-col justify-center pt-72 overflow-hidden">
     <div class="absolute inset-0 z-0">
       <img
         :src="bannerUrl"
+        alt=""
         class="w-full h-[24rem] object-cover blur-sm scale-105"
+        aria-hidden="true"
       />
       <div
         class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/80 to-transparent opacity-90"
@@ -17,12 +17,16 @@
 
     <div class="relative z-10">
       <div class="px-8">
-        <h1
-          class="text-5xl text-zinc-100 font-bold font-display drop-shadow-lg"
-        >
+        <h1 class="text-5xl text-zinc-100 font-bold font-display drop-shadow-lg">
           {{ game.mName }}
         </h1>
-        <div class="relative" v-if="status.type === 'Installed' && status.install_type.type != InstalledType.PartiallyInstalled">
+        <div
+          class="relative"
+          v-if="
+            status.type === 'Installed' &&
+            status.install_type.type != InstalledType.PartiallyInstalled
+          "
+        >
           <div
             v-if="!version?.userConfiguration?.enableUpdates"
             class="absolute mt-1 inline-flex items-center gap-x-1 text-xs text-zinc-400"
@@ -67,6 +71,7 @@
             :status="status"
           />
           <button
+            type="button"
             v-if="status.type === 'Installed' && status.update_available"
             class="transition-transform duration-300 hover:scale-105 active:scale-95 inline-flex gap-x-2 items-center rounded-md bg-blue-600 px-6 font-semibold text-white shadow-xl backdrop-blur-sm hover:bg-blue-700 uppercase font-display"
             @click="() => installFlow()"
@@ -102,9 +107,7 @@
 
           <div class="space-y-6">
             <div class="bg-zinc-800/50 rounded-xl p-6 backdrop-blur-sm">
-              <h2 class="text-xl font-display font-semibold text-zinc-100 mb-4">
-                Game Images
-              </h2>
+              <h2 class="text-xl font-display font-semibold text-zinc-100 mb-4">Game Images</h2>
               <div class="relative">
                 <div v-if="game.mImageCarouselObjectIds.length > 0">
                   <div
@@ -112,10 +115,7 @@
                   >
                     <div
                       class="absolute inset-0"
-                      @click="
-                        fullscreenImage =
-                          game.mImageCarouselObjectIds[currentImageIndex]
-                      "
+                      @click="fullscreenImage = game.mImageCarouselObjectIds[currentImageIndex]"
                     >
                       <TransitionGroup name="slide" tag="div" class="h-full">
                         <img
@@ -124,6 +124,7 @@
                           :src="useObject(url)"
                           class="absolute inset-0 w-full h-full object-cover"
                           v-show="index === currentImageIndex"
+                          :alt="`${game.mName} screenshot ${index + 1}`"
                         />
                       </TransitionGroup>
                     </div>
@@ -133,6 +134,7 @@
                     >
                       <div class="pointer-events-auto">
                         <button
+                          type="button"
                           v-if="game.mImageCarouselObjectIds.length > 1"
                           @click.stop="previousImage()"
                           class="p-2 rounded-full bg-zinc-900/50 text-zinc-100 hover:bg-zinc-900/80 transition-all duration-300 hover:scale-110"
@@ -142,6 +144,7 @@
                       </div>
                       <div class="pointer-events-auto">
                         <button
+                          type="button"
                           v-if="game.mImageCarouselObjectIds.length > 1"
                           @click.stop="nextImage()"
                           class="p-2 rounded-full bg-zinc-900/50 text-zinc-100 hover:bg-zinc-900/80 transition-all duration-300 hover:scale-110"
@@ -162,10 +165,9 @@
                     </div>
                   </div>
 
-                  <div
-                    class="absolute -bottom-2 left-1/2 -translate-x-1/2 flex gap-x-2"
-                  >
+                  <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 flex gap-x-2">
                     <button
+                      type="button"
                       v-for="(_, index) in game.mImageCarouselObjectIds"
                       :key="index"
                       @click.stop="currentImageIndex = index"
@@ -201,14 +203,12 @@
     <template #default>
       <div class="sm:flex sm:items-start">
         <div class="mt-3 text-center sm:mt-0 sm:text-left">
-          <h3 class="text-base font-semibold text-zinc-100">
-            Install {{ game.mName }}?
-          </h3>
+          <h3 class="text-base font-semibold text-zinc-100">Install {{ game.mName }}?</h3>
           <div class="mt-2">
             <p class="text-sm text-zinc-400">
-              Drop will add {{ game.mName }} to the queue to be downloaded.
-              While downloading, Drop may use up a large amount of resources,
-              particularly network bandwidth and CPU utilisation.
+              Drop will add {{ game.mName }} to the queue to be downloaded. While downloading, Drop
+              may use up a large amount of resources, particularly network bandwidth and CPU
+              utilisation.
             </p>
           </div>
         </div>
@@ -217,9 +217,7 @@
       <div class="space-y-6">
         <div v-if="versionOptions && versionOptions.length > 0">
           <Listbox as="div" v-model="installVersionIndex">
-            <ListboxLabel class="block text-sm/6 font-medium text-zinc-100"
-              >Version</ListboxLabel
-            >
+            <ListboxLabel class="block text-sm/6 font-medium text-zinc-100">Version</ListboxLabel>
             <div class="relative mt-2">
               <ListboxButton
                 class="relative w-full cursor-default rounded-md bg-zinc-800 py-1.5 pl-3 pr-10 text-left text-zinc-100 shadow-sm ring-1 ring-inset ring-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-600 sm:text-sm/6"
@@ -227,13 +225,8 @@
                 <span class="block truncate">{{
                   formatVersionOptionText(installVersionIndex)
                 }}</span>
-                <span
-                  class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
-                >
-                  <ChevronUpDownIcon
-                    class="h-5 w-5 text-gray-400"
-                    aria-hidden="true"
-                  />
+                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                  <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
                 </span>
               </ListboxButton>
 
@@ -243,36 +236,25 @@
               >
                 <div class="flex">
                   <div class="shrink-0">
-                    <InformationCircleIcon
-                      class="size-4 text-blue-400"
-                      aria-hidden="true"
-                    />
+                    <InformationCircleIcon class="size-4 text-blue-400" aria-hidden="true" />
                   </div>
                   <div class="ml-2 flex-1 md:flex md:justify-between">
                     <p class="text-xs text-blue-300">
-                      "Latest" will notify you when there is a new version
-                      available. Choose another version to pin this game's
-                      version.
+                      "Latest" will notify you when there is a new version available. Choose another
+                      version to pin this game's version.
                     </p>
                   </div>
                 </div>
               </div>
-              <div
-                v-else
-                class="mt-3 rounded-md bg-blue-500/10 p-2 outline outline-blue-500/20"
-              >
+              <div v-else class="mt-3 rounded-md bg-blue-500/10 p-2 outline outline-blue-500/20">
                 <div class="flex">
                   <div class="shrink-0">
-                    <InformationCircleIcon
-                      class="size-4 text-blue-400"
-                      aria-hidden="true"
-                    />
+                    <InformationCircleIcon class="size-4 text-blue-400" aria-hidden="true" />
                   </div>
                   <div class="ml-2 flex-1 md:flex md:justify-between">
                     <p class="text-xs text-blue-300">
                       This game will be pinned to "{{
-                        currentVersionOption?.displayName ||
-                        currentVersionOption?.versionPath
+                        currentVersionOption?.displayName || currentVersionOption?.versionPath
                       }}"
                     </p>
                   </div>
@@ -287,11 +269,7 @@
                 <ListboxOptions
                   class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-zinc-900 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm"
                 >
-                  <ListboxOption
-                    as="template"
-                    :value="-1"
-                    v-slot="{ active, selected }"
-                  >
+                  <ListboxOption as="template" :value="-1" v-slot="{ active, selected }">
                     <li
                       :class="[
                         active ? 'bg-blue-600 text-white' : 'text-zinc-300',
@@ -300,9 +278,7 @@
                     >
                       <span
                         :class="[
-                          selected
-                            ? 'font-semibold text-zinc-100'
-                            : 'font-normal',
+                          selected ? 'font-semibold text-zinc-100' : 'font-normal',
                           'block truncate',
                         ]"
                         >{{ formatVersionOptionText(-1) }}</span
@@ -335,9 +311,7 @@
                     >
                       <span
                         :class="[
-                          selected
-                            ? 'font-semibold text-zinc-100'
-                            : 'font-normal',
+                          selected ? 'font-semibold text-zinc-100' : 'font-normal',
                           'block truncate',
                         ]"
                         >{{ formatVersionOptionText(versionIdx) }}</span
@@ -369,14 +343,14 @@
             </div>
             <div class="ml-3">
               <h3 class="text-sm font-medium text-red-600">
-                There are no supported versions to install. Please contact your
-                server admin or try again later.
+                There are no supported versions to install. Please contact your server admin or try
+                again later.
               </h3>
             </div>
           </div>
         </div>
         <div v-else class="w-full flex items-center justify-center p-4">
-          <div role="status">
+          <output aria-live="polite">
             <svg
               aria-hidden="true"
               class="w-7 h-7 text-transparent animate-spin fill-white"
@@ -394,37 +368,29 @@
               />
             </svg>
             <span class="sr-only">Loading...</span>
-          </div>
+          </output>
         </div>
         <div v-if="installDirs">
-          <InstallDirectorySelector
-            :install-dirs="installDirs"
-            v-model="installDir"
-          />
+          <InstallDirectorySelector :install-dirs="installDirs" v-model="installDir" />
         </div>
         <div
           v-if="
-            currentVersionOption?.requiredContent &&
-            currentVersionOption.requiredContent.length > 0
+            currentVersionOption?.requiredContent && currentVersionOption.requiredContent.length > 0
           "
         >
           <div class="border-b border-white/10 py-2">
-            <h3 class="text-sm font-semibold text-white">
-              Install additional dependencies?
-            </h3>
+            <h3 class="text-sm font-semibold text-white">Install additional dependencies?</h3>
             <p class="mt-1 text-xs text-gray-400">
-              This game requires additional content to run. Click the components
-              to automatically queue for download.
+              This game requires additional content to run. Click the components to automatically
+              queue for download.
             </p>
           </div>
-          <ul role="list" class="mt-2 divide-y divide-white/5">
+          <ul class="mt-2 divide-y divide-white/5">
             <li
               v-for="content in currentVersionOption.requiredContent"
               :key="content.versionId"
               :class="[
-                !installDepsDisabled[content.versionId]
-                  ? 'bg-zinc-950 ring-2 ring-zinc-800'
-                  : '',
+                !installDepsDisabled[content.versionId] ? 'bg-zinc-950 ring-2 ring-zinc-800' : '',
                 'rounded-lg relative flex justify-between px-2 py-3',
               ]"
             >
@@ -432,11 +398,12 @@
                 <img
                   class="size-12 flex-none"
                   :src="useObject(content.iconObjectId)"
-                  alt=""
+                  :alt="content.name"
                 />
                 <div class="min-w-0 flex-auto">
                   <p class="text-sm/6 font-semibold text-white">
                     <button
+                      type="button"
                       @click="
                         () =>
                           (installDepsDisabled[content.versionId] =
@@ -454,9 +421,7 @@
               </div>
               <div class="flex shrink-0 items-center gap-x-2">
                 <div class="hidden sm:flex sm:flex-col sm:items-end">
-                  <p
-                    class="inline-flex items-center gap-x-1 text-xs/5 text-gray-400"
-                  >
+                  <p class="inline-flex items-center gap-x-1 text-xs/5 text-gray-400">
                     {{ formatKilobytes(content.size.installSize / 1024) }}B
                     <ServerIcon class="size-3" />
                   </p>
@@ -466,11 +431,7 @@
                   class="size-5 flex-none text-green-500"
                   aria-hidden="true"
                 />
-                <MinusIcon
-                  v-else
-                  class="size-5 flex-none text-gray-500"
-                  aria-hidden="true"
-                />
+                <MinusIcon v-else class="size-5 flex-none text-gray-500" aria-hidden="true" />
               </div>
             </li>
           </ul>
@@ -515,21 +476,20 @@
     <template #default>
       <div class="sm:flex sm:items-start">
         <div class="mt-3 text-center sm:mt-0 sm:text-left">
-          <h3 class="text-base font-semibold text-zinc-100">
-            Launch {{ game.mName }}
-          </h3>
+          <h3 class="text-base font-semibold text-zinc-100">Launch {{ game.mName }}</h3>
           <div class="mt-2">
             <p class="text-sm text-zinc-400">
-              The instance admin has configured multiple ways to start this
-              game. Select an option to start.
+              The instance admin has configured multiple ways to start this game. Select an option
+              to start.
             </p>
           </div>
         </div>
       </div>
 
       <ol class="space-y-2">
-        <li v-for="(launchData, launchIdx) in launchOptions!">
+        <li v-for="(launchData, launchIdx) in launchOptions!" :key="launchIdx">
           <button
+            type="button"
             class="transition w-full rounded-sm bg-zinc-800 inline-flex items-center text-sm py-2 px-3 gap-x-2 text-zinc-100 hover:text-zinc-300 hover:bg-zinc-700"
             @click="() => launchIndex(launchIdx)"
           >
@@ -583,30 +543,33 @@
       class="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
       @click="fullscreenImage = null"
     >
-      <div
-        class="relative w-full h-full flex items-center justify-center"
-        @click.stop
-      >
+      <div class="relative w-full h-full flex items-center justify-center" @click.stop>
         <button
+          type="button"
+          aria-label="Close fullscreen"
           class="absolute top-4 right-4 p-2 rounded-full bg-zinc-900/50 text-zinc-100 hover:bg-zinc-900 transition-colors"
           @click.stop="fullscreenImage = null"
         >
-          <XMarkIcon class="size-6" />
+          <XMarkIcon class="size-6" aria-hidden="true" />
         </button>
 
         <button
+          type="button"
+          aria-label="Previous image"
           v-if="game.mImageCarouselObjectIds.length > 1"
           @click.stop="previousImage()"
           class="absolute left-4 p-3 rounded-full bg-zinc-900/50 text-zinc-100 hover:bg-zinc-900 transition-colors"
         >
-          <ChevronLeftIcon class="size-6" />
+          <ChevronLeftIcon class="size-6" aria-hidden="true" />
         </button>
         <button
+          type="button"
+          aria-label="Next image"
           v-if="game.mImageCarouselObjectIds.length > 1"
           @click.stop="nextImage()"
           class="absolute right-4 p-3 rounded-full bg-zinc-900/50 text-zinc-100 hover:bg-zinc-900 transition-colors"
         >
-          <ChevronRightIcon class="size-6" />
+          <ChevronRightIcon class="size-6" aria-hidden="true" />
         </button>
 
         <TransitionGroup
@@ -637,10 +600,7 @@
     </div>
   </Transition>
 
-  <DependencyRequiredModal
-    v-if="dependencyRequiredModal"
-    v-model="dependencyRequiredModal"
-  />
+  <DependencyRequiredModal v-if="dependencyRequiredModal" v-model="dependencyRequiredModal" />
 </template>
 
 <script setup lang="ts">
@@ -654,7 +614,6 @@ import {
 import {
   CheckIcon,
   ChevronUpDownIcon,
-  WrenchIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   XMarkIcon,
@@ -667,7 +626,6 @@ import { BuildingStorefrontIcon } from "@heroicons/vue/24/outline";
 import {
   ArrowDownTrayIcon,
   CheckCircleIcon,
-  MapPinIcon,
   MinusIcon,
   ServerIcon,
   XCircleIcon,
@@ -720,8 +678,7 @@ async function install() {
   try {
     if (!versionOptions.value) throw new Error("Versions have not been loaded");
     installLoading.value = true;
-    const versionOption =
-      versionOptions.value[Math.max(installVersionIndex.value, 0)];
+    const versionOption = versionOptions.value[Math.max(installVersionIndex.value, 0)];
     const isLatest = installVersionIndex.value == -1;
 
     const games = [
@@ -783,10 +740,9 @@ async function launch() {
     return;
   }
   try {
-    const fetchedLaunchOptions = await invoke<Array<{ name: string }>>(
-      "get_launch_options",
-      { id: game.id },
-    );
+    const fetchedLaunchOptions = await invoke<Array<{ name: string }>>("get_launch_options", {
+      id: game.id,
+    });
     if (fetchedLaunchOptions.length == 1) {
       await launchIndex(0);
       return;
@@ -806,9 +762,7 @@ async function launch() {
   }
 }
 
-const dependencyRequiredModal = ref<
-  { gameId: string; versionId: string } | undefined
->(undefined);
+const dependencyRequiredModal = ref<{ gameId: string; versionId: string } | undefined>(undefined);
 
 async function launchIndex(index: number) {
   launchOptions.value = undefined;
@@ -862,8 +816,7 @@ async function kill() {
 }
 
 function nextImage() {
-  currentImageIndex.value =
-    (currentImageIndex.value + 1) % game.mImageCarouselObjectIds.length;
+  currentImageIndex.value = (currentImageIndex.value + 1) % game.mImageCarouselObjectIds.length;
 }
 
 function previousImage() {

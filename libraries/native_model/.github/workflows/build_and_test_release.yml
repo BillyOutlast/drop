@@ -2,9 +2,9 @@ name: Build Test Release
 
 on:
   push:
-    branches: [ main, next ]
+    branches: [main, next]
   pull_request:
-    branches: [ main, next ]
+    branches: [main, next]
   workflow_dispatch:
 
 jobs:
@@ -18,14 +18,14 @@ jobs:
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
+        uses: actions-rs/toolchain@63eb9591781c46a70274cb3ebdf190fce92702e8 # v1
         with:
           toolchain: ${{ matrix.toolchain }}
           override: true
-      - uses: extractions/setup-just@v3
-      - uses: hustcer/setup-nu@v3.23
+      - uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b # v3
+      - uses: hustcer/setup-nu@0f8993e49525fffbfd01be38c6ac3ef673a934ba # v3.23
         with:
-          version: '0.105.1'
+          version: "0.105.1"
       - name: Just version
         run: just --version
       - name: Build
@@ -50,10 +50,10 @@ jobs:
       - name: install npm
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Semantic Release
-        uses: cycjimmy/semantic-release-action@v4
+        uses: cycjimmy/semantic-release-action@16ca923e6ccbb50770c415a0ccd43709a8c5f7a4 # v4
         with:
           dry_run: ${{ github.event_name != 'workflow_dispatch' }}
           extra_plugins: |

@@ -77,6 +77,21 @@
   },
   "actions": "Actions",
   "add": "Add",
+  "admin": {
+    "massImport": {
+      "accept": "Accept",
+      "description": "Quickly import a large amount of versions at once.",
+      "displayName": "Display Name",
+      "importButton": "Import →",
+      "name": "Name",
+      "setupMode": "Setup Mode",
+      "title": "Mass Import Tool",
+      "type": "Type",
+      "warningBody": "While it is useful to import a lot of versions at once, this tool is designed for migrating from other projects, rather than building your Drop library from scratch.",
+      "warningMissing": "It is missing functionality present in the normal import wizard.",
+      "warningTitle": "This tool is basic."
+    }
+  },
   "adminTitle": "Admin Dashboard - {0}",
   "adminTitleTemplate": "{0} - Admin - {1}",
   "auth": {
@@ -386,6 +401,7 @@
         "addDescriptionNoImages": "No images to add.",
         "addImageCarousel": "Add from image library",
         "ageRatingLabel": "{organization}: {rating}",
+        "ageRatingValue": "Age rating value",
         "ageRatings": "Age Ratings",
         "ageRatingsEmpty": "No age ratings set",
         "currentBanner": "banner",

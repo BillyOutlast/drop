@@ -1,25 +1,14 @@
 <template>
-  <Listbox
-    as="div"
-    v-model="model.overrideHandler"
-    class="mt-6"
-    v-if="handlers.length > 1"
-  >
-    <ListboxLabel class="block text-sm/6 font-medium text-white"
-      >Launch method</ListboxLabel
-    >
+  <Listbox as="div" v-model="model.overrideHandler" class="mt-6" v-if="handlers.length > 1">
+    <ListboxLabel class="block text-sm/6 font-medium text-white">Launch method</ListboxLabel>
     <div class="relative mt-2">
       <ListboxButton
         class="grid w-full cursor-default grid-cols-1 rounded-md bg-white/5 py-1.5 pr-2 pl-3 text-left text-white outline-1 -outline-offset-1 outline-white/10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-500 sm:text-sm/6"
       >
-        <span
-          v-if="currentHandler"
-          class="col-start-1 row-start-1 truncate pr-6"
-          >{{ currentHandler.name }}</span
-        >
-        <span
-          v-else
-          class="col-start-1 row-start-1 truncate pr-6 italic text-zinc-400"
+        <span v-if="currentHandler" class="col-start-1 row-start-1 truncate pr-6">{{
+          currentHandler.name
+        }}</span>
+        <span v-else class="col-start-1 row-start-1 truncate pr-6 italic text-zinc-400"
           >Automatic</span
         >
         <ChevronUpDownIcon
@@ -36,22 +25,14 @@
         <ListboxOptions
           class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-zinc-800 py-1 text-base outline-1 -outline-offset-1 outline-white/10 sm:text-sm"
         >
-          <ListboxOption
-            as="template"
-            :value="undefined"
-            v-slot="{ active, selected }"
-          >
+          <ListboxOption as="template" :value="undefined" v-slot="{ active, selected }">
             <li
               :class="[
                 active ? 'bg-blue-500 text-white outline-hidden' : 'text-white',
                 'relative cursor-default py-2 pr-9 pl-3 select-none',
               ]"
             >
-              <span
-                :class="[
-                  selected ? 'font-semibold' : 'font-normal',
-                  'block truncate italic',
-                ]"
+              <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate italic']"
                 >Automatic</span
               >
               <span class="block truncate text-xs text-zinc-400"
@@ -82,16 +63,10 @@
                 'relative cursor-default py-2 pr-9 pl-3 select-none',
               ]"
             >
-              <span
-                :class="[
-                  selected ? 'font-semibold' : 'font-normal',
-                  'block truncate',
-                ]"
-                >{{ handler.name }}</span
-              >
-              <span class="block truncate text-xs text-zinc-400">{{
-                handler.description
+              <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{
+                handler.name
               }}</span>
+              <span class="block truncate text-xs text-zinc-400">{{ handler.description }}</span>
 
               <span
                 v-if="selected"
@@ -107,9 +82,7 @@
         </ListboxOptions>
       </transition>
     </div>
-    <p class="mt-2 text-sm text-zinc-400">
-      Override how this game is launched.
-    </p>
+    <p class="mt-2 text-sm text-zinc-400">Override how this game is launched.</p>
   </Listbox>
 </template>
 
@@ -135,7 +108,5 @@ const handlers = await invoke<ProcessHandlerOption[]>("get_process_handlers", {
   id: props.gameId,
 });
 
-const currentHandler = computed(() =>
-  handlers.find((v) => v.id == model.value.overrideHandler),
-);
+const currentHandler = computed(() => handlers.find((v) => v.id == model.value.overrideHandler));
 </script>

@@ -9,6 +9,12 @@ const paths = ["./components", "./layouts", "./pages", "./server"];
 const constPaths = ["error.vue", "app.vue"];
 const extensions = [".vue", ".ts"];
 
+/**
+ * Finds supported files beneath a directory and includes the configured constant paths.
+ *
+ * @param root - The directory to search recursively
+ * @returns Paths to matching files and configured constant files
+ */
 function recursiveFindFiles(root: string): string[] {
   const results = [];
   const subpaths = fs.readdirSync(root);
@@ -21,7 +27,6 @@ function recursiveFindFiles(root: string): string[] {
     const stat = fs.statSync(absPath);
     if (stat.isDirectory()) {
       results.push(...recursiveFindFiles(absPath));
-      continue;
     }
   }
   return [...results, ...constPaths];
@@ -31,7 +36,7 @@ function recursiveFindFiles(root: string): string[] {
  * Fetches the paths of all files available to be localised
  */
 export function allLocalisableFiles(): string[] {
-  const files = paths.map((k) => recursiveFindFiles(k)).flat();
+  const files = paths.flatMap((k) => recursiveFindFiles(k));
 
   return files;
 }
@@ -79,7 +84,7 @@ export function deleteLocalisation(localisation: Localisation, key: string) {
   for (const part of parts.slice(0, -1)) {
     if (typeof current === "string")
       throw new Error(`${key} not found in localisation`);
-    current = current[part];
+    current = current[part]!;
   }
   if (typeof current === "string")
     throw new Error(`${key} not found in localisation`);
@@ -97,7 +102,7 @@ export function fetchLocalisation(
   for (const part of parts.slice(0, -1)) {
     if (typeof current === "string")
       throw new Error(`${key} not found in localisation`);
-    current = current[part];
+    current = current[part]!;
   }
   if (typeof current === "string")
     throw new Error(`${key} not found in localisation`);

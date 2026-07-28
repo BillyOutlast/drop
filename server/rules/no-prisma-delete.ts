@@ -1,0 +1,63 @@
+import type { TSESLint } from "@typescript-eslint/utils";
+
+const blacklistedFunctions = new Set(["delete", "deleteMany"]);
+
+// Models where hard-delete is correct (join tables, auth tokens, ephemeral data, no deletedAt column)
+const allowedModels = new Set([
+  "aPIToken",
+  "certificate",
+  "collection",
+  "collectionEntry",
+  "company",
+  "companyGame",
+  "game",
+  "gameAgeRating",
+  "gameTag",
+  "gameVersion",
+  "invitation",
+  "library",
+  "linkedAuthMec",
+  "linkedMFAMec",
+  "notification",
+  "objectHash",
+  "saveSlot",
+  "session",
+  "unimportedGameVersion",
+]);
+
+export default {
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "Don't use Prisma .delete or .deleteMany — soft-delete is enforced via .update with deletedAt",
+    },
+    messages: {
+      noPrismaDelete:
+        "Prisma .delete(...) is used. Soft-delete via .update(..., { deletedAt: new Date() }) instead.",
+    },
+    schema: [],
+  },
+  create(context) {
+    return {
+      CallExpression: function (node) {
+        // @ts-expect-error It ain't typing properly
+        const funcId = node.callee.property;
+        if (!funcId || !blacklistedFunctions.has(funcId.name)) return;
+        // @ts-expect-error It ain't typing properly
+        const tableExpr = node.callee.object;
+        if (!tableExpr) return;
+        const prismaExpr = tableExpr.object;
+        if (prismaExpr?.name !== "prisma") return;
+        // Allow hard-delete on join tables, auth tokens, and ephemeral data
+        const modelName = tableExpr.property?.name;
+        if (modelName && allowedModels.has(modelName)) return;
+        context.report({
+          node,
+          messageId: "noPrismaDelete",
+        });
+      },
+    };
+  },
+  defaultOptions: [],
+} satisfies TSESLint.RuleModule<"noPrismaDelete">;

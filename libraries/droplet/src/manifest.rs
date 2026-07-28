@@ -79,7 +79,75 @@ where
     })
 }
 
-fn organise_files(
+pub(crate) fn push_chunk(
+    chunks: &mut Vec<Vec<(VersionFile, u64, u64)>>,
+    chunk: &mut Vec<(VersionFile, u64, u64)>,
+) {
+    chunks.push(std::mem::take(chunk));
+    println!("Chunks: {}", chunks.len());
+}
+
+pub(crate) fn collect_whole_files(
+    version_file: VersionFile,
+    current_chunk: &mut Vec<(VersionFile, u64, u64)>,
+    chunks: &mut Vec<Vec<(VersionFile, u64, u64)>>,
+) {
+    let version_file_size = version_file.size;
+
+    if version_file_size >= CHUNK_SIZE {
+        chunks.push(vec![(version_file, 0, version_file_size)]);
+        println!("Chunks: {}", chunks.len());
+        return;
+    }
+
+    let current_chunk_size = current_chunk
+        .iter()
+        .map(|(_, _, length)| *length)
+        .sum::<u64>();
+
+    current_chunk.push((version_file, 0, version_file_size));
+    if current_chunk_size + version_file_size >= CHUNK_SIZE {
+        push_chunk(chunks, current_chunk);
+    }
+}
+
+pub(crate) fn collect_split_files(
+    version_file: VersionFile,
+    current_chunk: &mut Vec<(VersionFile, u64, u64)>,
+    chunks: &mut Vec<Vec<(VersionFile, u64, u64)>>,
+) {
+    let version_file_size = version_file.size;
+    let current_chunk_size = current_chunk
+        .iter()
+        .map(|(_, _, length)| *length)
+        .sum::<u64>();
+
+    // Enough space for it to be put in immediately
+    if version_file_size + current_chunk_size < CHUNK_SIZE {
+        current_chunk.push((version_file, 0, version_file_size));
+        return;
+    }
+
+    let bytes_free_in_existing_chunk = CHUNK_SIZE - current_chunk_size;
+    current_chunk.push((version_file.clone(), 0, bytes_free_in_existing_chunk));
+    push_chunk(chunks, current_chunk);
+
+    // Loop over remaining data and create sufficient chunks to use it
+    let mut offset = bytes_free_in_existing_chunk;
+    while offset < version_file_size {
+        let length = CHUNK_SIZE.min(version_file_size - offset);
+        if length == CHUNK_SIZE {
+            chunks.push(vec![(version_file.clone(), offset, length)]);
+            println!("Chunks: {}", chunks.len());
+        } else {
+            current_chunk.push((version_file.clone(), offset, length));
+            println!("Chunks: {}", chunks.len());
+        }
+        offset += length;
+    }
+}
+
+pub(crate) fn organise_files(
     files: Vec<VersionFile>,
     require_whole_files: bool,
 ) -> Vec<Vec<(VersionFile, u64, u64)>> {
@@ -88,55 +156,13 @@ fn organise_files(
 
     for version_file in files {
         if current_chunk.len() >= MAX_FILE_COUNT {
-            // Pop current chunk
-            chunks.push(std::mem::take(&mut current_chunk));
-            println!("Chunks: {}", chunks.len());
+            push_chunk(&mut chunks, &mut current_chunk);
         }
-        let current_chunk_size = current_chunk
-            .iter()
-            .map(|(_, _, length)| *length)
-            .sum::<u64>();
-        let version_file_size = version_file.size;
 
         if require_whole_files {
-            // If the current chunk is larger than chunk size, there's no point adding
-            // it to the current_chunk. Just push it by itself
-            if version_file_size >= CHUNK_SIZE {
-                chunks.push(vec![(version_file, 0, version_file_size)]);
-                println!("Chunks: {}", chunks.len());
-                continue;
-            }
-
-            current_chunk.push((version_file, 0, version_file_size));
-            if current_chunk_size + version_file_size >= CHUNK_SIZE {
-                // Pop current chunk
-                chunks.push(std::mem::take(&mut current_chunk));
-                println!("Chunks: {}", chunks.len());
-            }
+            collect_whole_files(version_file, &mut current_chunk, &mut chunks);
         } else {
-            // Enough space for it to be put in immediately
-            if version_file_size + current_chunk_size < CHUNK_SIZE {
-                current_chunk.push((version_file, 0, version_file_size));
-                continue;
-            }
-
-            let bytes_free_in_existing_chunk = CHUNK_SIZE - current_chunk_size;
-            current_chunk.push((version_file.clone(), 0, bytes_free_in_existing_chunk));
-            chunks.push(std::mem::take(&mut current_chunk));
-
-            // Loop over remaining data and create sufficient chunks to use it
-            let mut offset = bytes_free_in_existing_chunk;
-            while offset < version_file_size {
-                let length = CHUNK_SIZE.min(version_file_size - offset);
-                if length == CHUNK_SIZE {
-                    chunks.push(vec![(version_file.clone(), offset, length)]);
-                    println!("Chunks: {}", chunks.len());
-                } else {
-                    current_chunk.push((version_file.clone(), offset, length));
-                    println!("Chunks: {}", chunks.len());
-                }
-                offset += length;
-            }
+            collect_split_files(version_file, &mut current_chunk, &mut chunks);
         }
     }
     if current_chunk.is_empty().not() {

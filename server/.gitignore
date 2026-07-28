@@ -36,4 +36,8 @@ deploy-template/*
 /prisma/client
 /prisma/validate
 
+# coverage output
+coverage/
+.type-coverage/
+
 /server/internal/proto

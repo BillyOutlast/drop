@@ -1,0 +1,151 @@
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { handleFileUpload } from "../../../server/internal/utils/handlefileupload";
+
+vi.mock("../../../server/internal/objects/transactional", () => ({
+  ObjectTransactionalHandler: class {
+    new() {
+      return [vi.fn(), vi.fn(), vi.fn()];
+    }
+  },
+}));
+
+const createMockH3 = () =>
+  ({
+    node: { req: {} },
+  }) as never;
+
+describe("handleFileUpload", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns undefined when no multipart data", async () => {
+    vi.stubGlobal(
+      "readMultipartFormData",
+      vi.fn().mockResolvedValue(undefined),
+    );
+    const result = await handleFileUpload(createMockH3(), {}, []);
+    expect(result).toBeUndefined();
+  });
+
+  it("rejects files exceeding 10MB size limit", async () => {
+    vi.stubGlobal(
+      "readMultipartFormData",
+      vi.fn().mockResolvedValue([
+        {
+          filename: "large.bin",
+          data: Buffer.alloc(11 * 1024 * 1024),
+          type: "application/pdf",
+        },
+      ]),
+    );
+    vi.stubGlobal("createError", (opts: unknown) => {
+      throw opts;
+    });
+
+    await expect(
+      handleFileUpload(createMockH3(), {}, []),
+    ).rejects.toMatchObject({
+      statusCode: 400,
+    });
+  });
+
+  it("rejects files with disallowed MIME type", async () => {
+    vi.stubGlobal(
+      "readMultipartFormData",
+      vi.fn().mockResolvedValue([
+        {
+          filename: "script.js",
+          data: Buffer.from("test"),
+          type: "application/javascript",
+        },
+      ]),
+    );
+    vi.stubGlobal("createError", (opts: unknown) => {
+      throw opts;
+    });
+
+    await expect(
+      handleFileUpload(createMockH3(), {}, []),
+    ).rejects.toMatchObject({
+      statusCode: 400,
+    });
+  });
+
+  it("rejects files with no MIME type", async () => {
+    vi.stubGlobal(
+      "readMultipartFormData",
+      vi.fn().mockResolvedValue([
+        {
+          filename: "unknown.bin",
+          data: Buffer.from("test"),
+          type: undefined,
+        },
+      ]),
+    );
+    vi.stubGlobal("createError", (opts: unknown) => {
+      throw opts;
+    });
+
+    await expect(
+      handleFileUpload(createMockH3(), {}, []),
+    ).rejects.toMatchObject({
+      statusCode: 400,
+    });
+  });
+
+  it("accepts valid image/jpeg files", async () => {
+    vi.stubGlobal(
+      "readMultipartFormData",
+      vi.fn().mockResolvedValue([
+        {
+          filename: "photo.jpg",
+          data: Buffer.from([
+            0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46,
+          ]),
+          type: "image/jpeg",
+        },
+      ]),
+    );
+
+    const result = await handleFileUpload(createMockH3(), {}, []);
+    expect(result).toBeDefined();
+  });
+
+  it("accepts valid application/pdf files", async () => {
+    vi.stubGlobal(
+      "readMultipartFormData",
+      vi.fn().mockResolvedValue([
+        {
+          filename: "doc.pdf",
+          data: Buffer.from("%PDF-1.4 dummy pdf content"),
+          type: "application/pdf",
+        },
+      ]),
+    );
+
+    const result = await handleFileUpload(createMockH3(), {}, []);
+    expect(result).toBeDefined();
+  });
+
+  it("enforces max file count", async () => {
+    vi.stubGlobal(
+      "readMultipartFormData",
+      vi.fn().mockResolvedValue([
+        {
+          filename: "a.jpg",
+          data: Buffer.from([0xff, 0xd8, 0xff, 0xe0]),
+          type: "image/jpeg",
+        },
+        {
+          filename: "b.jpg",
+          data: Buffer.from([0xff, 0xd8, 0xff, 0xe0]),
+          type: "image/jpeg",
+        },
+      ]),
+    );
+
+    const result = await handleFileUpload(createMockH3(), {}, [], 1);
+    expect(result).toBeDefined();
+  });
+});

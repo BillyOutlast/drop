@@ -46,19 +46,19 @@ type TaskPoolEntry = FinishedTask & {
  */
 class TaskHandler {
   // registry of scheduled tasks to be created
-  private taskCreators: Map<TaskGroup, () => Task> = new Map();
+  private readonly taskCreators: Map<TaskGroup, () => Task> = new Map();
 
   // list of all currently running tasks
-  private taskPool = new Map<string, TaskPoolEntry>();
+  private readonly taskPool = new Map<string, TaskPoolEntry>();
   // list of all clients currently connected to tasks
-  private clientRegistry = new Map<string, PeerImpl>();
+  private readonly clientRegistry = new Map<string, PeerImpl>();
 
-  private dailyScheduledTasks: TaskGroup[] = [
+  private readonly dailyScheduledTasks: TaskGroup[] = [
     "cleanup:invitations",
     "cleanup:sessions",
     "check:update",
   ];
-  private weeklyScheduledTasks: TaskGroup[] = ["cleanup:objects"];
+  private readonly weeklyScheduledTasks: TaskGroup[] = ["cleanup:objects"];
 
   constructor() {
     // register the cleanup invitations task
@@ -93,7 +93,7 @@ class TaskHandler {
       for (const existingTask of this.taskPool.values()) {
         // if a task is already running, we don't want to start another
         if (existingTask.taskGroup === task.taskGroup) {
-          // TODO: handle this more gracefully, maybe with a queue? should be configurable
+          // PENDING(sonar): implement configurable task queue for non-concurrent task groups - deferred
           logger.warn(
             `Task group ${task.taskGroup} does not allow concurrent tasks. Task ${task.id} will not be started.`,
           );
@@ -313,8 +313,7 @@ class TaskHandler {
       name: task.name,
       success: task.success,
       error: task.error as unknown as
-        | { title: string; description: string }
-        | undefined,
+        { title: string; description: string } | undefined,
       log: task.log,
       progress: task.progress,
       actions: task.actions as TaskActionLink[],
@@ -347,8 +346,7 @@ class TaskHandler {
     const allClientIds = this.taskPool
       .values()
       .toArray()
-      .map((e) => e.clients.keys().toArray())
-      .flat();
+      .flatMap((e) => e.clients.keys().toArray());
 
     if (!allClientIds.includes(id)) {
       this.clientRegistry.delete(id);
@@ -369,9 +367,7 @@ class TaskHandler {
   }
 
   hasTaskKey(key: string) {
-    return (
-      this.taskPool.values().find((v) => v.key && v.key == key) != undefined
-    );
+    return this.taskPool.values().some((v) => v.key && v.key == key);
   }
 
   dailyTasks() {
@@ -452,6 +448,18 @@ export type TaskRunContext = {
   addAction: (link: TaskActionLink) => void;
 };
 
+/**
+ * Wraps a task run context, remapping its progress range and attaching
+ * a child logger with the given prefix.
+ *
+ * Useful when a parent task delegates work to a sub-task and needs
+ * independent progress reporting (e.g. 0-100 maps to min-max range)
+ * without conflicting with the parent's own progress bar.
+ *
+ * @param context - The parent task's run context.
+ * @param options - Scoping options: min/max progress range and logger prefix.
+ * @returns A new context that maps progress(0-100) into min-max space.
+ */
 export function wrapTaskContext(
   context: TaskRunContext,
   options: { min: number; max: number; prefix: string },
@@ -525,32 +533,12 @@ export const TaskLog = type({
   prefix: "string?",
 });
 
-// /**
-//  * Create a log message with a timestamp in the format YYYY-MM-DD HH:mm:ss.SSS UTC
-//  * @param message
-//  * @returns
-//  */
-// function msgWithTimestamp(message: string): string {
-//   const now = new Date();
-
-//   const pad = (n: number, width = 2) => n.toString().padStart(width, "0");
-
-//   const year = now.getUTCFullYear();
-//   const month = pad(now.getUTCMonth() + 1);
-//   const day = pad(now.getUTCDate());
-
-//   const hours = pad(now.getUTCHours());
-//   const minutes = pad(now.getUTCMinutes());
-//   const seconds = pad(now.getUTCSeconds());
-//   const milliseconds = pad(now.getUTCMilliseconds(), 3);
-
-//   const log: typeof TaskLog.infer = {
-//     timestamp: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds} UTC`,
-//     message,
-//   };
-//   return JSON.stringify(log);
-// }
-
+/**
+ * Creates a task-group definition from a task builder.
+ *
+ * @param buildTask - The task definition used to construct task instances
+ * @returns A drop task that builds configured task instances
+ */
 export function defineDropTask(buildTask: BuildTask): DropTask {
   return {
     taskGroup: buildTask.taskGroup,

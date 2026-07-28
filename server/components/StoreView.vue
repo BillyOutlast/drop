@@ -178,6 +178,7 @@
                       v-slot="{ active }"
                     >
                       <button
+                        type="button"
                         :class="[
                           currentSort == option.param
                             ? 'font-medium text-zinc-100'
@@ -447,8 +448,7 @@ const filterQuery = computed(() => {
   const query = Object.entries(optionValues.value)
     .filter(
       ([_, v]) =>
-        v &&
-        (typeof v !== "object" || Object.values(v).filter((e) => e).length > 0),
+        v && (typeof v !== "object" || Object.values(v).some(Boolean)),
     )
     .map(([n, v]) => {
       if (typeof v === "string") return [`${n}=${v}`];
@@ -462,7 +462,8 @@ const filterQuery = computed(() => {
         .map(([k, v]) => `${k}=${v}`)
         .join("&")
     : props.params;
-  return `${query}${extraFilters ? (query ? "&" : "") + extraFilters : ""}`;
+  const separator = query && extraFilters ? "&" : "";
+  return `${query}${separator}${extraFilters ?? ""}`;
 });
 
 const games = ref<Array<SerializeObject<GameModel>>>();

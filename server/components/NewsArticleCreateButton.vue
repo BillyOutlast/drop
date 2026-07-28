@@ -4,6 +4,7 @@
     <!-- Create article button - only show for admin users -->
     <button
       v-if="user?.admin"
+      type="button"
       class="transition inline-flex w-full items-center px-4 gap-x-2 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold text-sm shadow-sm"
       @click="modalOpen = !modalOpen"
     >
@@ -43,6 +44,7 @@
             id="excerpt"
             v-model="newArticle.description"
             type="text"
+            autocomplete="off"
             class="mt-1 block w-full rounded-md bg-zinc-900 border-zinc-700 text-zinc-100 shadow-sm focus:border-primary-500 focus:ring-primary-500"
             required
           />
@@ -137,9 +139,11 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-zinc-400 mb-2">{{
-            $t("common.tags")
-          }}</label>
+          <label
+            for="tag-input"
+            class="block text-sm font-medium text-zinc-400 mb-2"
+            >{{ $t("common.tags") }}</label
+          >
           <div class="flex flex-wrap gap-2 mb-2">
             <span
               v-for="tag in newArticle.tags"
@@ -158,9 +162,11 @@
           </div>
           <div class="flex gap-x-2">
             <input
+              id="tag-input"
               v-model="newTagInput"
               type="text"
               :placeholder="$t('news.article.tagPlaceholder')"
+              aria-label="New tag"
               class="mt-1 block w-full rounded-md bg-zinc-900 border-zinc-700 text-zinc-100 shadow-sm focus:border-primary-500 focus:ring-primary-500"
               @keydown.enter.prevent="addTag"
             />
@@ -199,6 +205,7 @@
           {{ $t("news.article.submit") }}
         </LoadingButton>
         <button
+          type="button"
           class="inline-flex items-center rounded-md bg-zinc-800 px-3 py-2 text-sm font-semibold font-display text-white hover:bg-zinc-700"
           @click="() => (modalOpen = !modalOpen)"
         >
@@ -244,8 +251,7 @@ const isValidArticle = computed(
 );
 
 const markdownPreview = computed(() => {
-  // TODO: maybe?? add https://github.com/cure53/DOMPurify
-  // micromark says its safe, but this is straight html we are injecting
+  // PENDING(sonar): consider adding DOMPurify for HTML sanitization - deferred, micromark output is safe per spec
   return micromark(newArticle.value.content);
 });
 

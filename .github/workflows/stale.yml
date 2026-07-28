@@ -1,0 +1,20 @@
+name: Close stale issues
+on:
+  schedule:
+    - cron: "0 8 * * 1"
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9
+        with:
+          stale-issue-message: "This issue has been inactive for 90 days. Will close in 14 days unless updated."
+          days-before-stale: 90
+          days-before-close: 14
+          exempt-labels: "priority/p0,priority/p1"

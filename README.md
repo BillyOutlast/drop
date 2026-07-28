@@ -13,6 +13,7 @@
 [![Open Collective](https://img.shields.io/badge/OpenCollective-1F87FF?style=for-the-badge&logo=OpenCollective&logoColor=white)](https://opencollective.com/drop-oss)
 [![Weblate project translated](https://img.shields.io/weblate/progress/drop?server=https%3A%2F%2Ftranslate.droposs.org&style=for-the-badge&logo=weblate)
 ](https://translate.droposs.org/engage/drop/)
+[![codecov](https://codecov.io/gh/BillyOutlast/drop/branch/develop/graph/badge.svg?flag=server)](https://codecov.io/gh/BillyOutlast/drop)
 
 Drop is an open-source game distribution platform, similar to GameVault or Steam. It's designed to distribute and share DRM-free games quickly, all while being incredibly flexible, beautiful, and fast.
 

@@ -7,9 +7,7 @@
       :z-height="(modalIdx + 1) * 50"
       :loading="modal.loading"
       :data="modal.data"
-      @event="
-        (event: string, ...args: any[]) => handleCallback(modalIdx, event, args)
-      "
+      @event="(event: string, ...args: any[]) => handleCallback(modalIdx, event, args)"
     />
   </TransitionGroup>
   <div id="modalstack"></div>

@@ -12,11 +12,13 @@ Version 3 of libarchive is required to use this library.
 The required libraries and binaries can be installed by running:
 
 #### Debian / Ubuntu
+
 ```shell
 $ sudo apt-get install libarchive13
 ```
 
 #### Mac OS X
+
 ```shell
 $ brew install libarchive
 ```

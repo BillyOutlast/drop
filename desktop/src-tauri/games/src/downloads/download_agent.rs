@@ -24,8 +24,10 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs::{create_dir_all, remove_file};
+use std::future::Future;
 use std::io;
 use std::path::{Path, PathBuf};
+use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use tauri::AppHandle;
@@ -40,6 +42,9 @@ use super::download_logic::download_game_chunk;
 use super::drop_data::DropData;
 
 static RETRY_COUNT: usize = 3;
+
+type ChunkFuture =
+    Pin<Box<dyn Future<Output = Result<Option<String>, ApplicationDownloadError>> + Send>>;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -67,6 +72,60 @@ impl Debug for GameDownloadAgent {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("GameDownloadAgent").finish()
     }
+}
+
+async fn process_single_chunk(
+    metadata_id: String,
+    version_id: String,
+    chunk_id: String,
+    depot: String,
+    key: [u8; 16],
+    chunk_data: ChunkData,
+    file_list: HashMap<String, String>,
+    base_path: PathBuf,
+    control_flag: DownloadThreadControl,
+    dl_handle: ProgressHandle,
+    disk_handle: ProgressHandle,
+    permit: impl std::ops::Drop,
+) -> Result<Option<String>, ApplicationDownloadError> {
+    // Wrap in Option so we can drop the permit once and avoid
+    // holding the semaphore slot across retry cycles.
+    let mut permit = Some(permit);
+    for i in 0..RETRY_COUNT {
+        match download_game_chunk(
+            &metadata_id,
+            &version_id,
+            &chunk_id,
+            &depot,
+            &key,
+            &chunk_data,
+            &file_list,
+            &base_path,
+            &control_flag,
+            &dl_handle,
+            &disk_handle,
+        )
+        .await
+        {
+            Ok(true) => {
+                drop(permit.take());
+                return Ok(Some(chunk_id));
+            }
+            Ok(false) => return Ok(None),
+            Err(e) => {
+                warn!("got error for chunk id {}: {e:?}", chunk_id);
+                if i == RETRY_COUNT - 1 {
+                    warn!("retry logic failed, not re-attempting.");
+                    return Err(e);
+                }
+                // Free the semaphore slot before retrying — otherwise
+                // the permit is held across network timeouts, starving
+                // other concurrent chunk downloads.
+                drop(permit.take());
+            }
+        }
+    }
+    Ok(None)
 }
 
 impl GameDownloadAgent {
@@ -273,178 +332,206 @@ impl GameDownloadAgent {
         self.disk_progress.reset();
     }
 
+    fn cleanup_filetree(
+        base_path: &Path,
+        file_list: &HashMap<String, String>,
+    ) -> Result<(), io::Error> {
+        let current_file_tree = Self::scan_filetree_static(base_path)?;
+        for file in current_file_tree {
+            let filename = file
+                .strip_prefix(base_path)
+                .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "strip_prefix failed"))?
+                .to_string_lossy()
+                .to_string();
+            if !file_list.contains_key(&filename) && filename != ".dropdata" {
+                debug!("deleted {}", file.display());
+                remove_file(file)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn scan_filetree_static(path: &Path) -> Result<Vec<PathBuf>, io::Error> {
+        if !path.is_dir() {
+            return Ok(vec![path.into()]);
+        }
+        let subdirs = path.read_dir()?;
+        let mut results = Vec::new();
+        for subdir in subdirs {
+            let subdir = subdir?;
+            let subfiles = Self::scan_filetree_static(&subdir.path())?;
+            results.extend(subfiles);
+        }
+        Ok(results)
+    }
+
+    fn collect_output(
+        outputs: &mut Vec<String>,
+        value: Result<Option<String>, ApplicationDownloadError>,
+    ) -> Result<(), ApplicationDownloadError> {
+        match value {
+            Ok(Some(chunk_id)) => {
+                outputs.push(chunk_id);
+                Ok(())
+            }
+            Ok(None) => Ok(()),
+            Err(err) => Err(err),
+        }
+    }
+
+    fn update_completed_chunks(
+        completed_chunks: &mut HashMap<String, bool>,
+        outputs: &[String],
+    ) -> Vec<(String, bool)> {
+        for completed in outputs {
+            completed_chunks.insert(completed.clone(), true);
+        }
+        completed_chunks
+            .iter()
+            .map(|(k, v)| (k.clone(), *v))
+            .collect()
+    }
+
+    fn finalize_download(
+        &self,
+        drop_data_chunks: &[(String, bool)],
+        completed_count: usize,
+        chunk_len: usize,
+    ) -> Result<bool, ApplicationDownloadError> {
+        self.dropdata.set_contexts(drop_data_chunks);
+        self.dropdata.write();
+
+        info!("completed {} chunks", drop_data_chunks.len());
+
+        if completed_count != chunk_len {
+            info!(
+                "download agent for {} exited without completing ({}/{})",
+                self.metadata.id, completed_count, chunk_len,
+            );
+            return Ok(false);
+        }
+        Ok(true)
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    async fn spawn_chunk_download(
+        &self,
+        version_id: &str,
+        chunk_id: &str,
+        chunk_data: ChunkData,
+        key: [u8; 16],
+        file_list: &HashMap<String, String>,
+        completed_chunks: &HashMap<String, bool>,
+        max_download_threads: usize,
+        chunk_completions: &mut FuturesUnordered<ChunkFuture>,
+        outputs: &mut Vec<String>,
+        index: &mut usize,
+    ) -> Result<(), ApplicationDownloadError> {
+        let dl_handle = ProgressHandle::new(
+            self.download_progress.get(*index),
+            self.download_progress.clone(),
+        );
+        let disk_handle =
+            ProgressHandle::new(self.disk_progress.get(*index), self.disk_progress.clone());
+        *index += 1;
+
+        let chunk_length: usize = chunk_data.files.iter().map(|v| v.length).sum();
+        if *completed_chunks.get(chunk_id).unwrap_or(&false) {
+            dl_handle.skip(chunk_length);
+            disk_handle.skip(chunk_length);
+            return Ok(());
+        }
+
+        let (depot, permit) = self
+            .depot_manager
+            .next_depot(&self.metadata.id, &self.metadata.version)
+            .map_err(ApplicationDownloadError::from)?;
+
+        while chunk_completions.len() >= max_download_threads {
+            Self::collect_output(
+                outputs,
+                chunk_completions
+                    .next()
+                    .await
+                    .expect("max download threads is zero?"),
+            )?;
+        }
+
+        chunk_completions.push(Box::pin(process_single_chunk(
+            self.metadata.id.clone(),
+            version_id.to_string(),
+            chunk_id.to_string(),
+            depot,
+            key,
+            chunk_data,
+            file_list.clone(),
+            self.dropdata.base_path.clone(),
+            self.control_flag.clone(),
+            dl_handle,
+            disk_handle,
+            permit,
+        )));
+        Ok(())
+    }
+
     async fn run(&self) -> Result<bool, ApplicationDownloadError> {
         self.depot_manager.sync_depots().await?;
         info!("synced depots");
         self.setup_progress();
         info!("setup progress objects");
-        let manifests_chunks: Vec<(String, HashMap<String, ChunkData>, [u8; 16])> = {
+
+        let (manifests_chunks, file_list, chunk_len) = {
             let dl_info = lock!(self.dl_info);
-            dl_info
-                .as_ref()
-                .unwrap()
+            let dl_info = dl_info.as_ref().unwrap();
+            let chunks: Vec<(String, HashMap<String, ChunkData>, [u8; 16])> = dl_info
                 .manifests
                 .iter()
                 .map(|v| (v.0.clone(), v.1.chunks.clone(), v.1.key))
-                .collect()
+                .collect();
+            let chunk_len = chunks.iter().map(|v| v.1.len()).sum::<usize>();
+            (chunks, dl_info.file_list.clone(), chunk_len)
         };
-        let file_list = {
-            let dl_info = lock!(self.dl_info);
-            dl_info.as_ref().unwrap().file_list.clone()
-        };
-        let mut completed_chunks = {
-            let completed_chunks = lock!(self.dropdata.contexts);
-            completed_chunks.clone()
-        };
+
+        let completed_chunks = lock!(self.dropdata.contexts).clone();
         info!("started with {} existing chunks", completed_chunks.len());
-        let chunk_len = manifests_chunks.iter().map(|v| v.1.len()).sum::<usize>();
+
         let mut max_download_threads = borrow_db_checked().settings.max_download_threads;
         if max_download_threads == 0 {
             max_download_threads = 1;
         }
 
-        let file_list = &file_list;
-        let base_path = &self.dropdata.base_path;
-        let current_file_tree = self.scan_filetree(base_path)?;
+        Self::cleanup_filetree(&self.dropdata.base_path, &file_list)?;
 
-        for file in current_file_tree {
-            let filename = file.strip_prefix(base_path)?.to_string_lossy().to_string();
-            let needed = file_list.contains_key(&filename) || filename == ".dropdata";
-            if !needed {
-                debug!("deleted {}", file.display());
-                remove_file(file)?;
-            }
-        }
-
-        let local_completed_chunks = completed_chunks.clone();
-
+        let mut completed_chunks = completed_chunks.clone();
         let mut chunk_completions = FuturesUnordered::new();
-
         let mut outputs = Vec::new();
-
-        let mut handle_output =
-            |value: Result<Option<String>, ApplicationDownloadError>| match value {
-                Ok(value) => {
-                    if let Some(chunk_id) = value {
-                        outputs.push(chunk_id);
-                    }
-                    Ok(())
-                }
-                Err(err) => Err(err),
-            };
-
         let mut index = 0;
+
         for (version_id, chunks, key) in manifests_chunks.into_iter() {
-            let version_id = &version_id;
             for (chunk_id, chunk_data) in chunks.into_iter() {
-                let download_progress_handle = ProgressHandle::new(
-                    self.download_progress.get(index),
-                    self.download_progress.clone(),
-                );
-                let disk_progress_handle =
-                    ProgressHandle::new(self.disk_progress.get(index), self.disk_progress.clone());
-                index += 1;
-
-                let chunk_length = chunk_data.files.iter().map(|v| v.length).sum();
-
-                if *local_completed_chunks.get(&chunk_id).unwrap_or(&false) {
-                    download_progress_handle.skip(chunk_length);
-                    continue;
-                }
-
-                let (depot, permit) = match self
-                    .depot_manager
-                    .next_depot(&self.metadata.id, &self.metadata.version)
-                {
-                    Ok(v) => v,
-                    Err(err) => {
-                        return Err(err.into());
-                    }
-                };
-
-                let local_version_id = version_id.clone();
-                while chunk_completions.len() >= max_download_threads {
-                    handle_output(
-                        chunk_completions
-                            .next()
-                            .await
-                            .expect("max download threads is zero?"),
-                    )?;
-                }
-                chunk_completions.push(async move {
-                    for i in 0..RETRY_COUNT {
-                        match download_game_chunk(
-                            &self.metadata.id,
-                            &local_version_id,
-                            &chunk_id,
-                            &depot,
-                            &key,
-                            &chunk_data,
-                            file_list,
-                            base_path,
-                            &self.control_flag,
-                            &download_progress_handle,
-                            &disk_progress_handle,
-                        )
-                        .await
-                        {
-                            Ok(true) => {
-                                drop(permit);
-                                return Ok(Some(chunk_id.clone()));
-                            }
-                            Ok(false) => return Ok(None),
-                            Err(e) => {
-                                warn!("got error for chunk id {}: {e:?}", chunk_id);
-
-                                let retry = true; /*matches!(
-                                &e,
-                                ApplicationDownloadError::Communication(_)
-                                | ApplicationDownloadError::Checksum
-                                | ApplicationDownloadError::Lock
-                                | ApplicationDownloadError::IoError(_)
-                                );*/
-
-                                if i == RETRY_COUNT - 1 || !retry {
-                                    warn!("retry logic failed, not re-attempting.");
-                                    return Err(e);
-                                }
-                            }
-                        }
-                    }
-                    Ok(None)
-                });
+                self.spawn_chunk_download(
+                    &version_id,
+                    &chunk_id,
+                    chunk_data,
+                    key,
+                    &file_list,
+                    &completed_chunks,
+                    max_download_threads,
+                    &mut chunk_completions,
+                    &mut outputs,
+                    &mut index,
+                )
+                .await?;
             }
         }
 
         while let Some(value) = chunk_completions.next().await {
-            handle_output(value)?
+            Self::collect_output(&mut outputs, value)?;
         }
 
-        for completed_chunk in outputs {
-            completed_chunks.insert(completed_chunk, true);
-        }
+        let drop_data_chunks = Self::update_completed_chunks(&mut completed_chunks, &outputs);
 
-        let drop_data_chunks = completed_chunks
-            .iter()
-            .map(|v| (v.0.to_string(), *v.1))
-            .collect::<Vec<(String, bool)>>();
-
-        self.dropdata.set_contexts(&drop_data_chunks);
-        self.dropdata.write();
-
-        info!("completed {} chunks", drop_data_chunks.len());
-
-        // If there are any contexts left which are false
-        if completed_chunks.len() != chunk_len {
-            info!(
-                "download agent for {} exited without completing ({}/{})",
-                self.metadata.id.clone(),
-                completed_chunks.len(),
-                chunk_len,
-            );
-            return Ok(false);
-        }
-        Ok(true)
+        self.finalize_download(&drop_data_chunks, completed_chunks.len(), chunk_len)
     }
 
     #[allow(dead_code)]

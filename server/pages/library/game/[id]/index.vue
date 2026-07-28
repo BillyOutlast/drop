@@ -8,6 +8,7 @@
       <img
         :src="useObject(game.mBannerObjectId)"
         class="w-full h-[24rem] object-cover blur-sm scale-105"
+        alt=""
       />
       <div
         class="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent opacity-90"
@@ -80,6 +81,7 @@
                     <img
                       class="w-fit h-48 lg:h-96 rounded"
                       :src="useObject(image)"
+                      :alt="'Game screenshot'"
                     />
                   </VueSlide>
                   <VueSlide v-if="game.mImageCarouselObjectIds.length == 0">
@@ -138,21 +140,6 @@ const game = computed(() => {
 const descriptionHTML = computed(() =>
   micromark(game.value.mDescription ?? ""),
 );
-
-// const currentImageIndex = ref(0);
-
-// function nextImage() {
-//   if (!game.value?.mImageCarousel) return;
-//   currentImageIndex.value =
-//     (currentImageIndex.value + 1) % game.value.mImageCarousel.length;
-// }
-
-// function previousImage() {
-//   if (!game.value?.mImageCarousel) return;
-//   currentImageIndex.value =
-//     (currentImageIndex.value - 1 + game.value.mImageCarousel.length) %
-//     game.value.mImageCarousel.length;
-// }
 </script>
 
 <style scoped>

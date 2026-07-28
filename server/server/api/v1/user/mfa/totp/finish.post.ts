@@ -1,10 +1,13 @@
 import aclManager from "~/server/internal/acls";
+import {
+  verifyTOTPCode,
+  dropDecodeArrayBase64,
+} from "~/server/internal/auth/totp";
 import { totp, SecretKey } from "otp-io";
 import { hmac } from "otp-io/crypto";
 import prisma from "~/server/internal/db/database";
 import { MFAMec } from "~/prisma/client/client";
 import type { TOTPv1Credentials } from "~/server/internal/auth/totp";
-import { dropDecodeArrayBase64 } from "~/server/internal/auth/totp";
 import { createError } from "h3";
 import { type } from "arktype";
 import { readDropValidatedBody, throwingArktype } from "~/server/arktype";
@@ -13,6 +16,7 @@ const TOTPEnableBody = type({
   code: "string",
 }).configure(throwingArktype);
 
+// fallow-ignore-next-line unused-export
 export default defineEventHandler(async (h3) => {
   const userId = await aclManager.allowUserSuperlevel(h3); // No ACLs only allows session authentication
   if (!userId)
@@ -35,16 +39,17 @@ export default defineEventHandler(async (h3) => {
   if (!existing)
     throw createError({ statusCode: 400, message: "TOTP not started" });
 
+  // fallow-ignore-next-line code-duplication
   const secret = (existing.credentials as unknown as TOTPv1Credentials).secret;
   const secretKeyBuffer = dropDecodeArrayBase64(secret);
   const secretKey = new SecretKey(secretKeyBuffer);
 
   const code = await totp(hmac, { secret: secretKey });
-  if (body.code !== code)
+  if (!verifyTOTPCode(code, body.code))
     throw createError({ statusCode: 400, message: "Invalid TOTP code." });
 
   // Safe because we're updating something we just queried
-  // eslint-disable-next-line drop/no-prisma-delete
+
   await prisma.linkedMFAMec.update({
     where: {
       userId_mec: {
@@ -56,6 +61,4 @@ export default defineEventHandler(async (h3) => {
       enabled: true,
     },
   });
-
-  return;
 });

@@ -14,7 +14,7 @@
         <slot />
         <div class="mt-10">
           <div>
-            <div v-if="loading" role="status">
+            <output v-if="loading" aria-live="polite">
               <svg
                 aria-hidden="true"
                 class="w-5 h-5 text-transparent animate-spin fill-white"
@@ -32,9 +32,10 @@
                 />
               </svg>
               <span class="sr-only">Loading...</span>
-            </div>
+            </output>
             <span class="inline-flex gap-x-8 items-center" v-else>
               <button
+                type="button"
                 @click="() => authWrapper_wrapper()"
                 :disabled="loading"
                 class="px-3 py-1 inline-flex items-center gap-x-2 bg-zinc-700 rounded text-sm text-left font-semibold leading-7 text-white"
@@ -57,8 +58,9 @@
                 id="token"
                 name="token"
                 type="text"
-                autocomplete="token"
+                autocomplete="off"
                 required
+                aria-label="Authentication token"
                 class="grow block w-full rounded-md border-0 py-1.5 px-3 shadow-sm bg-zinc-950/20 text-zinc-300 ring-1 ring-inset ring-zinc-800 placeholder:text-zinc-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
                 v-model="manualToken"
               />
@@ -93,28 +95,18 @@
           class="mx-auto flex w-full max-w-7xl items-center gap-x-4 px-6 text-sm leading-7 text-zinc-400 lg:px-8"
         >
           <a href="#">Documentation</a>
-          <svg
-            viewBox="0 0 2 2"
-            aria-hidden="true"
-            class="h-0.5 w-0.5 fill-zinc-700"
-          >
+          <svg viewBox="0 0 2 2" aria-hidden="true" class="h-0.5 w-0.5 fill-zinc-700">
             <circle cx="1" cy="1" r="1" />
           </svg>
           <a href="#">Troubleshooting</a>
-          <svg
-            viewBox="0 0 2 2"
-            aria-hidden="true"
-            class="h-0.5 w-0.5 fill-zinc-700"
-          >
+          <svg viewBox="0 0 2 2" aria-hidden="true" class="h-0.5 w-0.5 fill-zinc-700">
             <circle cx="1" cy="1" r="1" />
           </svg>
           <NuxtLink to="/setup/server">Switch instance</NuxtLink>
         </nav>
       </div>
     </footer>
-    <div
-      class="hidden lg:relative lg:col-start-2 lg:row-start-1 lg:row-end-4 lg:block"
-    >
+    <div class="hidden lg:relative lg:col-start-2 lg:row-start-1 lg:row-end-4 lg:block">
       <img
         src="@/assets/wallpaper.jpg"
         alt=""

@@ -25,7 +25,7 @@ import {
 } from "~/utils/ageRatings";
 
 interface GiantBombResponseType<T> {
-  error: "OK" | string;
+  error: string;
   limit: number;
   offset: number;
   number_of_page_results: number;
@@ -164,8 +164,8 @@ interface CompanySearchResult {
 
 // Api Docs: https://www.giantbomb.com/api/
 export class GiantBombProvider implements MetadataProvider {
-  private apikey: string;
-  private turndown: TurndownService;
+  private readonly apikey: string;
+  private readonly turndown: TurndownService;
 
   constructor() {
     const apikey = process.env.GIANT_BOMB_API_KEY;
@@ -235,6 +235,51 @@ export class GiantBombProvider implements MetadataProvider {
 
     return mapped;
   }
+  private async importCompanies(
+    items: Array<{ name: string }> | undefined,
+    label: string,
+    company: (name: string) => Promise<CompanyModel | undefined>,
+    context?: TaskRunContext,
+  ): Promise<CompanyModel[]> {
+    const results: CompanyModel[] = [];
+    if (!items) return results;
+
+    for (const item of items) {
+      context?.logger.info(`Importing ${label} "${item.name}"`);
+      const res = await company(item.name);
+      if (res === undefined) {
+        context?.logger.warn(`Failed to import ${label} "${item.name}"`);
+        continue;
+      }
+      context?.logger.info(`Imported ${label} "${item.name}"`);
+      results.push(res);
+    }
+    return results;
+  }
+
+  private async importReviews(
+    reviews: Array<{ api_detail_url: string }> | undefined,
+    context?: TaskRunContext,
+  ): Promise<GameMetadataRating[]> {
+    const results: GameMetadataRating[] = [];
+    if (!reviews) return results;
+
+    context?.logger.info("Found reviews, importing...");
+    for (const { api_detail_url } of reviews) {
+      const reviewId = api_detail_url.split("/").at(-2);
+      if (!reviewId) continue;
+      const review = await this.request<ReviewResult>("review", reviewId, {});
+      results.push({
+        metadataSource: MetadataSource.GiantBomb,
+        metadataId: reviewId,
+        mReviewCount: 1,
+        mReviewRating: review.results.score / 5,
+        mReviewHref: review.results.site_detail_url,
+      });
+    }
+    return results;
+  }
+
   async fetchGame(
     { id, company, createObject }: _FetchGameMetadataParams,
     context?: TaskRunContext,
@@ -248,38 +293,20 @@ export class GiantBombProvider implements MetadataProvider {
       ? this.turndown.turndown(gameData.description)
       : gameData.deck;
 
-    const publishers: CompanyModel[] = [];
-    if (gameData.publishers) {
-      for (const pub of gameData.publishers) {
-        context?.logger.info(`Importing publisher "${pub.name}"`);
-
-        const res = await company(pub.name);
-        if (res === undefined) {
-          context?.logger.warn(`Failed to import publisher "${pub.name}"`);
-          continue;
-        }
-        context?.logger.info(`Imported publisher "${pub.name}"`);
-        publishers.push(res);
-      }
-    }
-
+    const publishers = await this.importCompanies(
+      gameData.publishers,
+      "publisher",
+      company,
+      context,
+    );
     context?.progress(35);
 
-    const developers: CompanyModel[] = [];
-    if (gameData.developers) {
-      for (const dev of gameData.developers) {
-        context?.logger.info(`Importing developer "${dev.name}"`);
-
-        const res = await company(dev.name);
-        if (res === undefined) {
-          context?.logger.warn(`Failed to import developer "${dev.name}"`);
-          continue;
-        }
-        context?.logger.info(`Imported developer "${dev.name}"`);
-        developers.push(res);
-      }
-    }
-
+    const developers = await this.importCompanies(
+      gameData.developers,
+      "developer",
+      company,
+      context,
+    );
     context?.progress(70);
 
     const icon = createObject(gameData.image.icon_url);
@@ -297,22 +324,7 @@ export class GiantBombProvider implements MetadataProvider {
 
     context?.progress(85);
 
-    const reviews: GameMetadataRating[] = [];
-    if (gameData.reviews) {
-      context?.logger.info("Found reviews, importing...");
-      for (const { api_detail_url } of gameData.reviews) {
-        const reviewId = api_detail_url.split("/").at(-2);
-        if (!reviewId) continue;
-        const review = await this.request<ReviewResult>("review", reviewId, {});
-        reviews.push({
-          metadataSource: MetadataSource.GiantBomb,
-          metadataId: reviewId,
-          mReviewCount: 1,
-          mReviewRating: review.results.score / 5,
-          mReviewHref: review.results.site_detail_url,
-        });
-      }
-    }
+    const reviews = await this.importReviews(gameData.reviews, context);
 
     const tags = (gameData.genres ?? []).map((e) => e.name);
 
@@ -345,8 +357,11 @@ export class GiantBombProvider implements MetadataProvider {
       }
 
       if (ageRatings.length > 0) {
+        const ratingsList = ageRatings
+          .map((r) => `${r.organization}: ${r.rating}`)
+          .join(", ");
         context?.logger.info(
-          `Found ${ageRatings.length} age ratings: ${ageRatings.map((r) => `${r.organization}: ${r.rating}`).join(", ")}`,
+          `Found ${ageRatings.length} age ratings: ${ratingsList}`,
         );
       }
     } catch (e) {

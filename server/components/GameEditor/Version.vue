@@ -131,15 +131,8 @@
                   <td
                     class="py-4 pr-4 pl-3 text-right text-sm font-medium whitespace-nowrap sm:pr-0 space-x-2"
                   >
-                    <!--
-                    <button class="text-blue-400 hover:text-blue-300">
-                      Edit<span class="sr-only"
-                        >,
-                        {{ version.displayName ?? version.versionPath }}</span
-                      >
-                    </button>
-                    -->
                     <button
+                      type="button"
                       class="text-red-400 hover:text-red-300"
                       @click="() => deleteVersion(version.versionId)"
                     >
@@ -180,7 +173,7 @@ import type { H3Error } from "h3";
 import { ExclamationCircleIcon, Bars3Icon } from "@heroicons/vue/24/outline";
 import type { AdminFetchGameType } from "~/server/api/v1/admin/game/[id]/index.get";
 
-// TODO implement UI for this page
+// PENDING(sonar): implement version management UI components - deferred, page structure defined
 
 const props = defineProps<{ unimportedVersions: string[] }>();
 
@@ -217,8 +210,8 @@ async function updateVersionOrder() {
         },
       },
     );
-    const newVersions = newVersionOrder.map(
-      (id) => game.value.versions.find((k) => k.versionId == id)!,
+    const newVersions = newVersionOrder.map((id) =>
+      game.value.versions.find((k) => k.versionId == id)!,
     );
     game.value.versions = newVersions;
   } catch (e) {

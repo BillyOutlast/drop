@@ -187,6 +187,8 @@
           v-model="searchQuery"
           type="text"
           name="search"
+          aria-label="Search games"
+          autocomplete="off"
           class="col-start-1 row-start-1 block w-full rounded-md bg-zinc-900 py-1.5 pl-10 pr-3 text-base text-zinc-100 border-[0px] outline-[0px] placeholder:text-zinc-400 sm:pl-9 sm:text-sm/6"
           :placeholder="$t('library.search')"
         />
@@ -228,6 +230,7 @@
                     v-slot="{ active }"
                   >
                     <button
+                      type="button"
                       :class="[
                         currentSort == option.param
                           ? 'font-medium text-zinc-100'
@@ -255,7 +258,6 @@
       </div>
     </Disclosure>
     <ul
-      role="list"
       class="relative grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
     >
       <li
@@ -276,6 +278,7 @@
               {{ game.mName }}
               <button
                 type="button"
+                :aria-label="game.featured ? 'Unfeature game' : 'Feature game'"
                 :class="[
                   'rounded-full p-1 shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2',
                   game.featured
@@ -341,6 +344,7 @@
                 </i18n-t>
               </NuxtLink>
               <button
+                type="button"
                 class="w-fit rounded-md bg-red-600 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-red-500 hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
                 @click="() => deleteGame(game.id)"
               >
@@ -458,7 +462,7 @@
         v-if="gamesLoading"
         class="absolute inset-0 bg-zinc-900/50 flex items-start p-4 justify-center"
       >
-        <div role="status">
+        <output aria-live="polite" aria-label="Loading">
           <svg
             aria-hidden="true"
             class="size-8 text-transparent animate-spin fill-white"
@@ -476,7 +480,7 @@
             />
           </svg>
           <span class="sr-only">{{ $t("common.srLoading") }}</span>
-        </div>
+        </output>
       </div>
     </ul>
     <nav
@@ -484,6 +488,7 @@
     >
       <div class="-mt-px flex w-0 flex-1">
         <button
+          type="button"
           class="group inline-flex items-center border-t-2 border-transparent pt-4 pr-1 text-sm font-medium text-zinc-400 disabled:text-zinc-700 hover:not-disabled:border-white/20 hover:not-disabled:text-zinc-200"
           :disabled="currentIndex == 0"
           @click="previousPage"
@@ -499,6 +504,7 @@
         <button
           v-for="page in maxPages"
           :key="page"
+          type="button"
           :class="[
             currentIndex == page - 1
               ? 'border-blue-400 text-blue-400'
@@ -512,6 +518,7 @@
       </div>
       <div class="-mt-px flex w-0 flex-1 justify-end">
         <button
+          type="button"
           class="group inline-flex items-center border-t-2 border-transparent pt-4 pl-1 text-sm font-medium text-zinc-400 disabled:text-zinc-700 hover:not-disabled:border-white/20 hover:not-disabled:text-zinc-200"
           :disabled="currentIndex == maxPages - 1"
           @click="nextPage"
@@ -574,7 +581,7 @@ const router = useRouter();
 // Hard limit on server
 const pageSize = 24;
 const currentIndex = ref(
-  route.query.page ? parseInt(route.query.page.toString()) - 1 : 0,
+  route.query.page ? Number.parseInt(route.query.page.toString()) - 1 : 0,
 );
 const maxIndex = ref(0);
 const maxPages = computed(() => Math.ceil(maxIndex.value / pageSize));

@@ -1,8 +1,20 @@
-import { spawn } from "child_process";
+import { spawn } from "node:child_process";
 import { Service } from "..";
 import { systemConfig } from "../../config/sys-conf";
-import path from "path";
-import fs from "fs";
+import path from "node:path";
+import fs from "node:fs";
+
+function resolveNginxPath(): string {
+  const knownPaths = [
+    "/usr/sbin/nginx",
+    "/usr/local/bin/nginx",
+    "/usr/bin/nginx",
+  ];
+  for (const p of knownPaths) {
+    if (fs.existsSync(p)) return p;
+  }
+  return "nginx";
+}
 
 export const NGINX_SERVICE = new Service(
   "nginx",
@@ -12,8 +24,9 @@ export const NGINX_SERVICE = new Service(
     );
     const nginxPrefix = path.join(systemConfig.getDataFolder(), "nginx");
     fs.mkdirSync(nginxPrefix, { recursive: true });
+    const nginxPath = resolveNginxPath();
 
-    return spawn("nginx", ["-c", nginxConfig, "-p", nginxPrefix]);
+    return spawn(nginxPath, ["-c", nginxConfig, "-p", nginxPrefix]);
   },
   undefined,
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment

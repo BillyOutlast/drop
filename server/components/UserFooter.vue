@@ -33,7 +33,7 @@
               <h3 class="text-sm font-semibold leading-6 text-white">
                 {{ $t("footer.games") }}
               </h3>
-              <ul role="list" class="mt-6 space-y-4">
+              <ul class="mt-6 space-y-4">
                 <li v-for="item in navigation.games" :key="item.name">
                   <NuxtLink
                     :to="item.href"
@@ -47,7 +47,7 @@
               <h3 class="text-sm font-semibold leading-6 text-white">
                 {{ $t("userHeader.links.community") }}
               </h3>
-              <ul role="list" class="mt-6 space-y-4">
+              <ul class="mt-6 space-y-4">
                 <li v-for="item in navigation.community" :key="item.name">
                   <NuxtLink
                     :to="item.href"
@@ -63,7 +63,7 @@
               <h3 class="text-sm font-semibold leading-6 text-white">
                 {{ $t("footer.documentation") }}
               </h3>
-              <ul role="list" class="mt-6 space-y-4">
+              <ul class="mt-6 space-y-4">
                 <li v-for="item in navigation.documentation" :key="item.name">
                   <NuxtLink
                     :to="item.href"
@@ -77,7 +77,7 @@
               <h3 class="text-sm font-semibold leading-6 text-white">
                 {{ $t("footer.about") }}
               </h3>
-              <ul role="list" class="mt-6 space-y-4">
+              <ul class="mt-6 space-y-4">
                 <li v-for="item in navigation.about" :key="item.name">
                   <NuxtLink
                     :to="item.href"
@@ -130,8 +130,6 @@ const navigation = computed(() => ({
     { name: t("common.servers"), href: "#" },
   ],
   documentation: [
-    // TODO: public API docs
-    // { name: t("footer.api"), href: "https://api.droposs.org/" },
     {
       name: t("footer.docs.server"),
       href: "https://droposs.org/docs/admin/quickstart",

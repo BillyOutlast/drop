@@ -1,5 +1,5 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 
 export function recursivelyReaddir(dir: string, depth: number = 100) {
   if (depth == 0) return [];

@@ -15,8 +15,8 @@
       />
     </div>
     <p class="mt-2 text-sm text-zinc-400" id="launch-description">
-      Override the launch string. Passed to system's default shell, and replaces
-      "{}" with the command to start the game.
+      Override the launch string. Passed to system's default shell, and replaces "{}" with the
+      command to start the game.
       <span class="font-semibold text-zinc-200"
         >Leaving it blank will cause the game not to start.</span
       >

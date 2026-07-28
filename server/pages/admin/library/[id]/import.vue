@@ -77,9 +77,11 @@
       <!-- version display name -->
       <div class="bg-zinc-800 p-4 rounded-xl relative flex flex-col gap-y-2">
         <div>
-          <label class="block text-sm font-medium leading-6 text-zinc-100">{{
-            $t("library.admin.import.version.displayName")
-          }}</label>
+          <label
+            for="display-name"
+            class="block text-sm font-medium leading-6 text-zinc-100"
+            >{{ $t("library.admin.import.version.displayName") }}</label
+          >
           <p class="text-zinc-400 text-xs">
             {{ $t("library.admin.import.version.displayNameDesc") }}
           </p>
@@ -99,9 +101,9 @@
       <!-- setup executable -->
       <div class="bg-zinc-800 p-4 rounded-xl relative flex flex-col gap-y-2">
         <div>
-          <label class="block text-sm font-medium leading-6 text-zinc-100">{{
+          <span class="block text-sm font-medium leading-6 text-zinc-100">{{
             $t("library.admin.import.version.setupCmd")
-          }}</label>
+          }}</span>
           <p class="text-zinc-400 text-xs">
             {{ $t("library.admin.import.version.setupDesc") }}
           </p>
@@ -121,6 +123,7 @@
               :needs-name="false"
             />
             <button
+              type="button"
               class="transition rounded p-1 bg-zinc-900/30 group hover:bg-red-600/30"
               @click="() => versionSettings.setups.splice(launchIdx, 1)"
             >
@@ -183,9 +186,9 @@
       <!-- launch executables -->
       <div class="relative flex flex-col gap-y-2 bg-zinc-800 p-4 rounded-xl">
         <div>
-          <label class="block text-sm font-medium leading-6 text-zinc-100">{{
+          <span class="block text-sm font-medium leading-6 text-zinc-100">{{
             $t("library.admin.import.version.launchCmd")
-          }}</label>
+          }}</span>
           <p class="text-zinc-400 text-xs">
             {{ $t("library.admin.import.version.launchDesc") }}
           </p>
@@ -220,6 +223,7 @@
                     <MinusIcon v-else class="size-6" aria-hidden="true" />
                   </span>
                   <button
+                    type="button"
                     class="ml-1 transition rounded p-1 bg-zinc-900/30 group hover:bg-red-600/30"
                     @click.prevent="
                       () => versionSettings.launches.splice(launchIdx, 1)
@@ -314,10 +318,11 @@
         </div>
       </div>
     </div>
-    <div
+    <output
       v-else-if="currentlySelectedVersion != -1"
-      role="status"
       class="inline-flex text-zinc-100 font-display font-semibold items-center gap-x-4"
+      aria-live="polite"
+      :aria-label="$t('library.admin.import.version.loadingVersion')"
     >
       {{ $t("library.admin.import.version.loadingVersion") }}
       <svg
@@ -336,7 +341,7 @@
           fill="currentFill"
         />
       </svg>
-    </div>
+    </output>
   </div>
 </template>
 

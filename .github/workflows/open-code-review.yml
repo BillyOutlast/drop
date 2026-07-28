@@ -1,0 +1,35 @@
+name: OpenCodeReview PR Review
+
+on:
+  pull_request:
+    branches: [main, rebuild, develop]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  review:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: alibaba/open-code-review@0ced7165718725e15223c3e5a506df7b7e9de51f # v1.7.17
+        with:
+          # Configure in GitHub repo settings → Secrets and variables → Actions
+          llm_url: ${{ secrets.OCR_LLM_URL }}
+          llm_auth_token: ${{ secrets.OCR_LLM_TOKEN }}
+          llm_model: ${{ secrets.OCR_LLM_MODEL }}
+          llm_use_anthropic: "false"
+          llm_extra_body: '{"thinking": {"type": "enabled", "budget_tokens": 16000}}'
+          llm_timeout: "300"
+          language: "English"
+          review_concurrency: "3"
+          # Only post new comments; don't delete or modify history
+          incremental: "true"
+          # Update a single sticky summary comment per PR
+          sticky_summary: "true"
+          # Upload review artifacts for debugging
+          upload_artifacts: "true"

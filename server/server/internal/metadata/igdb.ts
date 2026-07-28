@@ -25,8 +25,6 @@ import type { TaskRunContext } from "../tasks";
 import { logger } from "~/server/internal/logging";
 import type { NitroFetchOptions, NitroFetchRequest } from "nitropack";
 
-type IGDBID = number;
-
 interface TwitchAuthResponse {
   access_token: string;
   expires_in: number;
@@ -40,7 +38,7 @@ interface IGDBErrorResponse {
 }
 
 interface IGDBItem {
-  id: IGDBID;
+  id: number;
 }
 
 interface IGDBGenre extends IGDBItem {
@@ -51,8 +49,8 @@ interface IGDBGenre extends IGDBItem {
 
 // denotes role a company had in a game
 interface IGDBInvolvedCompany extends IGDBItem {
-  company: IGDBID;
-  game: IGDBID;
+  company: number;
+  game: number;
 
   developer: boolean;
   porting: boolean;
@@ -67,12 +65,12 @@ interface IGDBCompany extends IGDBItem {
   name: string;
   country: number; // ISO 3166-1 country code
   description: string;
-  logo: IGDBID;
-  parent: IGDBID;
+  logo: number;
+  parent: number;
   slug: string;
   start_date: number;
-  status: IGDBID;
-  websites: IGDBID[];
+  status: number;
+  websites: number[];
 }
 
 interface IGDBCompanyWebsite extends IGDBItem {
@@ -86,7 +84,7 @@ interface IGDBCover extends IGDBItem {
 
 interface IGDBSearchStub extends IGDBItem {
   name: string;
-  cover?: IGDBID;
+  cover?: number;
   first_release_date?: number; // unix timestamp
   summary: string;
 }
@@ -156,62 +154,62 @@ const IGDB_RATING_TO_STRING: Record<number, string> = {
 
 // https://api-docs.igdb.com/?shell#game
 interface IGDBGameFull extends IGDBSearchStub {
-  age_ratings?: IGDBID[];
+  age_ratings?: number[];
   aggregated_rating?: number;
   aggregated_rating_count?: number;
-  alternative_names?: IGDBID[];
-  artworks?: IGDBID[];
-  bundles?: IGDBID[];
+  alternative_names?: number[];
+  artworks?: number[];
+  bundles?: number[];
   checksum?: string;
-  collections?: IGDBID[];
+  collections?: number[];
   created_at: number; // unix timestamp
-  dlcs?: IGDBID[];
-  expanded_games?: IGDBID[];
-  expansions?: IGDBID[];
-  external_games?: IGDBID[];
-  forks?: IGDBID[];
-  franchise?: IGDBID;
-  franchises?: IGDBID[];
-  game_engines?: IGDBID[];
-  game_localizations?: IGDBID[];
-  game_modes?: IGDBID[];
-  game_status?: IGDBID;
-  game_type?: IGDBID;
-  genres?: IGDBID[];
+  dlcs?: number[];
+  expanded_games?: number[];
+  expansions?: number[];
+  external_games?: number[];
+  forks?: number[];
+  franchise?: number;
+  franchises?: number[];
+  game_engines?: number[];
+  game_localizations?: number[];
+  game_modes?: number[];
+  game_status?: number;
+  game_type?: number;
+  genres?: number[];
   hypes?: number;
-  involved_companies?: IGDBID[];
-  keywords?: IGDBID[];
-  language_supports?: IGDBID[];
-  multiplayer_modes?: IGDBID[];
-  platforms?: IGDBID[];
-  player_perspectives?: IGDBID[];
-  ports?: IGDBID[];
+  involved_companies?: number[];
+  keywords?: number[];
+  language_supports?: number[];
+  multiplayer_modes?: number[];
+  platforms?: number[];
+  player_perspectives?: number[];
+  ports?: number[];
   rating?: number;
   rating_count?: number;
-  release_dates?: IGDBID[];
-  remakes?: IGDBID[];
-  remasters?: IGDBID[];
-  screenshots?: IGDBID[];
-  similar_games?: IGDBID[];
+  release_dates?: number[];
+  remakes?: number[];
+  remasters?: number[];
+  screenshots?: number[];
+  similar_games?: number[];
   slug: string;
-  standalone_expansions?: IGDBID[];
+  standalone_expansions?: number[];
   storyline?: string;
-  tags?: IGDBID[];
-  themes?: IGDBID[];
+  tags?: number[];
+  themes?: number[];
   total_rating?: number;
   total_rating_count?: number;
   updated_at: number;
   url: string;
-  version_parent?: IGDBID;
+  version_parent?: number;
   version_title?: string;
-  videos?: IGDBID[];
-  websites?: IGDBID[];
+  videos?: number[];
+  websites?: number[];
 }
 
 // Api Docs: https://api-docs.igdb.com/
 export class IGDBProvider implements MetadataProvider {
-  private clientId: string;
-  private clientSecret: string;
+  private readonly clientId: string;
+  private readonly clientSecret: string;
   private accessToken: string;
   private accessTokenExpiry: DateTime;
 
@@ -293,17 +291,17 @@ export class IGDBProvider implements MetadataProvider {
         "content-type": "text/plain",
       },
     };
-    const response = await $fetch<T[] | IGDBErrorResponse[]>(
-      finalURL,
-      Object.assign({}, options, overlay),
-    );
+    const response = await $fetch<T[] | IGDBErrorResponse[]>(finalURL, {
+      ...options,
+      ...overlay,
+    });
 
     // should not have an error object if the status code is 200
     return <T[]>response;
   }
 
   private async _getMediaInternal(
-    mediaID: IGDBID,
+    mediaID: number,
     type: string,
     size: string = "t_thumb",
   ) {
@@ -315,7 +313,7 @@ export class IGDBProvider implements MetadataProvider {
     const body = `where id = ${mediaID}; fields image_id;`;
     const response = await this.request<IGDBCover>(type, body);
 
-    if (!response.length || !response[0].image_id) {
+    if (!response.length || !response[0]?.image_id) {
       throw new Error(`No image_id found for ${type} with id ${mediaID}`);
     }
 
@@ -325,23 +323,23 @@ export class IGDBProvider implements MetadataProvider {
     return result;
   }
 
-  private async getCoverURL(id: IGDBID) {
+  private async getCoverURL(id: number) {
     return await this._getMediaInternal(id, "covers", "t_cover_big");
   }
 
-  private async getArtworkURL(id: IGDBID) {
+  private async getArtworkURL(id: number) {
     return await this._getMediaInternal(id, "artworks", "t_1080p");
   }
 
-  private async getScreenshotURL(id: IGDBID) {
+  private async getScreenshotURL(id: number) {
     return await this._getMediaInternal(id, "screenshots", "t_1080p");
   }
 
-  private async getIconURL(id: IGDBID) {
+  private async getIconURL(id: number) {
     return await this._getMediaInternal(id, "covers", "t_thumb");
   }
 
-  private async getCompanyLogoURl(id: IGDBID) {
+  private async getCompanyLogoURl(id: number) {
     return await this._getMediaInternal(id, "company_logos", "t_original");
   }
 
@@ -349,7 +347,7 @@ export class IGDBProvider implements MetadataProvider {
     return msg.length > len ? msg.substring(0, 280) + "..." : msg;
   }
 
-  private async _getGenreInternal(genreID: IGDBID) {
+  private async _getGenreInternal(genreID: number) {
     if (genreID === undefined) throw new Error(`IGDB genreID was undefined`);
 
     const body = `where id = ${genreID}; fields slug,name,url;`;
@@ -364,7 +362,7 @@ export class IGDBProvider implements MetadataProvider {
     return result;
   }
 
-  private async getGenres(genres: IGDBID[] | undefined): Promise<string[]> {
+  private async getGenres(genres: number[] | undefined): Promise<string[]> {
     if (genres === undefined) return [];
 
     const results: string[] = [];
@@ -376,7 +374,7 @@ export class IGDBProvider implements MetadataProvider {
   }
 
   private async getAgeRatings(
-    ageRatingIds: IGDBID[] | undefined,
+    ageRatingIds: number[] | undefined,
   ): Promise<GameMetadataAgeRating[]> {
     if (!ageRatingIds?.length) return [];
 
@@ -395,7 +393,9 @@ export class IGDBProvider implements MetadataProvider {
         results.push({
           organization,
           rating,
-          ratingCoverUrl: ar.rating_cover_url,
+          ...(ar.rating_cover_url
+            ? { ratingCoverUrl: ar.rating_cover_url }
+            : {}),
         });
       }
     }
@@ -415,21 +415,21 @@ export class IGDBProvider implements MetadataProvider {
     const response = await this.request<IGDBSearchStub>("games", body);
 
     const results: GameMetadataSearchResult[] = [];
-    for (let i = 0; i < response.length; i++) {
-      let icon = "";
-      const cover = response[i].cover;
+    for (const item of response) {
+      let icon: string;
+      const cover = item.cover;
       if (cover !== undefined) {
         icon = await this.getIconURL(cover);
       } else {
         icon = "";
       }
 
-      const firstReleaseDate = response[i].first_release_date;
+      const firstReleaseDate = item.first_release_date;
       results.push({
-        id: "" + response[i].id,
-        name: response[i].name,
+        id: "" + item.id,
+        name: item.name,
         icon,
-        description: response[i].summary,
+        description: item.summary,
         year:
           firstReleaseDate === undefined
             ? 0
@@ -439,6 +439,137 @@ export class IGDBProvider implements MetadataProvider {
 
     return results;
   }
+  private async processGameImages(
+    currentGame: IGDBGameFull,
+    id: string,
+    createObject: (data: string) => string,
+    context?: TaskRunContext,
+  ) {
+    let iconRaw: string | Buffer, coverRaw: string | Buffer;
+    const cover = currentGame.cover;
+    if (cover !== undefined) {
+      context?.logger.info("Found cover URL, using...");
+      iconRaw = await this.getIconURL(cover);
+      coverRaw = await this.getCoverURL(cover);
+    } else {
+      context?.logger.info("Missing cover URL, using fallback...");
+      iconRaw = jdenticon.toPng(id, 512) as unknown as string;
+      coverRaw = iconRaw;
+    }
+
+    const icon = createObject(iconRaw as string);
+    const coverID = createObject(coverRaw as string);
+    let banner: string | undefined;
+
+    const images = [coverID];
+    for (const art of currentGame.artworks ?? []) {
+      const objectId = createObject(await this.getArtworkURL(art));
+      if (!banner) banner = objectId;
+      images.push(objectId);
+    }
+
+    if (!banner) {
+      banner = createObject(jdenticon.toPng(id, 512) as unknown as string);
+    }
+
+    for (const screenshot of currentGame.screenshots ?? []) {
+      const objectId = createObject(await this.getScreenshotURL(screenshot));
+      images.push(objectId);
+    }
+
+    return { icon, coverID, banner, images };
+  }
+
+  private async processCompanyData(
+    companyData: { name: string },
+    company: (name: string) => Promise<CompanyModel | undefined>,
+    foundInvolved: { developer: boolean; publisher: boolean },
+    context?: TaskRunContext,
+  ): Promise<CompanyModel | undefined> {
+    context?.logger.info(
+      `Found involved company "${companyData.name}" as: ${foundInvolved.developer ? "developer, " : ""}${foundInvolved.publisher ? "publisher" : ""}`,
+    );
+
+    const res = await company(companyData.name);
+    if (res === undefined) {
+      context?.logger.warn(`Failed to import company "${companyData.name}"`);
+      return undefined;
+    }
+
+    return res;
+  }
+
+  private async processInvolvedCompanyEntry(
+    foundInvolved: IGDBInvolvedCompany,
+    company: (name: string) => Promise<CompanyModel | undefined>,
+    context?: TaskRunContext,
+  ): Promise<{ developers: CompanyModel[]; publishers: CompanyModel[] }> {
+    const developers: CompanyModel[] = [];
+    const publishers: CompanyModel[] = [];
+    const companies = await this.request<{ name: string } & IGDBItem>(
+      "companies",
+      `where id = ${foundInvolved.company}; fields name;`,
+    );
+
+    for (const companyData of companies) {
+      const res = await this.processCompanyData(
+        companyData,
+        company,
+        foundInvolved,
+        context,
+      );
+      if (!res) continue;
+      if (foundInvolved.developer) developers.push(res);
+      if (foundInvolved.publisher) publishers.push(res);
+    }
+
+    return { developers, publishers };
+  }
+
+  private async processInvolvedCompanies(
+    currentGame: IGDBGameFull,
+    company: (name: string) => Promise<CompanyModel | undefined>,
+    context?: TaskRunContext,
+  ) {
+    const publishers: CompanyModel[] = [];
+    const developers: CompanyModel[] = [];
+
+    for (const involvedCompany of currentGame.involved_companies ?? []) {
+      const involved = await this.request<IGDBInvolvedCompany>(
+        "involved_companies",
+        `where id = ${involvedCompany}; fields *;`,
+      );
+      for (const foundInvolved of involved) {
+        const { developers: devs, publishers: pubs } =
+          await this.processInvolvedCompanyEntry(
+            foundInvolved,
+            company,
+            context,
+          );
+        developers.push(...devs);
+        publishers.push(...pubs);
+      }
+    }
+
+    return { publishers, developers };
+  }
+
+  private buildGameDescription(currentGame: IGDBGameFull) {
+    const { summary, storyline } = currentGame;
+    let description: string;
+    let shortDescription: string;
+
+    if (summary.length > (storyline?.length ?? 0)) {
+      description = summary;
+      shortDescription = this.trimMessage(storyline ?? summary, 280);
+    } else {
+      description = storyline ?? summary;
+      shortDescription = this.trimMessage(summary, 280);
+    }
+
+    return { description, shortDescription };
+  }
+
   async fetchGame(
     { id, company, createObject }: _FetchGameMetadataParams,
     context?: TaskRunContext,
@@ -449,85 +580,19 @@ export class IGDBProvider implements MetadataProvider {
 
     context?.logger.info("Using IGDB provider.");
 
-    let iconRaw, coverRaw;
-    const cover = currentGame.cover;
-
-    if (cover !== undefined) {
-      context?.logger.info("Found cover URL, using...");
-      iconRaw = await this.getIconURL(cover);
-      coverRaw = await this.getCoverURL(cover);
-    } else {
-      context?.logger.info("Missing cover URL, using fallback...");
-      iconRaw = jdenticon.toPng(id, 512);
-      coverRaw = iconRaw;
-    }
-
-    const icon = createObject(iconRaw);
-    const coverID = createObject(coverRaw);
-    let banner;
-
-    const images = [coverID];
-    for (const art of currentGame.artworks ?? []) {
-      const objectId = createObject(await this.getArtworkURL(art));
-      if (!banner) {
-        banner = objectId;
-      }
-      images.push(objectId);
-    }
-
-    if (!banner) {
-      banner = createObject(jdenticon.toPng(id, 512));
-    }
-
-    for (const screenshot of currentGame.screenshots ?? []) {
-      const objectId = createObject(await this.getScreenshotURL(screenshot));
-      images.push(objectId);
-    }
-
+    const { icon, coverID, banner, images } = await this.processGameImages(
+      currentGame,
+      id,
+      createObject,
+      context,
+    );
     context?.progress(20);
 
-    const publishers: CompanyModel[] = [];
-    const developers: CompanyModel[] = [];
-    for (const involvedCompany of currentGame.involved_companies ?? []) {
-      // get details about the involved company
-      const involved_company_response = await this.request<IGDBInvolvedCompany>(
-        "involved_companies",
-        `where id = ${involvedCompany}; fields *;`,
-      );
-      for (const foundInvolved of involved_company_response) {
-        // now we need to get the actual company so we can get the name
-        const findCompanyResponse = await this.request<
-          { name: string } & IGDBItem
-        >("companies", `where id = ${foundInvolved.company}; fields name;`);
-
-        for (const companyData of findCompanyResponse) {
-          context?.logger.info(
-            `Found involved company "${company.name}" as: ${foundInvolved.developer ? "developer, " : ""}${foundInvolved.publisher ? "publisher" : ""}`,
-          );
-
-          const res = await company(companyData.name);
-          if (res === undefined) {
-            context?.logger.warn(
-              `Failed to import company "${companyData.name}"`,
-            );
-            continue;
-          }
-
-          // if company was a dev or publisher
-          // CANNOT use else since a company can be both
-          if (foundInvolved.developer) {
-            context?.logger.info(`Imported developer "${companyData.name}"`);
-            developers.push(res);
-          }
-
-          if (foundInvolved.publisher) {
-            context?.logger.info(`Imported publisher "${companyData.name}"`);
-            publishers.push(res);
-          }
-        }
-      }
-    }
-
+    const { publishers, developers } = await this.processInvolvedCompanies(
+      currentGame,
+      company,
+      context,
+    );
     context?.progress(80);
 
     const firstReleaseDate = currentGame.first_release_date;
@@ -547,19 +612,8 @@ export class IGDBProvider implements MetadataProvider {
     const genres = await this.getGenres(currentGame.genres);
     const ageRatings = await this.getAgeRatings(currentGame.age_ratings);
 
-    let description = "";
-    let shortDescription = "";
-
-    if (currentGame.summary.length > (currentGame.storyline?.length ?? 0)) {
-      description = currentGame.summary;
-      shortDescription = this.trimMessage(
-        currentGame.storyline ?? currentGame.summary,
-        280,
-      );
-    } else {
-      description = currentGame.storyline ?? currentGame.summary;
-      shortDescription = this.trimMessage(currentGame.summary, 280);
-    }
+    const { description, shortDescription } =
+      this.buildGameDescription(currentGame);
 
     const metadata = {
       id: currentGame.id.toString(),
@@ -597,34 +651,33 @@ export class IGDBProvider implements MetadataProvider {
       `where name = "${query}"; fields *; limit 1;`,
     );
 
-    for (const company of response) {
-      const logo = createObject(await this.getCompanyLogoURl(company.logo));
+    const company = response[0];
+    if (!company) return undefined;
 
-      let company_url = "";
-      for (const companySite of company.websites) {
-        const companySiteRes = await this.request<IGDBCompanyWebsite>(
-          "company_websites",
-          `where id = ${companySite}; fields *;`,
-        );
+    const logo = createObject(await this.getCompanyLogoURl(company.logo));
 
-        for (const site of companySiteRes) {
-          if (company_url.length <= 0) company_url = site.url;
-        }
+    let company_url = "";
+    for (const companySite of company.websites) {
+      const companySiteRes = await this.request<IGDBCompanyWebsite>(
+        "company_websites",
+        `where id = ${companySite}; fields *;`,
+      );
+
+      for (const site of companySiteRes) {
+        if (company_url.length <= 0) company_url = site.url;
       }
-      const metadata: CompanyMetadata = {
-        id: "" + company.id,
-        name: company.name,
-        shortDescription: this.trimMessage(company.description, 280),
-        description: company.description,
-        website: company_url,
-
-        logo: logo,
-        banner: logo,
-      };
-
-      return metadata;
     }
+    const metadata: CompanyMetadata = {
+      id: "" + company.id,
+      name: company.name,
+      shortDescription: this.trimMessage(company.description, 280),
+      description: company.description,
+      website: company_url,
 
-    return undefined;
+      logo: logo,
+      banner: logo,
+    };
+
+    return metadata;
   }
 }

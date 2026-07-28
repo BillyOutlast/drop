@@ -3,15 +3,43 @@ import { globalIgnores } from "eslint/config";
 import withNuxt from "./.nuxt/eslint.config.mjs";
 import eslintConfigPrettier from "eslint-config-prettier/flat";
 import vueI18n from "@intlify/eslint-plugin-vue-i18n";
-import noPrismaDelete from "./rules/no-prisma-delete.mts";
+import vuejsAccessibility from "eslint-plugin-vuejs-accessibility";
+import noPrismaDelete from "./rules/no-prisma-delete.ts";
 
 export default withNuxt([
   globalIgnores([".data/*"]),
 
   eslintConfigPrettier,
 
+  // vuejs-accessibility plugin — flat/recommended
+  ...vuejsAccessibility.configs["flat/recommended"],
+  {
+    rules: {
+      "vuejs-accessibility/label-has-for": [
+        "error",
+        { required: { some: ["nesting", "id"] } },
+      ],
+      "vuejs-accessibility/no-autofocus": "off",
+      "vuejs-accessibility/anchor-has-content": [
+        "error",
+        {
+          accessibleChildren: [
+            "i18n-t",
+            "DropWordmark",
+            "ApplicationLogo",
+            "DropLogo",
+          ],
+          components: ["NuxtLink"],
+        },
+      ],
+      "vuejs-accessibility/form-control-has-label": [
+        "error",
+        { labelComponents: ["i18n-t", "label"] },
+      ],
+    },
+  },
+
   // vue-i18n plugin
-  // @ts-expect-error
   ...vueI18n.configs.recommended,
   // @ts-expect-error
   {

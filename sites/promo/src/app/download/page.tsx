@@ -1,15 +1,15 @@
-import { Container } from '@/components/container'
-import DownloadCards from '@/components/downloads'
-import { Footer } from '@/components/footer'
-import { GradientBackground } from '@/components/gradient'
-import { Navbar } from '@/components/navbar'
-import { Heading, Lead, Subheading } from '@/components/text'
-import type { Metadata } from 'next'
+import { Container } from "@/components/container";
+import DownloadCards from "@/components/downloads";
+import { Footer } from "@/components/footer";
+import { GradientBackground } from "@/components/gradient";
+import { Navbar } from "@/components/navbar";
+import { Heading, Lead, Subheading } from "@/components/text";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Download',
-  description: 'Download the latest version of the Drop client.',
-}
+  title: "Download",
+  description: "Download the latest version of the Drop client.",
+};
 
 function Header() {
   return (
@@ -22,7 +22,7 @@ function Header() {
       </Lead>
       <Subheading className="mt-2">Last updated 15-11-2025</Subheading>
     </Container>
-  )
+  );
 }
 
 export default function DownloadPage() {
@@ -38,5 +38,5 @@ export default function DownloadPage() {
 
       <Footer />
     </main>
-  )
+  );
 }

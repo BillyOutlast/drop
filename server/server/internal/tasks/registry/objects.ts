@@ -52,8 +52,9 @@ export default defineDropTask({
 });
 
 /**
- * Builds a map of Prisma models and their fields that may contain object IDs
- * @returns
+ * Builds a map of Prisma models and fields that may reference object IDs.
+ *
+ * @returns A field reference map containing each model, its scalar object ID fields, and its array object ID fields.
  */
 function buildRefMap(): FieldReferenceMap {
   const tables = Object.keys(prisma).filter(
@@ -83,79 +84,132 @@ function buildRefMap(): FieldReferenceMap {
 }
 
 /**
- * Searches all models for a given id in their fields
- * @param id
- * @param fieldRefMap
- * @returns
+ * Builds WHERE conditions for querying references.
+ *
+ * @param objectIds - The object IDs to check
+ * @param fields - Scalar fields to check
+ * @param arrayFields - Array fields to check
+ * @returns Array of OR condition objects
  */
-async function isReferencedInModelFields(
-  id: string,
-  fieldRefMap: FieldReferenceMap,
-): Promise<boolean> {
-  // TODO: optimize the built queries
-  // rn it runs a query for every id over each db table
-  for (const { model, fields, arrayFields } of Object.values(fieldRefMap)) {
-    const singleFieldOrConditions = fields
-      ? fields.map((field) => ({
-          [field]: {
-            equals: id,
-          },
-        }))
-      : [];
-    const arrayFieldOrConditions = arrayFields
-      ? arrayFields.map((field) => ({
-          [field]: {
-            has: id,
-          },
-        }))
-      : [];
+function buildOrConditions(
+  objectIds: string[],
+  fields: string[],
+  arrayFields: string[],
+): Array<Record<string, unknown>> {
+  const singleFieldConditions = fields.map((field) => ({
+    [field]: { in: objectIds },
+  }));
 
-    // prisma.game.findFirst({
-    //   where: {
-    //     OR: [
-    //       // single item
-    //       {
-    //         mIconId: {
-    //           equals: "",
-    //         },
-    //       },
-    //       // array
-    //       {
-    //         mImageCarousel: {
-    //           has: "",
-    //         },
-    //       },
-    //     ],
-    //   },
-    // });
+  const arrayFieldConditions = arrayFields.map((field) => ({
+    [field]: { hasSome: objectIds },
+  }));
 
-    // @ts-expect-error using unknown because im not typing this mess omg
-    const found = await model.findFirst({
-      where: { OR: [...singleFieldOrConditions, ...arrayFieldOrConditions] },
-    });
-
-    if (found) return true;
-  }
-
-  return false;
+  return [...singleFieldConditions, ...arrayFieldConditions];
 }
 
 /**
- * Takes a list of objects and checks if they are referenced in any model fields
- * @param objects
- * @param fieldRefMap
- * @returns
+ * Extracts referenced object IDs from query results.
+ *
+ * @param rows - Query result rows
+ * @param fields - Scalar fields to extract
+ * @param arrayFields - Array fields to extract
+ * @param objectIds - Valid object IDs to filter
+ * @param referenced - Set to accumulate referenced IDs into
+ */
+function extractScalarReferences(
+  row: Record<string, unknown>,
+  fields: string[],
+  validIds: Set<string>,
+  referenced: Set<string>,
+): void {
+  for (const field of fields) {
+    const val = row[field];
+    if (typeof val === "string" && validIds.has(val)) {
+      referenced.add(val);
+    }
+  }
+}
+
+function extractArrayReferences(
+  row: Record<string, unknown>,
+  arrayFields: string[],
+  validIds: Set<string>,
+  referenced: Set<string>,
+): void {
+  for (const field of arrayFields) {
+    const arr = row[field];
+    if (!Array.isArray(arr)) continue;
+    for (const val of arr) {
+      if (typeof val === "string" && validIds.has(val)) {
+        referenced.add(val);
+      }
+    }
+  }
+}
+
+function extractReferencedIds(
+  rows: Array<Record<string, unknown>>,
+  fields: string[],
+  arrayFields: string[],
+  objectIds: string[],
+  referenced: Set<string>,
+): void {
+  const validIds = new Set(objectIds);
+  for (const row of rows) {
+    extractScalarReferences(row, fields, validIds, referenced);
+    extractArrayReferences(row, arrayFields, validIds, referenced);
+  }
+}
+
+/**
+ * Identifies object IDs referenced by the configured scalar and array fields.
+ *
+ * @param objectIds - The object IDs to check
+ * @param fieldRefMap - The models and fields to inspect
+ * @returns A set containing the referenced object IDs
+ */
+async function findReferencedIds(
+  objectIds: string[],
+  fieldRefMap: FieldReferenceMap,
+): Promise<Set<string>> {
+  const referenced = new Set<string>();
+  const BATCH_SIZE = 500;
+
+  for (const { model, fields, arrayFields } of Object.values(fieldRefMap)) {
+    // Process in batches to avoid overwhelming the query builder with large ID lists
+    for (let i = 0; i < objectIds.length; i += BATCH_SIZE) {
+      const batch = objectIds.slice(i, i + BATCH_SIZE);
+      const orConditions = buildOrConditions(batch, fields, arrayFields);
+
+      if (orConditions.length === 0) continue;
+
+      // @ts-expect-error dynamic model access
+      const rows = await model.findMany({
+        where: { OR: orConditions },
+        select: Object.fromEntries([
+          ...fields.map((f) => [f, true]),
+          ...arrayFields.map((f) => [f, true]),
+        ]),
+      });
+
+      extractReferencedIds(rows, fields, arrayFields, batch, referenced);
+    }
+  }
+
+  return referenced;
+}
+
+/**
+ * Identifies object IDs that are not referenced by any model fields.
+ *
+ * @param objects - The object IDs to inspect
+ * @param fieldRefMap - The model fields that may reference object IDs
+ * @returns The object IDs with no references
  */
 async function findUnreferencedStrings(
   objects: string[],
   fieldRefMap: FieldReferenceMap,
 ): Promise<string[]> {
-  const unreferenced: string[] = [];
-
-  for (const obj of objects) {
-    const isRef = await isReferencedInModelFields(obj, fieldRefMap);
-    if (!isRef) unreferenced.push(obj);
-  }
-
-  return unreferenced;
+  const referenced = await findReferencedIds(objects, fieldRefMap);
+  return objects.filter((id) => !referenced.has(id));
 }

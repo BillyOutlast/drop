@@ -1,5 +1,6 @@
 import aclManager from "~/server/internal/acls";
 import prisma from "~/server/internal/db/database";
+import { validateAndSanitizeBody } from "~/server/internal/validation/body";
 
 export default defineEventHandler(async (h3) => {
   const allowed = await aclManager.allowSystemACL(h3, ["game:update"]);
@@ -8,19 +9,26 @@ export default defineEventHandler(async (h3) => {
   const body = await readBody(h3);
   const id = getRouterParam(h3, "id")!;
 
-  const restOfTheBody = { ...body };
-  delete restOfTheBody["id"];
+  const allowedFields = new Set([
+    "mName",
+    "mShortDescription",
+    "mDescription",
+    "mReleased",
+    "mIconObjectId",
+    "mBannerObjectId",
+    "mCoverObjectId",
+    "mImageCarouselObjectIds",
+    "mImageLibraryObjectIds",
+    "featured",
+  ]);
+  const sanitizedData = validateAndSanitizeBody(body, allowedFields);
 
   const newObj = (
     await prisma.game.updateManyAndReturn({
-      where: {
-        id: id,
-      },
-      data: restOfTheBody,
-      // I would put a select here, but it would be based on the body, and muck up the types
+      where: { id },
+      data: sanitizedData,
     })
   ).at(0);
-
   if (!newObj)
     throw createError({ statusCode: 404, message: "Game not found" });
 

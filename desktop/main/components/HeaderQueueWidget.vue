@@ -12,9 +12,7 @@ const props = defineProps<{ object?: QueueState["queue"][0] }>();
     <ArrowDownTrayIcon
       :class="[
         'h-5 z-50',
-        props.object
-          ? 'text-white hover:text-zinc-300'
-          : 'text-zinc-600 hover:text-zinc-300',
+        props.object ? 'text-white hover:text-zinc-300' : 'text-zinc-600 hover:text-zinc-300',
       ]"
     />
     <div

@@ -6,6 +6,7 @@
       <img
         :src="useObject(company.mBannerObjectId)"
         class="absolute inset-0 w-full h-full object-cover object-center"
+        alt=""
       />
       <div class="absolute inset-0 bg-zinc-900/80" />
 
@@ -15,14 +16,14 @@
           :object-id="company.mLogoObjectId"
           :open-modal="() => (uploadLogoOpen = true)"
           :hover-text="$t('library.admin.metadata.companies.editor.uploadIcon')"
-          :image-alt="`${company.mName} logo`"
+          :alt-description="`${company.mName} logo`"
         />
         <div class="flex flex-col">
           <h1
             class="group/name inline-flex items-center gap-x-3 text-5xl font-bold font-display text-zinc-100"
           >
             {{ company.mName }}
-            <button @click="() => editName()">
+            <button type="button" @click="() => editName()">
               <PencilIcon
                 class="transition duration-200 xl:opacity-0 group-hover/name:opacity-100 size-8"
               />
@@ -35,7 +36,7 @@
               company.mShortDescription ||
               $t("library.admin.metadata.companies.editor.noDescription")
             }}
-            <button @click="() => editShortDescription()">
+            <button type="button" @click="() => editShortDescription()">
               <PencilIcon
                 class="transition duration-200 xl:opacity-0 group-hover/description:opacity-100 size-5"
               />
@@ -48,7 +49,7 @@
               company.mWebsite ||
               $t("library.admin.metadata.companies.editor.websitePlaceholder")
             }}
-            <button @click="() => editWebsite()">
+            <button type="button" @click="() => editWebsite()">
               <PencilIcon
                 class="transition duration-200 xl:opacity-0 group-hover/website:opacity-100 size-4"
               />
@@ -76,6 +77,7 @@
       </div>
       <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
         <button
+          type="button"
           class="block rounded-md bg-blue-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-blue-500 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
           @click="() => (addGameModelOpen = true)"
         >
@@ -98,6 +100,7 @@
         v-model="searchQuery"
         type="text"
         name="search"
+        aria-label="Search games"
         class="col-start-1 row-start-1 block w-full rounded-md bg-zinc-900 py-1.5 pl-10 pr-3 text-base text-zinc-100 outline outline-1 -outline-offset-1 outline-zinc-700 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:pl-9 sm:text-sm/6"
         :placeholder="$t('library.admin.metadata.companies.searchGames')"
       />
@@ -107,7 +110,6 @@
       />
     </div>
     <ul
-      role="list"
       class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
     >
       <li
@@ -185,6 +187,7 @@
                 >
               </div>
               <button
+                type="button"
                 class="w-fit rounded-md bg-red-600 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-red-500 hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
                 @click="() => removeGame(game.id)"
               >
@@ -294,7 +297,7 @@ function buildToggleProxy(param: "developed" | "published") {
     set(_target, prop, value) {
       if (typeof value !== "boolean") return false;
       const id = prop.toString();
-      const exists = company.value[param].findIndex((e) => e === id);
+      const exists = company.value[param].indexOf(id);
       if (value && exists == -1) {
         company.value[param].push(id);
       }
@@ -325,12 +328,12 @@ async function removeGame(gameId: string) {
   if (gameIndex == -1) return;
   games.value.splice(gameIndex, 1);
 
-  const publishedIndex = company.value.published.findIndex((e) => e === gameId);
+  const publishedIndex = company.value.published.indexOf(gameId);
   if (publishedIndex != -1) {
     company.value.published.splice(publishedIndex, 1);
   }
 
-  const developedIndex = company.value.developed.findIndex((e) => e === gameId);
+  const developedIndex = company.value.developed.indexOf(gameId);
   if (developedIndex != -1) {
     company.value.developed.splice(developedIndex, 1);
   }

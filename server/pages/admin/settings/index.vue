@@ -14,10 +14,11 @@
           >
           <div class="mt-2">
             <input
-              id="name"
+              id="serverName"
               v-model="settings.generalSettings.serverName"
               type="text"
               name="serverName"
+              autocomplete="organization"
               :placeholder="$t('settings.admin.general.serverNamePlaceholder')"
               class="block w-full rounded-md bg-zinc-800 px-3 py-1.5 text-base text-zinc-100 outline outline-1 -outline-offset-1 outline-zinc-700 placeholder:text-zinc-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6"
               @input="(event) => updateServerName(event)"
@@ -26,7 +27,7 @@
         </div>
 
         <div class="mt-4">
-          <p for="logo" class="block text-sm/6 font-medium text-zinc-100">
+          <p class="block text-sm/6 font-medium text-zinc-100">
             {{ $t("settings.admin.general.logo") }}
           </p>
           <ul class="flex gap-3">
@@ -36,7 +37,9 @@
                   :hover-text="$t('settings.admin.general.uploadLogo')"
                   :open-modal="openModal"
                   :object-id="mCustomLogoObjectId"
-                  :image-alt="$t('settings.admin.general.applicationLogo')"
+                  :alt-description="
+                    $t('settings.admin.general.applicationLogo')
+                  "
                 />
               </div>
               <label class="flex flex-col text-zinc-100 text-sm items-center">
@@ -55,7 +58,14 @@
             </li>
             <li class="w-40 flex flex-col items-center">
               <div class="flex w-25 mt-2 mb-2 h-full">
-                <DropLogo @click="() => updateFormLogo(null)" />
+                <button
+                  type="button"
+                  aria-label="Use default logo"
+                  class="cursor-pointer"
+                  @click="() => updateFormLogo(null)"
+                >
+                  <DropLogo />
+                </button>
               </div>
               <label class="flex flex-col text-zinc-100 text-sm items-center">
                 <div class="flex items-center">
@@ -118,7 +128,7 @@ const mCustomLogoObjectId = ref<string>(
   settings.value.generalSettings.mLogoObjectId || "",
 );
 
-const updateServerName = (event: InputEvent) => {
+const updateServerName = (event: Event) => {
   settings.value.generalSettings.serverName =
     (event.target as HTMLInputElement)?.value || "";
   allowSave.value = true;
@@ -166,7 +176,7 @@ function updateLogo(response: { id: string }) {
   allowSave.value = true;
 }
 
-const updateFormLogo = (event: InputEvent | null) => {
+const updateFormLogo = (event: Event | null) => {
   settings.value.generalSettings.mLogoObjectId =
     (event?.target as HTMLInputElement)?.value || null;
   allowSave.value = true;

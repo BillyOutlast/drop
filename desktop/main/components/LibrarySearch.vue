@@ -1,25 +1,20 @@
 <template>
   <div class="flex flex-col h-full">
     <div class="mb-3 inline-flex gap-x-2">
-      <div
-        class="relative transition-transform duration-300 hover:scale-105 active:scale-95"
-      >
-        <div
-          class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"
-        >
-          <MagnifyingGlassIcon
-            class="h-5 w-5 text-zinc-400"
-            aria-hidden="true"
-          />
+      <div class="relative transition-transform duration-300 hover:scale-105 active:scale-95">
+        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+          <MagnifyingGlassIcon class="h-5 w-5 text-zinc-400" aria-hidden="true" />
         </div>
         <input
           type="text"
           v-model="searchQuery"
+          aria-label="Search library"
           class="block w-full rounded-lg border-0 bg-zinc-800/50 py-2 pl-10 pr-3 text-zinc-100 placeholder:text-zinc-500 focus:bg-zinc-800 focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm sm:leading-6"
           placeholder="Search library..."
         />
       </div>
       <button
+        type="button"
         @click="() => calculateGames(true, true)"
         class="p-1 flex items-center justify-center transition-transform duration-300 size-10 hover:scale-110 active:scale-90 rounded-lg bg-zinc-800/50 text-zinc-100"
       >
@@ -27,16 +22,15 @@
       </button>
     </div>
 
-    <TransitionGroup
-      name="list"
-      tag="ul"
-      class="flex flex-col gap-y-1.5 h-full"
-    >
+    <TransitionGroup name="list" tag="ul" class="flex flex-col gap-y-1.5 h-full">
       <Disclosure
         as="div"
         v-for="(nav, navIndex) in filteredNavigation"
         :key="nav.id"
-        :class="['first:pt-0 last:pb-0', nav.tools && !filteredNavigation[navIndex - 1].tools ? 'mt-auto' : '']"
+        :class="[
+          'first:pt-0 last:pb-0',
+          nav.tools && !filteredNavigation[navIndex - 1]?.tools ? 'mt-auto' : '',
+        ]"
         v-slot="{ open }"
         :default-open="nav.deft"
       >
@@ -44,9 +38,7 @@
           <DisclosureButton
             class="flex w-full items-center justify-between text-left text-gray-900 dark:text-white"
           >
-            <span class="text-sm font-semibold font-display">{{
-              nav.name
-            }}</span>
+            <span class="text-sm font-semibold font-display">{{ nav.name }}</span>
             <span class="ml-6 relative flex size-4">
               <MinusIcon class="absolute inset-0 size-4" aria-hidden="true" />
               <MinusIcon
@@ -62,7 +54,7 @@
         <DisclosurePanel as="dd" class="mt-2 flex flex-col gap-y-1.5">
           <NuxtLink
             v-for="item in nav.items"
-            :key="nav.id"
+            :key="item.id"
             :class="[
               'transition-all duration-300 rounded-lg flex items-center px-1 py-0.5 hover:scale-105 active:scale-95 hover:shadow-lg hover:shadow-zinc-950/50',
               currentNavigation == item.id
@@ -74,9 +66,7 @@
             :href="item.route"
           >
             <div class="flex items-center w-full gap-x-2">
-              <div
-                class="flex-none transition-transform duration-300 hover:-rotate-2"
-              >
+              <div class="flex-none transition-transform duration-300 hover:-rotate-2">
                 <img
                   class="size-6 object-cover bg-zinc-900 rounded transition-all duration-300 shadow-sm"
                   :src="useObject(item.icon)"
@@ -89,9 +79,7 @@
                 </p>
                 <p
                   class="truncate text-[10px] font-bold uppercase font-display"
-                  :class="[
-                    getGameStatusStyleText(games[item.id].status.value)[0],
-                  ]"
+                  :class="[getGameStatusStyleText(games[item.id].status.value)[0]]"
                 >
                   {{ getGameStatusStyleText(games[item.id].status.value)[1] }}
                 </p>
@@ -104,11 +92,8 @@
         </DisclosurePanel>
       </Disclosure>
     </TransitionGroup>
-    <div
-      v-if="loading"
-      class="h-full grow flex p-8 justify-center text-zinc-100"
-    >
-      <div role="status">
+    <div v-if="loading" class="h-full grow flex p-8 justify-center text-zinc-100">
+      <output aria-live="polite">
         <svg
           aria-hidden="true"
           class="w-6 h-6 text-transparent animate-spin fill-zinc-600"
@@ -126,24 +111,19 @@
           />
         </svg>
         <span class="sr-only">Loading...</span>
-      </div>
+      </output>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { Disclosure, DisclosureButton, DisclosurePanel } from "@headlessui/vue";
-import {
-  ArrowPathIcon,
-  MagnifyingGlassIcon,
-  MinusIcon,
-  PlusIcon,
-} from "@heroicons/vue/20/solid";
+import { ArrowPathIcon, MagnifyingGlassIcon, MinusIcon } from "@heroicons/vue/20/solid";
 import { invoke } from "@tauri-apps/api/core";
 import {
   type EmptyGameStatusEnum,
   InstalledType,
-  type Collection as Collection,
+  type Collection,
   type Game,
   type GameStatus,
 } from "~/types";
@@ -181,9 +161,8 @@ function getGameStatusStyleText(status: GameStatus): [string, string] {
     if (status.install_type.type === InstalledType.SetupRequired) {
       return ["text-yellow-500", "Setup required"];
     }
-    throw (
-      "Non-exhaustive installed type, missing: " +
-      JSON.stringify(status.install_type)
+    throw new Error(
+      "Non-exhaustive installed type, missing: " + JSON.stringify(status.install_type),
     );
   }
   return [gameStatusTextStyle[status.type], gameStatusText[status.type]];
@@ -235,10 +214,7 @@ async function calculateGamesLogic(clearAll = false, forceRefresh = false) {
   });
   const allGames = [
     ...library.library,
-    ...library.collections
-      .map((e) => e.entries)
-      .flat()
-      .map((e) => e.game),
+    ...library.collections.flatMap((e) => e.entries).map((e) => e.game),
     ...library.other,
     ...library.missing,
   ].filter((v, i, a) => a.indexOf(v) === i);
@@ -327,8 +303,7 @@ const currentNavigation = computed(() => {
 });
 
 const filteredNavigation = computed(() => {
-  if (!searchQuery.value)
-    return navigation.value.map((e, i) => ({ ...e, index: i }));
+  if (!searchQuery.value) return navigation.value.map((e, i) => ({ ...e, index: i }));
   const query = searchQuery.value.toLowerCase();
   return navigation.value
     .map((c) => ({

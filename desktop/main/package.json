@@ -8,7 +8,11 @@
     "dev": "nuxt dev",
     "postinstall": "nuxt prepare",
     "tauri": "tauri",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "format:check": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "lint": "prettier --check .",
+    "test": "vitest run"
   },
   "dependencies": {
     "@headlessui/vue": "^1.7.23",
@@ -19,12 +23,12 @@
     "@tauri-apps/plugin-os": "^2.3.2",
     "@tauri-apps/plugin-shell": "^2.3.3",
     "@types/node": "^25.5.0",
-    "koa": "^2.16.1",
+    "koa": "^3.1.2",
     "markdown-it": "^14.1.0",
     "micromark": "^4.0.1",
     "nuxt": "^4.4.8",
     "scss": "^0.2.4",
-    "vue-router": "latest",
+    "vue-router": "4.5.1",
     "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
@@ -32,10 +36,12 @@
     "@tailwindcss/typography": "^0.5.15",
     "@types/markdown-it": "^14.1.2",
     "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.47",
+    "postcss": "^8.5.18",
     "sass-embedded": "^1.79.4",
     "tailwindcss": "^3.4.13",
     "typescript": "^5.8.3",
+    "vitest": "^4.1.10",
+    "vue": "3.5.17",
     "vue-tsc": "^2.2.10"
   }
 }

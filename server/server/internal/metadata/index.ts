@@ -17,14 +17,14 @@ import { PriorityListIndexed } from "../utils/prioritylist";
 import { systemConfig } from "../config/sys-conf";
 import type { TaskRunContext } from "../tasks";
 import taskHandler, { wrapTaskContext } from "../tasks";
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 import { fuzzy } from "fast-fuzzy";
 import { logger } from "~/server/internal/logging";
 import { createGameImportTaskId } from "../library";
 import type { GameTagModel } from "~/prisma/client/models";
 
 export class MissingMetadataProviderConfig extends Error {
-  private providerName: string;
+  private readonly providerName: string;
 
   constructor(configKey: string, providerName: string) {
     super(`Missing config item ${configKey} for ${providerName}`);
@@ -36,7 +36,7 @@ export class MissingMetadataProviderConfig extends Error {
   }
 }
 
-// TODO: add useragent to all outbound api calls (best practice)
+// User-agent string sent with outbound API calls per HTTP best practice
 export const DropUserAgent = `Drop/${systemConfig.getDropVersion()}`;
 
 export abstract class MetadataProvider {
@@ -56,9 +56,9 @@ export abstract class MetadataProvider {
 
 export class MetadataHandler {
   // Ordered by priority
-  private providers: PriorityListIndexed<MetadataProvider> =
+  private readonly providers: PriorityListIndexed<MetadataProvider> =
     new PriorityListIndexed("source");
-  private objectHandler: ObjectTransactionalHandler =
+  private readonly objectHandler: ObjectTransactionalHandler =
     new ObjectTransactionalHandler();
 
   addProvider(provider: MetadataProvider, priority: number = 0) {
@@ -81,27 +81,27 @@ export class MetadataHandler {
     for (const provider of this.providers.values()) {
       const queryTransformationPromise = new Promise<
         InternalGameMetadataResult[]
-        // TODO: fix eslint error
-        // eslint-disable-next-line no-async-promise-executor
-      >(async (resolve, reject) => {
+      >((resolve, reject) => {
         setTimeout(
           () => reject(new Error("Timeout while fetching results")),
           systemConfig.getMetadataTimeout(),
         );
-        try {
-          const results = await provider.search(query);
-          const mappedResults: InternalGameMetadataResult[] = results.map(
-            (result) =>
-              Object.assign({}, result, {
+        (async () => {
+          try {
+            const results = await provider.search(query);
+            const mappedResults: InternalGameMetadataResult[] = results.map(
+              (result) => ({
+                ...result,
                 sourceId: provider.source(),
                 sourceName: provider.name(),
               }),
-          );
-          resolve(mappedResults);
-        } catch (e) {
-          logger.warn(e);
-          reject(e);
-        }
+            );
+            resolve(mappedResults);
+          } catch (e) {
+            logger.warn(e);
+            reject(e);
+          }
+        })();
       });
       promises.push(queryTransformationPromise);
     }
@@ -109,8 +109,7 @@ export class MetadataHandler {
     const results = await Promise.allSettled(promises);
     const successfulResults = results
       .filter((result) => result.status === "fulfilled")
-      .map((result) => result.value)
-      .flat()
+      .flatMap((result) => result.value)
       .map((result) => {
         const match = fuzzy(query, result.name);
         return { ...result, fuzzy: match };
@@ -240,7 +239,7 @@ export class MetadataHandler {
             ReturnType<typeof metadataHandler.fetchCompany>
           >;
         } = {};
-        let metadata: GameMetadata | undefined = undefined;
+        let metadata: GameMetadata | undefined;
         try {
           metadata = await provider.fetchGame(
             {

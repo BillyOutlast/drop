@@ -54,13 +54,10 @@
                 class="flex grow flex-col gap-y-5 overflow-y-auto bg-zinc-950 px-4 pb-4"
               >
                 <div class="inline-flex items-center py-4 px-4">
-                  <DropWordmark class="h-full w-auto" alt="Drop`" />
+                  <DropWordmark class="h-full w-auto" alt="Drop" />
                 </div>
-                <nav>
-                  <ul
-                    role="list"
-                    class="grid grid-cols-2 items-stretch gap-4 px-5"
-                  >
+                <nav aria-label="Admin navigation">
+                  <ul class="grid grid-cols-2 items-stretch gap-4 px-5">
                     <li v-for="(item, itemIdx) in navigation" :key="item.route">
                       <NuxtLink
                         :href="item.route"
@@ -101,8 +98,8 @@
           >{{ $t("header.admin.admin") }}</span
         >
       </div>
-      <nav class="mt-8">
-        <ul role="list" class="flex flex-col items-stretch space-y-4 mx-2">
+      <nav aria-label="Admin navigation" class="mt-8">
+        <ul class="flex flex-col items-stretch space-y-4 mx-2">
           <li v-for="(item, itemIdx) in navigation" :key="item.route">
             <NuxtLink
               :href="item.route"
@@ -125,7 +122,7 @@
       </nav>
     </div>
 
-    <div
+    <header
       class="sticky top-0 z-40 lg:pl-20 border-b border-zinc-800 bg-zinc-950 shadow-sm"
     >
       <div class="flex items-center gap-x-4 px-4 py-2 sm:px-6 lg:px-8">
@@ -170,7 +167,7 @@
           <UserHeaderUserWidget />
         </ol>
       </div>
-    </div>
+    </header>
 
     <main class="lg:pl-20 min-h-screen bg-zinc-900 flex flex-col">
       <div

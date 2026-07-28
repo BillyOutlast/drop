@@ -1,0 +1,3 @@
+# Incremental test run: only tests affected by pushed changes.
+# Full suite still runs in CI.
+pnpm --filter drop test:changed

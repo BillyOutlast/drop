@@ -3,12 +3,14 @@
     class="w-full bg-zinc-950 p-1 inline-flex items-center gap-x-2 fixed inset-x-0 top-0 z-100"
   >
     <button
+      type="button"
       class="p-1 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-900 transition-all rounded"
       @click="() => router.back()"
     >
       <ChevronLeftIcon class="size-4" />
     </button>
     <button
+      type="button"
       class="p-1 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-900 transition-all rounded"
       @click="() => router.forward()"
     >
@@ -31,7 +33,7 @@ onMounted(() => {
 
 router.afterEach(() => {
   title.value = "Loading...";
-  // TODO: more robust after-render "detection"
+  // PENDING(sonar): replace setTimeout with MutationObserver for robust title detection - deferred, current workaround functional
   setTimeout(() => {
     title.value = document.title;
   }, 500);

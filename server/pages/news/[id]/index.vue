@@ -11,7 +11,7 @@
                 ? useObject(article.imageObjectId)
                 : '/wallpapers/news-placeholder.jpg'
             "
-            alt=""
+            :alt="article.title"
             class="w-full h-full object-cover blur-sm scale-110"
           />
           <div
@@ -31,6 +31,7 @@
 
             <button
               v-if="user?.admin"
+              type="button"
               class="px-2 py-1 rounded bg-red-900/50 backdrop-blur-sm transition text-sm/6 font-semibold text-red-400 hover:text-red-100 inline-flex gap-x-2 items-center duration-200 hover:scale-105"
               @click="() => (currentlyDeleting = article)"
             >

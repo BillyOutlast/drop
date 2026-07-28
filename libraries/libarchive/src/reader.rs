@@ -49,21 +49,25 @@ pub trait Reader: Handle {
     }
 
     fn read_block(&self) -> ArchiveResult<Option<&[u8]>> {
-        let mut buff = ptr::null();
-        let mut size = 0;
-        let mut offset = 0;
+        let mut buff;
+        let mut size;
+        let mut offset;
+        loop {
+            buff = ptr::null();
+            size = 0;
+            offset = 0;
 
-        unsafe {
-            match ffi::archive_read_data_block(self.handle(), &mut buff, &mut size, &mut offset) {
-                ffi::ARCHIVE_EOF => Ok(None),
-                ffi::ARCHIVE_OK => {
-                    if buff != ptr::null() {
-                        Ok(Some(slice::from_raw_parts(buff as *const u8, size)))
-                    } else {
-                        return self.read_block();
+            unsafe {
+                match ffi::archive_read_data_block(self.handle(), &mut buff, &mut size, &mut offset)
+                {
+                    ffi::ARCHIVE_EOF => return Ok(None),
+                    ffi::ARCHIVE_OK => {
+                        if buff != ptr::null() {
+                            return Ok(Some(slice::from_raw_parts(buff as *const u8, size)));
+                        }
                     }
+                    _ => return Err(ArchiveError::Sys(self.err_code(), self.err_msg())),
                 }
-                _ => Err(ArchiveError::Sys(self.err_code(), self.err_msg())),
             }
         }
     }

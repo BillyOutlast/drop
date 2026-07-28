@@ -1,0 +1,28 @@
+# CodeRabbit configuration
+# https://docs.coderabbit.ai/guides/configure-coderabbit
+
+language: en-US
+early_access: true
+
+reviews:
+  request_changes_workflow: false
+  profile: chill
+  base_branches:
+    - develop
+    - rebuild
+  high_level_summary: true
+  review_status: true
+  commit_messages: true
+  suggested_labels: true
+  poem: false
+  path_filters:
+    - "!**/target/**"
+    - "!**/node_modules/**"
+    - "!**/.nuxt/**"
+    - "!**/.output/**"
+    - "!**/coverage/**"
+    - "!**/dist/**"
+    - "!**/.git/**"
+
+chat:
+  auto_reply: true

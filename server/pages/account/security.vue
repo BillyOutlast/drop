@@ -208,6 +208,7 @@
                       class="py-4 pr-4 pl-3 text-right text-sm font-medium whitespace-nowrap sm:pr-0"
                     >
                       <button
+                        type="button"
                         class="text-blue-400 hover:text-blue-300"
                         @click="() => deletePasskey(mec.id)"
                       >
@@ -242,7 +243,6 @@ import {
 } from "@heroicons/vue/20/solid";
 import { CheckIcon, ClockIcon, KeyIcon } from "@heroicons/vue/24/outline";
 const superlevel = await $dropFetch("/api/v1/user/superlevel");
-//const auth = await $dropFetch("/api/v1/user/auth");
 const mfa = await $dropFetch("/api/v1/user/mfa");
 
 const webAuthnOpen = ref(false);

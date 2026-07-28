@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/no-v-html -->
 <template>
   <div
     class="flex grow flex-col gap-y-5 overflow-y-auto bg-zinc-900 px-6 py-6 ring-1 ring-white/10"
@@ -20,6 +19,7 @@
             id="search"
             v-model="searchQuery"
             type="text"
+            autocomplete="off"
             class="block w-full rounded-md border-0 bg-zinc-800 py-2.5 pl-10 pr-3 text-zinc-100 placeholder:text-zinc-400 focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm sm:leading-6"
             :placeholder="$t('news.searchPlaceholder')"
           />
@@ -47,13 +47,14 @@
 
       <!-- Tags -->
       <div>
-        <label class="block text-sm font-medium text-zinc-400 mb-2">
+        <span class="block text-sm font-medium text-zinc-400 mb-2">
           {{ $t("common.tags") }}
-        </label>
+        </span>
         <div class="flex flex-wrap gap-2">
           <button
             v-for="tag in availableTags"
             :key="tag"
+            type="button"
             class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors duration-200"
             :class="[
               selectedTags.includes(tag)
@@ -90,6 +91,7 @@
             <img
               :src="useObject(article.imageObjectId)"
               class="absolute blur-sm inset-0 w-full h-full object-cover transition-all duration-200 group-hover:scale-110"
+              alt=""
             />
             <div class="absolute inset-0 bg-zinc-900/50" />
           </div>
@@ -97,10 +99,12 @@
           <h3 class="relative text-sm font-medium text-zinc-100">
             {{ article.title }}
           </h3>
+          <!-- eslint-disable vue/no-v-html -->
           <p
             class="relative mt-1 text-xs text-zinc-400 line-clamp-2"
             v-html="formatExcerpt(article.description)"
           />
+          <!-- eslint-enable vue/no-v-html -->
           <div
             class="relative mt-2 flex items-center gap-x-2 text-xs text-zinc-500"
           >
@@ -190,11 +194,9 @@ const filteredArticles = computed(() => {
       }
     }
 
-    const matchesTags =
-      selectedTags.value.length === 0 ||
-      selectedTags.value.every((tag) =>
-        article.tags.find((e) => e.name == tag),
-      );
+    const matchesTags = selectedTags.value.every((tag) =>
+      article.tags.find((e) => e.name == tag),
+    );
 
     return matchesSearch && matchesDate && matchesTags;
   });

@@ -16,9 +16,7 @@ use crate::{
     depot_manager::DepotManager,
     download_manager_frontend::DownloadStatus,
     error::ApplicationDownloadError,
-    frontend_updates::{
-        DownloadStatsUpdateEvent, QueueUpdateEvent, QueueUpdateEventQueueData,
-    },
+    frontend_updates::{DownloadStatsUpdateEvent, QueueUpdateEvent, QueueUpdateEventQueueData},
 };
 
 use super::{
@@ -226,6 +224,68 @@ impl DownloadManagerBuilder {
         send!(self.sender, DownloadManagerSignal::UpdateUIQueue);
     }
 
+    async fn ensure_other_downloads_queued(
+        registry: &HashMap<DownloadableMetadata, DownloadAgent>,
+        active_meta: &DownloadableMetadata,
+        app_handle: &AppHandle,
+    ) {
+        for agent in registry.values() {
+            if agent.metadata() != *active_meta && agent.status() != DownloadStatus::Queued {
+                agent.on_queued(app_handle);
+            }
+        }
+    }
+
+    async fn run_download_loop(
+        download_agent: DownloadAgent,
+        sender: tokio::sync::mpsc::Sender<DownloadManagerSignal>,
+        app_handle: AppHandle,
+    ) {
+        loop {
+            match download_agent.download(&app_handle).await {
+                Ok(true) => {}
+                Ok(false) => return,
+                Err(e) => {
+                    error!("download {:?} has error {}", download_agent.metadata(), &e);
+                    download_agent.on_error(&app_handle, &e);
+                    send!(sender, DownloadManagerSignal::Error(e));
+                    return;
+                }
+            }
+
+            if download_agent.control_flag().get() == DownloadThreadControlFlag::Stop {
+                return;
+            }
+
+            match download_agent.validate(&app_handle) {
+                Ok(true) => {
+                    download_agent.on_complete(&app_handle).await;
+                    send!(
+                        sender,
+                        DownloadManagerSignal::Completed(download_agent.metadata())
+                    );
+                    send!(sender, DownloadManagerSignal::UpdateUIQueue);
+                    return;
+                }
+                Ok(false) => {}
+                Err(e) => {
+                    error!(
+                        "download {:?} has validation error {}",
+                        download_agent.metadata(),
+                        &e
+                    );
+                    download_agent.on_error(&app_handle, &e);
+                    send!(sender, DownloadManagerSignal::Error(e));
+                    return;
+                }
+            }
+
+            if download_agent.control_flag().get() == DownloadThreadControlFlag::Stop {
+                return;
+            }
+        }
+    }
+
     async fn manage_go_signal(&mut self) {
         debug!("got signal Go");
         if self.download_agent_registry.is_empty() {
@@ -250,80 +310,30 @@ impl DownloadManagerBuilder {
             .unwrap()
             .clone();
 
-        let status = download_agent.status();
-
         // This download is already going
-        if status != DownloadStatus::Queued {
+        if download_agent.status() != DownloadStatus::Queued {
             return;
         }
 
-        // Ensure all others are marked as queued
-        for agent in self.download_agent_registry.values() {
-            if agent.metadata() != agent_data && agent.status() != DownloadStatus::Queued {
-                agent.on_queued(&self.app_handle);
-            }
-        }
+        Self::ensure_other_downloads_queued(
+            &self.download_agent_registry,
+            &agent_data,
+            &self.app_handle,
+        )
+        .await;
 
         info!("starting download for {agent_data:?}");
         self.active_control_flag = Some(download_agent.control_flag());
 
         let sender = self.sender.clone();
-
-        let mut download_thread_lock = lock!(self.current_download_thread);
         let app_handle = self.app_handle.clone();
 
-        *download_thread_lock = Some(tauri::async_runtime::spawn(async move {
-            loop {
-                let download_result = match download_agent.download(&app_handle).await {
-                    // Ok(true) is for completed and exited properly
-                    Ok(v) => v,
-                    Err(e) => {
-                        error!("download {:?} has error {}", download_agent.metadata(), &e);
-                        download_agent.on_error(&app_handle, &e);
-                        send!(sender, DownloadManagerSignal::Error(e));
-                        return;
-                    }
-                };
-
-                // If the download gets canceled
-                // immediately return, on_cancelled gets called for us earlier
-                if !download_result {
-                    return;
-                }
-
-                if download_agent.control_flag().get() == DownloadThreadControlFlag::Stop {
-                    return;
-                }
-
-                let validate_result = match download_agent.validate(&app_handle) {
-                    Ok(v) => v,
-                    Err(e) => {
-                        error!(
-                            "download {:?} has validation error {}",
-                            download_agent.metadata(),
-                            &e
-                        );
-                        download_agent.on_error(&app_handle, &e);
-                        send!(sender, DownloadManagerSignal::Error(e));
-                        return;
-                    }
-                };
-
-                if download_agent.control_flag().get() == DownloadThreadControlFlag::Stop {
-                    return;
-                }
-
-                if validate_result {
-                    download_agent.on_complete(&app_handle).await;
-                    send!(
-                        sender,
-                        DownloadManagerSignal::Completed(download_agent.metadata())
-                    );
-                    send!(sender, DownloadManagerSignal::UpdateUIQueue);
-                    return;
-                }
-            }
-        }));
+        let mut download_thread_lock = lock!(self.current_download_thread);
+        *download_thread_lock = Some(tauri::async_runtime::spawn(Self::run_download_loop(
+            download_agent,
+            sender,
+            app_handle,
+        )));
 
         self.set_status(DownloadManagerStatus::Downloading);
         let active_control_flag = self.active_control_flag.clone().unwrap();

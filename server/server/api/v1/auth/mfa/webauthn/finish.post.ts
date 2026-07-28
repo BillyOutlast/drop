@@ -9,7 +9,7 @@ import sessionHandler from "~/server/internal/session";
 
 export default defineEventHandler(async (h3) => {
   const session = await sessionHandler.getSession(h3);
-  if (!session || !session.authenticated || session.authenticated.level == 0)
+  if (!session?.authenticated || session.authenticated?.level == 0)
     throw createError({
       statusCode: 403,
       message: "Sign in before completing MFA",
@@ -53,8 +53,10 @@ export default defineEventHandler(async (h3) => {
   if (passkeyIndex == -1)
     throw createError({ statusCode: 400, message: "Invalid credential ID." });
   const passkey = passkeys[passkeyIndex];
+  if (!passkey)
+    throw createError({ statusCode: 400, message: "Invalid credential ID." });
 
-  const externalUrl = await systemConfig.getExternalUrl();
+  const externalUrl = systemConfig.getExternalUrl();
   const url = new URL(externalUrl);
 
   let verification;
@@ -85,11 +87,11 @@ export default defineEventHandler(async (h3) => {
   const { authenticationInfo } = verification;
   const { newCounter } = authenticationInfo;
 
-  passkeys[passkeyIndex].counter = newCounter;
+  passkeys[passkeyIndex]!.counter = newCounter;
   (mfaMec.credentials as unknown as WebAuthNv1Credentials).passkeys = passkeys;
 
   // Safe because we query it at the start of the route
-  // eslint-disable-next-line drop/no-prisma-delete
+
   await prisma.linkedMFAMec.update({
     where: {
       userId_mec: {

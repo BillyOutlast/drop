@@ -16,7 +16,7 @@
         $t("errors.externalUrl.subtitle")
       }}</span>
     </div>
-    <button class="text-red-200" @click="() => hideExternalURL()">
+    <button type="button" class="text-red-200" @click="() => hideExternalURL()">
       <XMarkIcon class="size-5" />
     </button>
   </div>
@@ -38,7 +38,7 @@ function checkExternalUrl() {
   const chosenOrigin = apiDetails.external.trim();
   const ignore = window.localStorage.getItem("ignoreExternalUrl");
   if (ignore && ignore == "true") return;
-  showExternalUrlWarning.value = !(realOrigin == chosenOrigin);
+  showExternalUrlWarning.value = realOrigin != chosenOrigin;
 }
 
 function hideExternalURL() {

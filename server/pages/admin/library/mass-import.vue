@@ -5,10 +5,11 @@
         <h1
           class="inline-flex items-center gap-x-2 text-base font-semibold text-white"
         >
-          <WrenchScrewdriverIcon class="size-6" /> Mass Import Tool
+          <WrenchScrewdriverIcon class="size-6" />
+          {{ $t("admin.massImport.title") }}
         </h1>
         <p class="mt-2 text-sm text-zinc-300">
-          Quickly import a large amount of versions at once.
+          {{ $t("admin.massImport.description") }}
         </p>
       </div>
       <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
@@ -17,7 +18,7 @@
           :disabled="!hasSelected"
           @click="triggerImport"
         >
-          Import &rarr;
+          {{ $t("admin.massImport.importButton") }}
         </LoadingButton>
       </div>
     </div>
@@ -38,6 +39,7 @@
                         v-model="globalState"
                         :indeterminate="globalState === 'indeterminate'"
                         type="checkbox"
+                        aria-label="Select all versions"
                         class="col-start-1 row-start-1 appearance-none rounded-sm border border-white/20 bg-zinc-800/50 checked:border-blue-500 checked:bg-blue-500 indeterminate:border-blue-500 indeterminate:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:border-white/10 disabled:bg-zinc-800 disabled:checked:bg-zinc-800 forced-colors:appearance-auto"
                       />
                       <svg
@@ -66,25 +68,25 @@
                     scope="col"
                     class="w-full py-3.5 pr-3 text-left text-sm font-semibold text-white whitespace-nowrap"
                   >
-                    Name
+                    {{ $t("admin.massImport.name") }}
                   </th>
                   <th
                     scope="col"
                     class="px-3 py-3.5 text-left text-sm font-semibold text-white whitespace-nowrap"
                   >
-                    Type
+                    {{ $t("admin.massImport.type") }}
                   </th>
                   <th
                     scope="col"
                     class="px-3 py-3.5 text-left text-sm font-semibold text-white whitespace-nowrap"
                   >
-                    Display Name
+                    {{ $t("admin.massImport.displayName") }}
                   </th>
                   <th
                     scope="col"
                     class="px-3 py-3.5 text-left text-sm font-semibold text-white whitespace-nowrap"
                   >
-                    Setup Mode
+                    {{ $t("admin.massImport.setupMode") }}
                   </th>
                 </tr>
               </thead>
@@ -96,6 +98,7 @@
                         <img
                           :src="useObject(game.icon)"
                           class="size-6 rounded-sm"
+                          alt=""
                         />
                         {{ game.name }}
                       </div>
@@ -117,6 +120,7 @@
                         <input
                           v-model="version.enabled"
                           type="checkbox"
+                          aria-label="Select version"
                           class="col-start-1 row-start-1 appearance-none rounded-sm border border-white/20 bg-zinc-800/50 checked:border-blue-500 checked:bg-blue-500 indeterminate:border-blue-500 indeterminate:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:border-white/10 disabled:bg-zinc-800 disabled:checked:bg-zinc-800 forced-colors:appearance-auto"
                         />
                         <svg
@@ -156,6 +160,7 @@
                         id="display-name"
                         v-model="version.settings.displayName"
                         type="text"
+                        aria-label="Display name"
                         class="min-w-48 block w-full rounded-md border-radius-md bg-zinc-900 px-3 py-1.5 text-white outline-2 -outline-offset-1 outline-zinc-800 placeholder:text-zinc-500 focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 sm:text-sm/6"
                         placeholder="My New Version"
                       />
@@ -233,17 +238,14 @@
                     <DialogTitle
                       as="h3"
                       class="text-base font-semibold text-white"
-                      >This tool is basic.</DialogTitle
+                      >{{ $t("admin.massImport.warningTitle") }}</DialogTitle
                     >
                     <div class="mt-2">
                       <p class="text-sm text-zinc-400">
-                        While it is useful to import a lot of versions at once,
-                        this tool is designed for migrating from other projects,
-                        rather than building your Drop library from scratch.
+                        {{ $t("admin.massImport.warningBody") }}
 
                         <span class="text-sm text-zinc-100 font-bold">
-                          It is missing functionality present in the normal
-                          import wizard.
+                          {{ $t("admin.massImport.warningMissing") }}
                         </span>
                       </p>
                     </div>
@@ -255,7 +257,7 @@
                     class="inline-flex w-full justify-center rounded-md bg-zinc-800 px-3 py-2 text-sm font-semibold text-white hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-800"
                     @click="open = false"
                   >
-                    Accept
+                    {{ $t("admin.massImport.accept") }}
                   </button>
                 </div>
               </DialogPanel>
@@ -304,12 +306,8 @@ const massImport = ref(
   })),
 );
 
-const hasSelected = computed(
-  () =>
-    massImport.value
-      .map((v) => v.versions)
-      .flat()
-      .filter((e) => e.enabled).length > 0,
+const hasSelected = computed(() =>
+  massImport.value.flatMap((v) => v.versions).some((e) => e.enabled),
 );
 
 const globalState = computed({
@@ -341,21 +339,19 @@ async function triggerImport() {
   const { taskId } = await $dropFetch("/api/v1/admin/import/massversion", {
     method: "POST",
     body: {
-      versions: massImport.value
-        .map((game) =>
-          game.versions
-            .filter((version) => version.enabled)
-            .map((version) => ({
-              id: game.id,
-              version: {
-                type: version.type,
-                identifier: version.identifier,
-                name: version.name,
-              },
-              ...version.settings,
-            })),
-        )
-        .flat(),
+      versions: massImport.value.flatMap((game) =>
+        game.versions
+          .filter((version) => version.enabled)
+          .map((version) => ({
+            id: game.id,
+            version: {
+              type: version.type,
+              identifier: version.identifier,
+              name: version.name,
+            },
+            ...version.settings,
+          })),
+      ),
     },
   });
   router.push(`/admin/task/${taskId}`);

@@ -5,7 +5,7 @@
 [![Documentation](https://docs.rs/native_model/badge.svg)](https://docs.rs/native_model)
 [![License](https://img.shields.io/crates/l/native_model)](LICENSE)
 
-Add interoperability                  on the top  of   serialization formats like bincode, postcard etc.
+Add interoperability on the top of serialization formats like bincode, postcard etc.
 
 See [concepts](#concepts) for more details.
 
@@ -27,7 +27,6 @@ See [concepts](#concepts) for more details.
    Decode DotV1 | <--------------------------------| Encode DotV2 back to DotV1
                 |                                  |
 ```
-
 
 ```rust
 use native_model::native_model;
@@ -87,11 +86,11 @@ let (dot, _) = native_model::decode::<DotV1>(bytes).unwrap();
 assert_eq!(dot, DotV1(5, 2));
 ```
 
- - Full example [here](./tests_crate/tests/example/example_main.rs).
+- Full example [here](./tests_crate/tests/example/example_main.rs).
 
 ## Serialization format
 
-You can use  default serialization formats via  the feature flags, like:
+You can use default serialization formats via the feature flags, like:
 
 ```toml
 [dependencies]
@@ -111,16 +110,19 @@ changes, the default serialization format is the oldest one.
 Define a struct with the name you want. This struct must implement [`native_model::Encode`](https://docs.rs/native_model/latest/native_model/trait.Encode.html) and [`native_model::Decode`](https://docs.rs/native_model/latest/native_model/trait.Decode.html) traits.
 
 Full examples:
+
 - [bincode with encode/decode](./tests_crate/tests/example/custom_codec/bincode.rs)
 - [bincode with serde](./tests_crate/tests/example/custom_codec/bincode_serde.rs)
 
-Others examples,  see the default implementations:
+Others examples, see the default implementations:
+
 - [bincode v1.3](./src/codec/bincode_1_3.rs)
 - [bincode v2.0 (rc)](./src/codec/bincode_2.rs)
 - [postcard v1.0](./src/codec/postcard_1_0.rs)
 - [rmp-serde v1.3](./src/codec/rmp_serde_1_3.rs)
 
 ### Notice
+
 `native_model` provides implementations that rely on metadata-less formats and `serde`.
 There are known issues with some `serde` advanced features such as:
 
@@ -143,14 +145,15 @@ The `rmp-serde` serialization format can optionally support them serializing str
 Define your model using the macro [`native_model`](file:///home/vincentherlemont/IdeaProjects/native_model/target/doc/native_model/attr.native_model.html).
 
 Attributes:
+
 - `id = u32`: The unique identifier of the model.
 - `version = u32`: The version of the model.
 - `with = type`: The serialization format that you use for the Encode/Decode implementation. Setup [here](#setup-your-serialization-format).
 - `from = type`: Optional, the previous version of the model.
-    - `type`: The previous version of the model that you use for the From implementation.
+  - `type`: The previous version of the model that you use for the From implementation.
 - `try_from = (type, error)`: Optional, the previous version of the model with error handling.
-    - `type`: The previous version of the model that you use for the TryFrom implementation.
-    - `error`: The error type that you use for the TryFrom implementation.
+  - `type`: The previous version of the model that you use for the TryFrom implementation.
+  - `error`: The error type that you use for the TryFrom implementation.
 
 ```rust
 use native_model::native_model;
@@ -231,26 +234,26 @@ impl TryFrom<DotV3> for DotV2 {
 `native_model` comes with several optional built-in serializer features available:
 
 - [bincode 1.3](https://crates.io/crates/bincode/1.3.3)
-	- This is the default codec.
-	- **Warning: This codec may not work with all serde-derived types.**
+  - This is the default codec.
+  - **Warning: This codec may not work with all serde-derived types.**
 
 - [bincode 2.0.0-rc.3](https://crates.io/crates/bincode/2.0.0-rc.3)
-	- Enable the `bincode_2` feature and use the `native_model::bincode_2::Bincode` attribute to have `native_db` use this crate for serializing & deserializing.
-	- **Warning: This codec may not work with all serde-derived types.**
+  - Enable the `bincode_2` feature and use the `native_model::bincode_2::Bincode` attribute to have `native_db` use this crate for serializing & deserializing.
+  - **Warning: This codec may not work with all serde-derived types.**
 
 - [postcard 1.0](https://crates.io/crates/postcard/1.0.8)
-	- Enable the `postcard_1_0` feature and use the `native_model::postcard_1_0::PostCard` attribute.
-	- **Warning: This codec may not work with all serde-derived types.**
+  - Enable the `postcard_1_0` feature and use the `native_model::postcard_1_0::PostCard` attribute.
+  - **Warning: This codec may not work with all serde-derived types.**
 
 - [rmp-serde 1.3](https://crates.io/crates/rmp-serde/1.3.0)
-	- Enable the `rmp_serde_1_3` feature and use the `native_model::rmp_serde_1_3::RmpSerde` attribute.
+  - Enable the `rmp_serde_1_3` feature and use the `native_model::rmp_serde_1_3::RmpSerde` attribute.
 
 ###### Codec example:
 
 As example, to use `rmp-serde`:
 
 1. In your project's `Cargo.toml` file, enable the `rmp_serde_1_3` feature for the `native_model` dependency.
-	- Be sure to check `crates.io` for the most recent [`native_model`](https://crates.io/crates/native_model) version number.
+   - Be sure to check `crates.io` for the most recent [`native_model`](https://crates.io/crates/native_model) version number.
 
 ```toml
 [dependencies]
@@ -294,7 +297,7 @@ In order to understand how the native model works, you need to understand the fo
 
 Under the hood, the native model is a thin wrapper around serialized data. The `id` and the `version` are twice encoded with a [`little_endian::U32`](https://docs.rs/zerocopy/latest/zerocopy/byteorder/little_endian/type.U32.html). That represents 8 bytes, that are added at the beginning of the data.
 
-``` text
+```text
 +------------------+------------------+------------------------------------+
 |     ID (4 bytes) | Version (4 bytes)| Data (indeterminate-length bytes)  |
 +------------------+------------------+------------------------------------+
@@ -312,16 +315,16 @@ to avoid unnecessary copies.
 👉 To know the total time of the encode/decode, you need to add the time of your serialization format.
 
 Resume:
+
 - **Encode**: ~20 ns
 - **Decode**: ~40 ps
 
-|      data size       |   encode time (ns)    | decode time (ps)        |
-|:--------------------:|:---------------------:|:-----------------------:|
-|         1 B          | 19.769 ns - 20.154 ns | 40.526 ps - 40.617 ps   |
-|        1 KiB         | 19.597 ns - 19.971 ns | 40.534 ps - 40.633 ps   |
-|        1 MiB         | 19.662 ns - 19.910 ns | 40.508 ps - 40.632 ps   |
-|        10 MiB        | 19.591 ns - 19.980 ns | 40.504 ps - 40.605 ps   |
-|       100 MiB        | 19.669 ns - 19.867 ns | 40.520 ps - 40.644 ps   |
+| data size |   encode time (ns)    |   decode time (ps)    |
+| :-------: | :-------------------: | :-------------------: |
+|    1 B    | 19.769 ns - 20.154 ns | 40.526 ps - 40.617 ps |
+|   1 KiB   | 19.597 ns - 19.971 ns | 40.534 ps - 40.633 ps |
+|   1 MiB   | 19.662 ns - 19.910 ns | 40.508 ps - 40.632 ps |
+|  10 MiB   | 19.591 ns - 19.980 ns | 40.504 ps - 40.605 ps |
+|  100 MiB  | 19.669 ns - 19.867 ns | 40.520 ps - 40.644 ps |
 
 Benchmark of the native model overhead [here](benches/overhead.rs).
-

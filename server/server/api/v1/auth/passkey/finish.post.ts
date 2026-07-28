@@ -47,10 +47,14 @@ export default defineEventHandler(async (h3) => {
   const passkeys = (mfaMec.credentials as unknown as WebAuthNv1Credentials)
     .passkeys;
   const passkeyIndex = passkeys.findIndex((v) => v.id === credentialId);
-  const passkey = passkeys[passkeyIndex]; // Exists guarantee by database
+  if (passkeyIndex === -1)
+    throw createError({ statusCode: 400, message: "Invalid credential ID." });
+  const passkey = passkeys[passkeyIndex];
+  if (!passkey)
+    throw createError({ statusCode: 400, message: "Invalid credential ID." });
 
   const rpID = await getRpId();
-  const externalUrl = await systemConfig.getExternalUrl();
+  const externalUrl = systemConfig.getExternalUrl();
   const url = new URL(externalUrl);
 
   let verification;
@@ -81,11 +85,11 @@ export default defineEventHandler(async (h3) => {
   const { authenticationInfo } = verification;
   const { newCounter } = authenticationInfo;
 
-  passkeys[passkeyIndex].counter = newCounter;
+  passkeys[passkeyIndex]!.counter = newCounter;
   (mfaMec.credentials as unknown as WebAuthNv1Credentials).passkeys = passkeys;
 
   // Safe because we query it before
-  // eslint-disable-next-line drop/no-prisma-delete
+
   await prisma.linkedMFAMec.update({
     where: {
       userId_mec: {

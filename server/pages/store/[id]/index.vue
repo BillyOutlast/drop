@@ -8,6 +8,7 @@
       <img
         :src="useObject(game.mBannerObjectId)"
         class="blur-sm w-full h-auto"
+        alt=""
       />
       <div
         class="absolute inset-0 bg-gradient-to-b from-transparent to-80% to-zinc-950"
@@ -50,14 +51,15 @@
               aria-hidden="true"
             />
           </NuxtLink>
-          <table class="min-w-full">
+          <table class="min-w-full" aria-label="Game details">
             <tbody>
               <tr>
-                <td
+                <th
+                  scope="row"
                   class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-zinc-100 sm:pl-3"
                 >
                   {{ $t("store.released") }}
-                </td>
+                </th>
                 <td class="whitespace-nowrap px-3 py-4 text-sm text-zinc-400">
                   <time datetime="game.mReleased">
                     {{ $d(new Date(game.mReleased), "short") }}
@@ -65,11 +67,12 @@
                 </td>
               </tr>
               <tr>
-                <td
+                <th
+                  scope="row"
                   class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-zinc-100 sm:pl-3"
                 >
                   {{ $t("store.platform", platforms.length) }}
-                </td>
+                </th>
                 <td
                   class="whitespace-nowrap inline-flex gap-x-4 px-3 py-4 text-sm text-zinc-400"
                 >
@@ -87,11 +90,12 @@
                 </td>
               </tr>
               <tr>
-                <td
+                <th
+                  scope="row"
                   class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-zinc-100 sm:pl-3"
                 >
                   {{ $t("store.size") }}
-                </td>
+                </th>
                 <td
                   v-if="sizes.length > 0"
                   class="whitespace-nowrap inline-flex gap-x-4 px-3 py-4 text-sm text-zinc-400"
@@ -124,11 +128,12 @@
                 </td>
               </tr>
               <tr>
-                <td
+                <th
+                  scope="row"
                   class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-zinc-100 sm:pl-3"
                 >
                   {{ $t("store.rating") }}
-                </td>
+                </th>
                 <td
                   class="whitespace-nowrap flex flex-row items-center gap-x-1 px-3 py-4 text-sm text-zinc-400"
                 >
@@ -254,6 +259,7 @@
                 <img
                   class="w-fit h-48 lg:h-96 rounded"
                   :src="useObject(image)"
+                  :alt="'Game screenshot'"
                 />
               </VueSlide>
               <VueSlide v-if="game.mImageCarouselObjectIds.length == 0">
@@ -302,9 +308,8 @@ const isClient = isClientRequest();
 
 const descriptionHTML = micromark(game.mDescription);
 
-// const rating = Math.round(game.mReviewRating * 5);
 const averageRating = Math.round((rating._avg.mReviewRating ?? 0) * 5);
-const ratingArray = Array(5)
+const ratingArray = new Array(5)
   .fill(null)
   .map((_, i) => i + 1 <= averageRating);
 

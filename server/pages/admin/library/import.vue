@@ -88,6 +88,7 @@
       <span class="flex grow flex-col">
         <label
           id="bulkImport-label"
+          for="bulkImport"
           class="text-sm/6 font-medium text-zinc-100"
           >{{ $t("library.admin.import.bulkImportTitle") }}</label
         >
@@ -262,10 +263,11 @@
             </transition>
           </div>
         </Listbox>
-        <div
+        <output
           v-else-if="gameSearchResultsLoading"
-          role="status"
           class="inline-flex text-zinc-100 font-display font-semibold items-center gap-x-4"
+          aria-live="polite"
+          :aria-label="$t('library.admin.import.loading')"
         >
           {{ $t("library.admin.import.loading") }}
           <svg
@@ -284,7 +286,7 @@
               fill="currentFill"
             />
           </svg>
-        </div>
+        </output>
 
         <div
           v-if="gameSearchResultsError"

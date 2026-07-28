@@ -1,5 +1,5 @@
-import { withContentCollections } from '@content-collections/next'
+import { withContentCollections } from "@content-collections/next";
 /** @type {import('next').NextConfig} */
-const nextConfig = { reactStrictMode: true, output: 'export' }
+const nextConfig = { reactStrictMode: true, output: "export" };
 
-export default withContentCollections(nextConfig)
+export default withContentCollections(nextConfig);

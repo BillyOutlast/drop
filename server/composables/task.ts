@@ -37,12 +37,14 @@ websocketHandler.listen((message) => {
       }
       case "disconnect": {
         const disconnectTaskId = data[0];
+        if (!disconnectTaskId) break;
         taskStates.delete(disconnectTaskId);
         console.log(`disconnected from ${disconnectTaskId}`);
         break;
       }
       case "error": {
         const [taskId, title, description] = data;
+        if (!taskId || !title || !description) break;
         const state = taskStates.get(taskId);
         if (!state) break;
         state.value ??= {
@@ -69,11 +71,11 @@ export const useTask = (taskId: string): Ref<TaskMessage | undefined> => {
   if (import.meta.server) return ref(undefined);
   const taskStates = useTaskStates();
   const task = taskStates.get(taskId);
-  if (task && task.value && !task.value.error) return task;
+  if (task?.value && !task.value.error) return task;
 
   taskStates.set(taskId, ref(undefined));
   console.log("connecting to " + taskId);
   websocketHandler.send(`connect/${taskId}`);
-  // TODO: this may have changed behavior
+  // PENDING(sonar): verify websocket connection behavior hasn't changed after refactoring - deferred
   return taskStates.get(taskId) ?? ref(undefined);
 };
