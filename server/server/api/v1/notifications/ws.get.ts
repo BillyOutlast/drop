@@ -6,6 +6,11 @@ import { logger } from "~/server/internal/logging";
 // Peer ID to user ID
 const socketSessions = new Map<string, string>();
 
+// Grace period for unauthenticated WebSocket peers to re-authenticate via token message
+const AUTH_GRACE_PERIOD_MS = 10_000;
+// Track pending auth timeouts keyed by peer ID so they can be cleared on re-auth
+const authTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+
 async function authenticatePeer(
   peer: { id: string; send: (data: string) => void },
   headers: Headers,
@@ -42,11 +47,13 @@ export default defineWebSocketHandler({
         logger.warn(`WebSocket auth failed for peer ${peer.id}`);
         peer.send("unauthenticated");
         // Allow grace period for token-based re-auth, then close
-        setTimeout(() => {
+        const authTimeout = setTimeout(() => {
           if (!socketSessions.has(peer.id)) {
             peer.close();
           }
-        }, 10_000);
+          authTimeouts.delete(peer.id);
+        }, AUTH_GRACE_PERIOD_MS);
+        authTimeouts.set(peer.id, authTimeout);
       }
     } catch (error) {
       logger.error(
@@ -64,7 +71,15 @@ export default defineWebSocketHandler({
         if (socketSessions.has(peer.id)) return;
         const headers = new Headers({ Authorization: `Bearer ${data.token}` });
         const authenticated = await authenticatePeer(peer, headers);
-        if (authenticated) return;
+        if (authenticated) {
+          // Clear the pending auth timeout — peer successfully re-authenticated
+          const timeoutId = authTimeouts.get(peer.id);
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            authTimeouts.delete(peer.id);
+          }
+          return;
+        }
         // Token auth failed — close connection
         peer.send("unauthenticated");
         peer.close();
@@ -91,6 +106,13 @@ export default defineWebSocketHandler({
   },
 
   async close(peer, _details) {
+    // Clean up any pending auth timeout
+    const pendingTimeout = authTimeouts.get(peer.id);
+    if (pendingTimeout) {
+      clearTimeout(pendingTimeout);
+      authTimeouts.delete(peer.id);
+    }
+
     const userId = socketSessions.get(peer.id);
     if (!userId) {
       logger.info(`skipping websocket close for ${peer.id}`);

@@ -180,3 +180,33 @@ risks:
     accepted_date: "2025-07-24"
     review_by: "2025-10-24"
     ci_ignore: true
+
+  - id: RISK-014
+    title: "quick-xml: Quadratic duplicate attribute check DoS"
+    package: "quick-xml@<0.41.0"
+    advisory: RUSTSEC-2026-0194
+    severity: high
+    affected_paths:
+      - "cli>opendal>reqsign>quick-xml 0.37.5"
+      - "cli>opendal>quick-xml 0.38.4"
+      - "desktop>tauri>tauri-utils>plist>quick-xml 0.38.4"
+    mitigation: "All affected paths process only trusted data. CLI: opendal queries trusted cloud storage APIs over HTTPS. Desktop: plist is build-time only (tauri-build/tauri-utils), parses own Info.plist from app source. No untrusted XML input anywhere in these paths. Upstream crate bumps (opendal, plist) will resolve when available."
+    accepted_by: "BillyOutlast"
+    accepted_date: "2026-07-28"
+    review_by: "2026-10-28"
+    ci_ignore: false
+
+  - id: RISK-015
+    title: "quick-xml: Unbounded namespace allocation OOM"
+    package: "quick-xml@<0.41.0"
+    advisory: RUSTSEC-2026-0195
+    severity: high
+    affected_paths:
+      - "cli>opendal>reqsign>quick-xml 0.37.5"
+      - "cli>opendal>quick-xml 0.38.4"
+      - "desktop>tauri>tauri-utils>plist>quick-xml 0.38.4"
+    mitigation: "Same as RISK-014. No untrusted XML input in these paths. NsReader path unused in all affected crates' usage patterns."
+    accepted_by: "BillyOutlast"
+    accepted_date: "2026-07-28"
+    review_by: "2026-10-28"
+    ci_ignore: false
