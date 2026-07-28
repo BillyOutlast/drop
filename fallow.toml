@@ -11,6 +11,8 @@ ignorePatterns = [
 ignoreDependencies = [
   # otp-io is a production dependency used by the server; referenced in tests
   "otp-io",
+  # arktype is used across the server codebase; not listed individually
+  "arktype",
 ]
 
 [audit]
