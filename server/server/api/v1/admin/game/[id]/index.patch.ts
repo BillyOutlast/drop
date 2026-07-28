@@ -1,6 +1,6 @@
 import aclManager from "~/server/internal/acls";
 import prisma from "~/server/internal/db/database";
-import { validateAndSanitizeBody } from "~/server/api/v1/admin/_helpers";
+import { validateAndSanitizeBody } from "~/server/internal/validation/body";
 
 export default defineEventHandler(async (h3) => {
   const allowed = await aclManager.allowSystemACL(h3, ["game:update"]);
