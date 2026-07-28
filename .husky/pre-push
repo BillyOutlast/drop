@@ -4,8 +4,14 @@ pnpm --filter drop test:changed
 
 # OpenCodeReview gate: compare local branch against remote base.
 # Runs only when ocr CLI is installed and remote base is fetchable.
-# Detect base from upstream tracking, fall back to origin/rebuild.
-REMOTE_BASE="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || echo 'origin/rebuild')"
+# Detect base from upstream tracking. If upstream matches current branch
+# (PR branch self-tracking) or unset, fall back to origin/rebuild.
+CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+UPSTREAM="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)"
+REMOTE_BASE="${UPSTREAM}"
+if [ -z "${REMOTE_BASE}" ] || [ "${REMOTE_BASE#origin/}" = "${CURRENT_BRANCH}" ]; then
+  REMOTE_BASE="origin/rebuild"
+fi
 
 if command -v ocr >/dev/null 2>&1 && git rev-parse --quiet --verify "${REMOTE_BASE}" >/dev/null 2>&1; then
   OCR_LOG="$(mktemp /tmp/ocr-pre-push.XXXXXX.log)"
