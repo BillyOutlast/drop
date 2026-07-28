@@ -65,6 +65,22 @@ export default defineEventHandler(async (h3) => {
   await userStatsManager.cacheUserSessions();
 
   if (result.options.redirect) {
+    const requestOrigin = getRequestURL(h3).origin;
+    let redirectUrl: URL;
+    try {
+      redirectUrl = new URL(result.options.redirect, requestOrigin);
+    } catch {
+      throw createError({
+        statusCode: 400,
+        message: "Invalid redirect URL",
+      });
+    }
+    if (redirectUrl.origin !== requestOrigin) {
+      throw createError({
+        statusCode: 400,
+        message: "Invalid redirect URL",
+      });
+    }
     return sendRedirect(h3, result.options.redirect);
   }
 

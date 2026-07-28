@@ -157,35 +157,53 @@ function walkJsonPath(
   obj: unknown,
   basePath: string[] = [],
 ): Array<{ path: string[]; value: unknown }> {
-  const results: Array<{ path: string[]; value: unknown }> = [];
-
   if (Array.isArray(obj)) {
-    for (let i = 0; i < obj.length; i++) {
-      const v = obj[i];
-      if (v === undefined) continue;
-      if (v !== null && typeof v === "object") {
-        results.push(...walkJsonPath(v, [...basePath, String(i)]));
-      } else {
-        results.push({ path: [...basePath, String(i)], value: v });
-      }
-    }
-    return results;
+    return walkArray(obj, basePath);
   }
 
   if (obj !== null && typeof obj === "object") {
-    for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
-      if (v === undefined) continue;
-      if (v !== null && typeof v === "object") {
-        results.push(...walkJsonPath(v, [...basePath, k]));
-      } else {
-        results.push({ path: [...basePath, k], value: v });
-      }
-    }
-    return results;
+    return walkObject(obj as Record<string, unknown>, basePath);
   }
 
   if (basePath.length > 0) {
-    results.push({ path: basePath, value: obj });
+    return [{ path: basePath, value: obj }];
+  }
+  return [];
+}
+
+function walkArray(
+  arr: unknown[],
+  basePath: string[],
+): Array<{ path: string[]; value: unknown }> {
+  const results: Array<{ path: string[]; value: unknown }> = [];
+  for (let i = 0; i < arr.length; i++) {
+    const v = arr[i];
+    if (v === undefined) continue;
+    collectPathValue(v, [...basePath, String(i)], results);
   }
   return results;
+}
+
+function walkObject(
+  obj: Record<string, unknown>,
+  basePath: string[],
+): Array<{ path: string[]; value: unknown }> {
+  const results: Array<{ path: string[]; value: unknown }> = [];
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined) continue;
+    collectPathValue(v, [...basePath, k], results);
+  }
+  return results;
+}
+
+function collectPathValue(
+  value: unknown,
+  path: string[],
+  results: Array<{ path: string[]; value: unknown }>,
+) {
+  if (value !== null && typeof value === "object") {
+    results.push(...walkJsonPath(value, path));
+  } else {
+    results.push({ path, value });
+  }
 }
