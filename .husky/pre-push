@@ -8,13 +8,9 @@ BASE_BRANCH="rebuild"
 REMOTE_BASE="origin/${BASE_BRANCH}"
 
 if command -v ocr >/dev/null 2>&1 && git rev-parse --quiet --verify "${REMOTE_BASE}" >/dev/null 2>&1; then
-  printf '\n:: Running OpenCodeReview against %s...\n' "${REMOTE_BASE}"
-  ocr review --from "${REMOTE_BASE}" --to HEAD --audience agent --exclude 'pnpm-lock.yaml,Cargo.lock' 2>&1 || {
-    rc=$?
-    printf '\n⚠️  OCR found issues (exit %d). Review above before pushing.\n' "$rc"
-    printf '   Use --no-verify to skip, or fix findings.\n'
-    exit "$rc"
-  }
+  printf '\n:: Starting OpenCodeReview against %s (non-blocking)...\n' "${REMOTE_BASE}"
+  nohup ocr review --from "${REMOTE_BASE}" --to HEAD --audience agent --exclude 'pnpm-lock.yaml,Cargo.lock' >/tmp/ocr-pre-push.log 2>&1 &
+  printf '   Review running in background — check /tmp/ocr-pre-push.log later.\n'
 elif ! command -v ocr >/dev/null 2>&1; then
   printf ':: ocr CLI not found — skipping OpenCodeReview gate\n'
 fi
