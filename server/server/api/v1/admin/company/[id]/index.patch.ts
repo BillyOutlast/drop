@@ -10,10 +10,9 @@ export default defineEventHandler(async (h3) => {
     throw createError({ statusCode: 400, message: "Invalid request body" });
   const id = getRouterParam(h3, "id")!;
 
-  // Whitelist allowed fields to prevent mass assignment
-  const allowedFields = ["name", "description", "website"];
+  const allowedFields = new Set(["name", "description", "website"]);
   const restOfTheBody = Object.fromEntries(
-    Object.entries(body).filter(([key]) => allowedFields.includes(key)),
+    Object.entries(body).filter(([key]) => allowedFields.has(key)),
   );
 
   const newObj = (
