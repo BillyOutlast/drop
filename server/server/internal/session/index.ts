@@ -274,7 +274,7 @@ export class SessionHandler {
     setCookie(h3, dropTokenCookieName, token, {
       expires: expiresAt,
       httpOnly: true,
-      secure: true,
+      secure: getRequestURL(h3).protocol === "https:",
       sameSite: "lax",
       path: "/",
     });

@@ -95,6 +95,10 @@ ENV NGINX_CONFIG="/nginx.conf"
 # Nuxt's port
 ENV PORT=4000
 
+# Create runtime directories and set ownership before dropping root
+RUN mkdir -p /data/nginx /data/objects /library && \
+    chown -R node:node /data /library
+
 # Run as non-root user for security
 USER node
 

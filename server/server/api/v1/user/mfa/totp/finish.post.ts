@@ -1,5 +1,5 @@
 import aclManager from "~/server/internal/acls";
-import { createHash } from "node:crypto";
+import { timingSafeEqual } from "node:crypto";
 import { totp, SecretKey } from "otp-io";
 import { hmac } from "otp-io/crypto";
 import prisma from "~/server/internal/db/database";
@@ -42,12 +42,11 @@ export default defineEventHandler(async (h3) => {
 
   const code = await totp(hmac, { secret: secretKey });
   // Timing-safe comparison to prevent timing attacks
+  const codeBuffer = Buffer.from(code, "utf8");
+  const bodyCodeBuffer = Buffer.from(body.code, "utf8");
   if (
-    body.code.length !== code.length ||
-    !createHash("sha256")
-      .update(body.code)
-      .digest()
-      .equals(createHash("sha256").update(code).digest())
+    bodyCodeBuffer.length !== codeBuffer.length ||
+    !timingSafeEqual(bodyCodeBuffer, codeBuffer)
   )
     throw createError({ statusCode: 400, message: "Invalid TOTP code." });
 

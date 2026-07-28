@@ -6,6 +6,8 @@ export default defineEventHandler(async (h3) => {
   if (!allowed) throw createError({ statusCode: 403 });
 
   const body = await readBody(h3);
+  if (!body || typeof body !== "object" || Array.isArray(body))
+    throw createError({ statusCode: 400, message: "Invalid request body" });
   const id = getRouterParam(h3, "id")!;
 
   // Whitelist allowed fields to prevent mass assignment

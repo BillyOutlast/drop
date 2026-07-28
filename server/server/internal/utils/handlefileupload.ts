@@ -2,7 +2,6 @@ import type { EventHandlerRequest, H3Event } from "h3";
 import type { Dump, Pull } from "../objects/transactional";
 import { ObjectTransactionalHandler } from "../objects/transactional";
 
-// Allowed MIME types for file uploads
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -13,7 +12,6 @@ const ALLOWED_MIME_TYPES = new Set([
   "application/zip",
   "application/x-7z-compressed",
   "application/x-rar-compressed",
-  "application/octet-stream",
 ]);
 
 // Maximum file size: 10MB
@@ -58,12 +56,11 @@ export async function handleFileUpload(
         });
       }
 
-      // Validate MIME type
-      const mimeType = entry.type ?? "application/octet-stream";
-      if (!ALLOWED_MIME_TYPES.has(mimeType)) {
+      // Validate MIME type (reject if not in allowlist)
+      if (!entry.type || !ALLOWED_MIME_TYPES.has(entry.type)) {
         throw createError({
           statusCode: 400,
-          message: `File type ${mimeType} is not allowed`,
+          message: `File type ${entry.type ?? "unknown"} is not allowed`,
         });
       }
 
