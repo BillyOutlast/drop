@@ -273,11 +273,15 @@ export default defineNuxtConfig({
           "https://*.steamstatic.com",
         ],
       },
-      strictTransportSecurity: false,
+      strictTransportSecurity: { maxAge: 31536000, includeSubdomains: true },
     },
-    rateLimiter: false,
+    rateLimiter: { tokensPerInterval: 10, interval: 60000 },
     xssValidator: false,
-    requestSizeLimiter: false,
+    requestSizeLimiter: {
+      maxRequestSizeInBytes: 10485760,
+      maxUploadFileRequestInBytes: 10485760,
+      throwError: true,
+    },
   },
 });
 

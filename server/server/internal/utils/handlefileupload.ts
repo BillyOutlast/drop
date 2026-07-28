@@ -2,6 +2,23 @@ import type { EventHandlerRequest, H3Event } from "h3";
 import type { Dump, Pull } from "../objects/transactional";
 import { ObjectTransactionalHandler } from "../objects/transactional";
 
+// Allowed MIME types for file uploads
+const ALLOWED_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/svg+xml",
+  "application/pdf",
+  "application/zip",
+  "application/x-7z-compressed",
+  "application/x-rar-compressed",
+  "application/octet-stream",
+]);
+
+// Maximum file size: 10MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
 /**
  * Parses a multipart form upload, storing files and collecting metadata fields.
  *
@@ -32,6 +49,23 @@ export async function handleFileUpload(
   for (const entry of formData) {
     if (entry.filename) {
       if (max > 0 && ids.length >= max) continue;
+
+      // Validate file size
+      if (entry.data.length > MAX_FILE_SIZE) {
+        throw createError({
+          statusCode: 400,
+          message: `File ${entry.filename} exceeds maximum size of 10MB`,
+        });
+      }
+
+      // Validate MIME type
+      const mimeType = entry.type ?? "application/octet-stream";
+      if (!ALLOWED_MIME_TYPES.has(mimeType)) {
+        throw createError({
+          statusCode: 400,
+          message: `File type ${mimeType} is not allowed`,
+        });
+      }
 
       // Add file to transaction handler so we can void it later if we error out
       ids.push(add(entry.data));

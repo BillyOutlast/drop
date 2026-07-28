@@ -11,7 +11,7 @@ import { logger } from "~/server/internal/logging";
 
 const signinValidator = type({
   username: "string",
-  password: "string",
+  password: "string<=128",
   "rememberMe?": "boolean | undefined",
 });
 

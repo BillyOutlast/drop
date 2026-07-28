@@ -8,8 +8,20 @@ export default defineEventHandler(async (h3) => {
   const body = await readBody(h3);
   const id = getRouterParam(h3, "id")!;
 
-  const restOfTheBody = { ...body };
-  delete restOfTheBody["id"];
+  // Whitelist allowed fields to prevent mass assignment
+  const allowedFields = [
+    "name",
+    "description",
+    "slug",
+    "coverId",
+    "backgroundId",
+    "iconId",
+    "headerId",
+    "companyId",
+  ];
+  const restOfTheBody = Object.fromEntries(
+    Object.entries(body).filter(([key]) => allowedFields.includes(key)),
+  );
 
   const newObj = (
     await prisma.game.updateManyAndReturn({

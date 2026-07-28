@@ -65,6 +65,17 @@ export default defineEventHandler(async (h3) => {
   await userStatsManager.cacheUserSessions();
 
   if (result.options.redirect) {
+    // Validate redirect URL to prevent open redirect attacks
+    const redirectUrl = new URL(
+      result.options.redirect,
+      getRequestURL(h3).origin,
+    );
+    if (redirectUrl.origin !== getRequestURL(h3).origin) {
+      throw createError({
+        statusCode: 400,
+        message: "Invalid redirect URL",
+      });
+    }
     return sendRedirect(h3, result.options.redirect);
   }
 

@@ -4,6 +4,7 @@ import prisma from "~/server/internal/db/database";
 import { MFAMec } from "~/prisma/client/client";
 import type { TOTPv1Credentials } from "~/server/internal/auth/totp";
 import { dropDecodeArrayBase64 } from "~/server/internal/auth/totp";
+import { createHash } from "node:crypto";
 import { SecretKey, totp } from "otp-io";
 import { hmac } from "otp-io/crypto-web";
 import { readDropValidatedBody, throwingArktype } from "~/server/arktype";
@@ -39,7 +40,14 @@ export default defineEventHandler(async (h3) => {
   const secretKey = new SecretKey(secretKeyBuffer);
 
   const code = await totp(hmac, { secret: secretKey });
-  if (code !== body.code)
+  // Timing-safe comparison to prevent timing attacks
+  if (
+    code.length !== body.code.length ||
+    !createHash("sha256")
+      .update(code)
+      .digest()
+      .equals(createHash("sha256").update(body.code).digest())
+  )
     throw createError({ statusCode: 403, message: "Invalid TOTP code." });
 
   await sessionHandler.mfa(h3, 10);
