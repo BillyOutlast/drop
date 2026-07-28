@@ -8,8 +8,8 @@ use std::{
 
 use aes::cipher::{KeyIvInit, StreamCipher};
 use aes_gcm::{
-    Aes256Gcm, Key, Nonce,
     aead::{Aead, KeyInit},
+    Aes256Gcm, Key, Nonce,
 };
 type Aes128Ctr64LE = ctr::Ctr64LE<aes::Aes128>;
 use anyhow::Error;
@@ -134,6 +134,9 @@ impl DatabaseInterface {
                     magic
                 );
             }
+            // Pre-migration databases used AES-128-CTR with a dummy zero key
+            // and zero IV. This is backward-compatible decryption only — no
+            // real encryption existed before the AES-256-GCM migration (DMS2).
             let mut legacy_data = encrypted.clone();
             let legacy_key = [0u8; 16];
             let legacy_iv = [0u8; 16];

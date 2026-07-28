@@ -263,11 +263,11 @@ class DropletInterfaceManager {
 
     return await new Promise((resolve, reject) => {
       this.callbacks.set(messageId, {
-        type: callbackType,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        type: callbackType as any,
         resolve,
         reject,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+      });
     });
   }
 

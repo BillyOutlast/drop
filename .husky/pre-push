@@ -4,13 +4,16 @@ pnpm --filter drop test:changed
 
 # OpenCodeReview gate: compare local branch against remote base.
 # Runs only when ocr CLI is installed and remote base is fetchable.
-BASE_BRANCH="rebuild"
-REMOTE_BASE="origin/${BASE_BRANCH}"
+# Detect base from upstream tracking, fall back to origin/rebuild.
+REMOTE_BASE="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || echo 'origin/rebuild')"
 
 if command -v ocr >/dev/null 2>&1 && git rev-parse --quiet --verify "${REMOTE_BASE}" >/dev/null 2>&1; then
+  OCR_LOG="$(mktemp /tmp/ocr-pre-push.XXXXXX.log)"
   printf '\n:: Starting OpenCodeReview against %s (non-blocking)...\n' "${REMOTE_BASE}"
-  nohup ocr review --from "${REMOTE_BASE}" --to HEAD --audience agent --exclude 'pnpm-lock.yaml,Cargo.lock' >/tmp/ocr-pre-push.log 2>&1 &
-  printf '   Review running in background — check /tmp/ocr-pre-push.log later.\n'
+  nohup ocr review --from "${REMOTE_BASE}" --to HEAD --audience agent --exclude 'pnpm-lock.yaml,Cargo.lock' >"${OCR_LOG}" 2>&1 &
+  printf '   Review running in background — check %s later.\n' "${OCR_LOG}"
 elif ! command -v ocr >/dev/null 2>&1; then
   printf ':: ocr CLI not found — skipping OpenCodeReview gate\n'
+else
+  printf ':: Remote base %s not found locally — run `git fetch origin` first.\n' "${REMOTE_BASE}"
 fi

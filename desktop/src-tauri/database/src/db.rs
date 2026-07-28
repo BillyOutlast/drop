@@ -41,7 +41,9 @@ fn encryption_key_impl() -> [u8; 32] {
             buffer.to_vec()
         }
         Err(e) => {
-            panic!("keyring read error: {e}");
+            // Keyring failure is fatal — DB is unusable without the encryption key.
+            // LazyLock panics permanently here; recovery requires app restart.
+            panic!("failed to read database encryption key from keyring: {e}");
         }
     };
 

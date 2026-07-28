@@ -7,7 +7,9 @@ import { logger } from "~/server/internal/logging";
 const socketSessions = new Map<string, string>();
 
 // Grace period for unauthenticated WebSocket peers to re-authenticate via token message
-const AUTH_GRACE_PERIOD_MS = 10_000;
+const AUTH_GRACE_PERIOD_MS = Number.parseInt(
+  process.env.WS_AUTH_GRACE_PERIOD ?? "10000",
+);
 // Track pending auth timeouts keyed by peer ID so they can be cleared on re-auth
 const authTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 // Track peers currently being authenticated to prevent race between open and message handlers
@@ -64,6 +66,7 @@ export default defineWebSocketHandler({
         `WebSocket open auth error for peer ${peer.id}`,
       );
       peer.send("unauthenticated");
+      peer.close();
     } finally {
       pendingAuth.delete(peer.id);
     }
@@ -105,7 +108,7 @@ export default defineWebSocketHandler({
     } catch (error) {
       logger.warn(
         { error: (error as Error)?.message },
-        `WebSocket message auth error for peer ${peer.id}`,
+        `WebSocket message processing error for peer ${peer.id}`,
       );
       peer.send("unauthenticated");
       peer.close();
