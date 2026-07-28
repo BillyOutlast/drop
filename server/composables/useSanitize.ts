@@ -93,6 +93,12 @@ function registerHooks(): void {
   });
 }
 
+// Reset hook registration state for test isolation or HMR.
+// DOMPurify hooks are additive — this allows re-registration on next useSanitize().
+function resetHooks(): void {
+  hooksRegistered = false;
+}
+
 export const useSanitize = () => {
   registerHooks();
 
