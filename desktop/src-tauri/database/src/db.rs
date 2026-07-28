@@ -26,22 +26,31 @@ pub static DATA_ROOT_DIR: LazyLock<Arc<PathBuf>> = LazyLock::new(|| {
 /// In test builds, uses a deterministic non-zero key (no system keyring needed).
 #[cfg(not(test))]
 fn encryption_key_impl() -> [u8; 32] {
-    let entry = match keyring::Entry::new("drop", "database_key") {
-        Ok(e) => e,
-        Err(err) => {
-            log::warn!("failed to open keyring: {err}, using ephemeral key");
-            let mut key = [0u8; 32];
-            rand::rng().fill_bytes(&mut key);
-            return key;
+    let entry = keyring::Entry::new("drop", "database_key").expect("failed to open keyring");
+
+    let secret: Vec<u8> = match entry.get_secret() {
+        Ok(s) => s,
+        Err(keyring::Error::NoEntry) => {
+            // No existing key — generate and persist new one
+            let mut buffer = [0u8; 32];
+            rand::rng().fill_bytes(&mut buffer);
+            entry
+                .set_secret(&buffer)
+                .expect("failed to save new key to keyring");
+            log::info!("created new database key");
+            buffer.to_vec()
+        }
+        Err(e) => {
+            panic!("keyring read error: {e}");
         }
     };
-    let secret: Vec<u8> = entry.get_secret().unwrap_or_else(|_| {
-        let mut buffer = [0u8; 32];
-        rand::rng().fill_bytes(&mut buffer);
-        entry.set_secret(&buffer).expect("failed to save key");
-        log::info!("created new database key");
-        buffer.to_vec()
-    });
+
+    if secret.len() != 32 {
+        panic!(
+            "keyring returned secret of length {}, expected 32",
+            secret.len()
+        );
+    }
     let mut key = [0u8; 32];
     key.copy_from_slice(&secret);
     key

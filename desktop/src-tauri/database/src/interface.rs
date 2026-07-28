@@ -26,6 +26,10 @@ use crate::{
     },
 };
 
+/// Magic bytes for database file format detection.
+const MAGIC_V2: &[u8; 4] = b"DMS2"; // AES-256-GCM (current)
+const MAGIC_V1: &[u8; 4] = b"DMS1"; // Legacy AES-128-CTR
+
 pub struct DatabaseInterface {
     data: RwLock<models::data::Database>,
     path: PathBuf,
@@ -102,27 +106,39 @@ impl DatabaseInterface {
             return Ok(None);
         };
         let encrypted = std::fs::read(db_path)?;
-        if encrypted.len() < 12 {
-            anyhow::bail!("database file too short (missing nonce)");
+        if encrypted.len() < 16 {
+            anyhow::bail!("database file too short");
         }
 
-        let (nonce_bytes, ciphertext) = encrypted.split_at(12);
-        let key = *ENCRYPTION_KEY;
-        let key_slice = Key::<Aes256Gcm>::from_slice(&key);
-        let cipher = Aes256Gcm::new(key_slice);
-        let nonce = Nonce::from_slice(nonce_bytes);
+        let magic = &encrypted[..4];
+        let payload = &encrypted[4..];
 
-        let plaintext = match cipher.decrypt(nonce, ciphertext) {
-            Ok(p) => p,
-            Err(e) => {
-                warn!("GCM decryption failed ({e}), attempting legacy AES-128-CTR migration");
-                let mut legacy_data = encrypted.to_vec();
-                let legacy_key = [0u8; 16];
-                let legacy_iv = [0u8; 16];
-                let mut legacy_cipher = Aes128Ctr64LE::new(&legacy_key.into(), &legacy_iv.into());
-                legacy_cipher.apply_keystream(&mut legacy_data);
-                legacy_data
+        let plaintext = if magic == MAGIC_V2.as_slice() {
+            if payload.len() < 12 {
+                anyhow::bail!("v2 database file too short (missing nonce)");
             }
+            let (nonce_bytes, ciphertext) = payload.split_at(12);
+            let key = *ENCRYPTION_KEY;
+            let key_slice = Key::<Aes256Gcm>::from_slice(&key);
+            let cipher = Aes256Gcm::new(key_slice);
+            let nonce = Nonce::from_slice(nonce_bytes);
+            cipher
+                .decrypt(nonce, ciphertext)
+                .map_err(|e| anyhow::anyhow!("v2 database decryption failed: {e}"))?
+        } else {
+            // Legacy AES-128-CTR format (V1 or pre-versioned)
+            if magic != MAGIC_V1.as_slice() {
+                warn!(
+                    "unknown database magic {:?}, attempting legacy decryption",
+                    magic
+                );
+            }
+            let mut legacy_data = payload.to_vec();
+            let legacy_key = [0u8; 16];
+            let legacy_iv = [0u8; 16];
+            let mut legacy_cipher = Aes128Ctr64LE::new(&legacy_key.into(), &legacy_iv.into());
+            legacy_cipher.apply_keystream(&mut legacy_data);
+            legacy_data
         };
 
         let database_data = String::from_utf8(plaintext)?;
@@ -149,8 +165,9 @@ impl DatabaseInterface {
             .encrypt(nonce, plaintext.as_ref())
             .map_err(|e| anyhow::anyhow!("database encryption failed: {e}"))?;
 
-        // Prepend 12-byte nonce to ciphertext+tag
-        let mut encrypted = Vec::with_capacity(12 + ciphertext.len());
+        // Write: [4-byte magic V2][12-byte nonce][ciphertext+tag]
+        let mut encrypted = Vec::with_capacity(4 + 12 + ciphertext.len());
+        encrypted.extend_from_slice(MAGIC_V2);
         encrypted.extend_from_slice(&nonce_bytes);
         encrypted.extend_from_slice(&ciphertext);
 
@@ -304,12 +321,15 @@ mod tests {
             .encrypt(nonce, plaintext.as_ref())
             .expect("encryption should succeed");
 
-        // Recombine as stored on disk: [12-byte nonce][ciphertext+tag]
-        let mut combined = Vec::with_capacity(12 + ciphertext.len());
+        // Recombine as stored on disk: [4-byte magic][12-byte nonce][ciphertext+tag]
+        let mut combined = Vec::with_capacity(4 + 12 + ciphertext.len());
+        combined.extend_from_slice(MAGIC_V2);
         combined.extend_from_slice(&nonce_bytes);
         combined.extend_from_slice(&ciphertext);
 
-        let (stored_nonce, stored_ct) = combined.split_at(12);
+        // Read: skip magic, read nonce
+        let payload = &combined[4..];
+        let (stored_nonce, stored_ct) = payload.split_at(12);
         let nonce = Nonce::from_slice(stored_nonce);
         let decrypted = cipher
             .decrypt(nonce, stored_ct)
@@ -333,7 +353,8 @@ mod tests {
             let ct = cipher
                 .encrypt(nonce, plaintext.as_ref())
                 .expect("encryption should succeed");
-            let mut combined = Vec::with_capacity(12 + ct.len());
+            let mut combined = Vec::with_capacity(4 + 12 + ct.len());
+            combined.extend_from_slice(MAGIC_V2);
             combined.extend_from_slice(&nonce_bytes);
             combined.extend_from_slice(&ct);
             results.insert(combined);
@@ -366,13 +387,15 @@ mod tests {
             .encrypt(nonce, plaintext.as_ref())
             .expect("encryption should succeed");
 
-        let mut combined = Vec::with_capacity(12 + ct.len());
+        let mut combined = Vec::with_capacity(4 + 12 + ct.len());
+        combined.extend_from_slice(MAGIC_V2);
         combined.extend_from_slice(&nonce_bytes);
         combined.extend_from_slice(&ct);
 
         let wrong_key_slice = Key::<Aes256Gcm>::from_slice(&wrong_key);
         let wrong_cipher = Aes256Gcm::new(wrong_key_slice);
-        let (stored_nonce, stored_ct) = combined.split_at(12);
+        let payload = &combined[4..];
+        let (stored_nonce, stored_ct) = payload.split_at(12);
         let nonce = Nonce::from_slice(stored_nonce);
         let result = wrong_cipher.decrypt(nonce, stored_ct);
 

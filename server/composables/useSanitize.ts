@@ -1,5 +1,11 @@
 import DOMPurify from "isomorphic-dompurify";
 
+// Security: HTML tags/attributes allowed in user-generated content.
+// img: permitted for Markdown image syntax. Note: external images can track
+// users via src URLs. Mitigate with CSP `img-src` directive or image proxy.
+// script, style, iframe, form, input, object, embed: intentionally excluded
+// to prevent XSS, script injection, and UI redressing.
+// class, id: permitted for component styling; content sanitized by DOMPurify.
 const ALLOWED_TAGS = [
   "p",
   "br",
@@ -35,6 +41,8 @@ const ALLOWED_TAGS = [
 ];
 
 const ALLOWED_ATTR = [
+  // Security: href/src allow navigation and image display.
+  // on* event handlers and style attribute are excluded to prevent XSS.
   "href",
   "src",
   "alt",
@@ -47,6 +55,8 @@ const ALLOWED_ATTR = [
 
 const ALLOWED_TARGETS = ["_blank", "_self", "_parent", "_top"];
 
+// Register DOMPurify hooks once (safe for multiple useSanitize() calls).
+// Enforces: target value whitelist, rel="noopener noreferrer" on _blank links.
 let hooksRegistered = false;
 
 function registerHooks(): void {

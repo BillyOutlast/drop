@@ -6,47 +6,41 @@ import { logger } from "~/server/internal/logging";
 // Peer ID to user ID
 const socketSessions = new Map<string, string>();
 
+async function authenticatePeer(
+  peer: { id: string; send: (data: string) => void },
+  headers: Headers,
+): Promise<boolean> {
+  const h3 = { headers };
+  const userId = await aclManager.getUserIdACL(h3, ["notifications:listen"]);
+  if (!userId) return false;
+
+  const acls = await aclManager.fetchAllACLs(h3);
+  if (!acls) return false;
+
+  socketSessions.set(peer.id, userId);
+  notificationSystem.listen(userId, acls, peer.id, (notification) => {
+    peer.send(JSON.stringify(notification));
+  });
+  return true;
+}
+
 export default defineWebSocketHandler({
   async open(peer) {
-    const h3 = { headers: peer.request?.headers ?? new Headers() };
-    const userId = await aclManager.getUserIdACL(h3, ["notifications:listen"]);
-    if (!userId) {
+    const authenticated = await authenticatePeer(
+      peer,
+      peer.request?.headers ?? new Headers(),
+    );
+    if (!authenticated) {
       peer.send("unauthenticated");
-      return;
     }
-
-    const acls = await aclManager.fetchAllACLs(h3);
-    if (!acls) {
-      peer.send("unauthenticated");
-      return;
-    }
-
-    socketSessions.set(peer.id, userId);
-
-    notificationSystem.listen(userId, acls, peer.id, (notification) => {
-      peer.send(JSON.stringify(notification));
-    });
   },
   async message(peer, msg) {
     try {
       const data = JSON.parse(msg.toString());
       if (data.token) {
-        const h3 = {
-          headers: new Headers({ Authorization: `Bearer ${data.token}` }),
-        };
-        const userId = await aclManager.getUserIdACL(h3, [
-          "notifications:listen",
-        ]);
-        if (userId) {
-          socketSessions.set(peer.id, userId);
-          const acls = await aclManager.fetchAllACLs(h3);
-          if (acls) {
-            notificationSystem.listen(userId, acls, peer.id, (notification) => {
-              peer.send(JSON.stringify(notification));
-            });
-          }
-          return; // authenticated via token
-        }
+        const headers = new Headers({ Authorization: `Bearer ${data.token}` });
+        const authenticated = await authenticatePeer(peer, headers);
+        if (authenticated) return;
       }
     } catch {
       // Invalid JSON or missing token — fall through to unauthenticated
