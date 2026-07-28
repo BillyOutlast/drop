@@ -54,6 +54,7 @@ const ALLOWED_ATTR = [
 ];
 
 const ALLOWED_TARGETS = ["_blank", "_self", "_parent", "_top"];
+const ALLOWED_TARGETS_SET = new Set(ALLOWED_TARGETS);
 
 // Register DOMPurify hooks once (safe for multiple useSanitize() calls).
 // Enforces: target value whitelist, rel="noopener noreferrer" on _blank links.
@@ -70,10 +71,8 @@ function registerHooks(): void {
       return;
     }
 
-    const allowedTargets = new Set(ALLOWED_TARGETS);
-
     const target = node.getAttribute("target");
-    if (target !== null && !allowedTargets.has(target)) {
+    if (target !== null && !ALLOWED_TARGETS_SET.has(target)) {
       node.removeAttribute("target");
     }
 

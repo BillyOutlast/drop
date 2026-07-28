@@ -11,8 +11,5 @@
   },
   "scripts": {
     "prepare": "husky"
-  },
-  "scripts": {
-    "prepare": "husky"
   }
 }

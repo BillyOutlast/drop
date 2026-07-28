@@ -126,14 +126,15 @@ impl DatabaseInterface {
                 .decrypt(nonce, ciphertext)
                 .map_err(|e| anyhow::anyhow!("v2 database decryption failed: {e}"))?
         } else {
-            // Legacy AES-128-CTR format (V1 or pre-versioned)
+            // Legacy AES-128-CTR format (V1 or pre-versioned).
+            // Pre-PR databases have no magic prefix — decrypt full file.
             if magic != MAGIC_V1.as_slice() {
                 warn!(
                     "unknown database magic {:?}, attempting legacy decryption",
                     magic
                 );
             }
-            let mut legacy_data = payload.to_vec();
+            let mut legacy_data = encrypted.clone();
             let legacy_key = [0u8; 16];
             let legacy_iv = [0u8; 16];
             let mut legacy_cipher = Aes128Ctr64LE::new(&legacy_key.into(), &legacy_iv.into());

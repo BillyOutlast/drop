@@ -26,11 +26,17 @@ async function authenticatePeer(
 
 export default defineWebSocketHandler({
   async open(peer) {
-    const authenticated = await authenticatePeer(
-      peer,
-      peer.request?.headers ?? new Headers(),
-    );
-    if (!authenticated) {
+    try {
+      const authenticated = await authenticatePeer(
+        peer,
+        peer.request?.headers ?? new Headers(),
+      );
+      if (!authenticated) {
+        logger.warn(`WebSocket auth failed for peer ${peer.id}`);
+        peer.send("unauthenticated");
+      }
+    } catch (error) {
+      logger.error({ error }, `WebSocket open auth error for peer ${peer.id}`);
       peer.send("unauthenticated");
     }
   },
@@ -38,12 +44,17 @@ export default defineWebSocketHandler({
     try {
       const data = JSON.parse(msg.toString());
       if (data.token) {
+        // Skip re-authentication if peer is already authenticated
+        if (socketSessions.has(peer.id)) return;
         const headers = new Headers({ Authorization: `Bearer ${data.token}` });
         const authenticated = await authenticatePeer(peer, headers);
         if (authenticated) return;
       }
-    } catch {
-      // Invalid JSON or missing token — fall through to unauthenticated
+    } catch (error) {
+      logger.warn(
+        { error },
+        `WebSocket message auth error for peer ${peer.id}`,
+      );
     }
     peer.send("unauthenticated");
   },
