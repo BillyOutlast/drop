@@ -1,7 +1,57 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { timingSafeEqual } from "node:crypto";
 
+vi.mock("~/server/internal/session", () => ({
+  default: {
+    getSession: vi.fn(),
+    mfa: vi.fn(),
+  },
+}));
+
+vi.mock("~/server/internal/db/database", () => ({
+  default: {
+    linkedMFAMec: {
+      findUnique: vi.fn(),
+    },
+  },
+}));
+
+vi.mock("~/server/internal/auth/totp", () => ({
+  dropDecodeArrayBase64: vi
+    .fn()
+    .mockReturnValue(Buffer.from("fake-secret-key-here")),
+  TOTPv1Credentials: Object,
+}));
+
+class MockSecretKey {
+  _buffer: Buffer;
+  constructor(buffer: Buffer) {
+    this._buffer = buffer;
+  }
+}
+
+vi.mock("otp-io", () => ({
+  SecretKey: MockSecretKey,
+  totp: vi.fn().mockResolvedValue("123456"),
+}));
+
+vi.mock("otp-io/crypto-web", () => ({
+  hmac: vi.fn(),
+}));
+
+vi.mock("~/server/arktype", () => ({
+  readDropValidatedBody: vi.fn(),
+  throwingArktype: Object,
+}));
+
 describe("TOTP Timing-Safe Comparison", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubGlobal("createError", (opts: unknown) => {
+      throw opts;
+    });
+  });
+
   it("timingSafeEqual returns true for identical buffers", () => {
     const a = Buffer.from("123456");
     const b = Buffer.from("123456");
@@ -31,25 +81,78 @@ describe("TOTP Timing-Safe Comparison", () => {
     expect(isValid).toBe(false);
   });
 
-  it("validates correct 6-digit TOTP code", () => {
-    const code = "123456";
-    const bodyCode = "123456";
+  it("validates correct 6-digit TOTP code via production handler", async () => {
+    const sessionHandler = (await import("~/server/internal/session")).default;
+    const prisma = (await import("~/server/internal/db/database")).default;
+    const { readDropValidatedBody } = await import("~/server/arktype");
 
-    const isValid =
-      code.length === bodyCode.length &&
-      timingSafeEqual(Buffer.from(code), Buffer.from(bodyCode));
+    vi.mocked(sessionHandler.getSession).mockResolvedValue({
+      authenticated: {
+        userId: "user-1",
+        level: 10,
+        requiredLevel: 10,
+      },
+    } as never);
+    vi.mocked(prisma.linkedMFAMec.findUnique).mockResolvedValue({
+      credentials: { secret: "dGVzdC1zZWNyZXQ=" },
+    } as never);
+    vi.mocked(readDropValidatedBody).mockResolvedValue({ code: "123456" });
 
-    expect(isValid).toBe(true);
+    const handler = (await import("~/server/api/v1/auth/mfa/totp.post"))
+      .default;
+    const result = await handler({} as never);
+
+    expect(result).toEqual({});
+    expect(sessionHandler.mfa).toHaveBeenCalledWith(expect.anything(), 10);
   });
 
-  it("rejects incorrect 6-digit TOTP code", () => {
-    const code = "123456";
-    const bodyCode = "000000";
+  it("rejects incorrect 6-digit TOTP code via production handler", async () => {
+    const sessionHandler = (await import("~/server/internal/session")).default;
+    const prisma = (await import("~/server/internal/db/database")).default;
+    const { readDropValidatedBody } = await import("~/server/arktype");
+    const { totp } = await import("otp-io");
 
-    const isValid =
-      code.length === bodyCode.length &&
-      timingSafeEqual(Buffer.from(code), Buffer.from(bodyCode));
+    vi.mocked(sessionHandler.getSession).mockResolvedValue({
+      authenticated: {
+        userId: "user-1",
+        level: 10,
+        requiredLevel: 10,
+      },
+    } as never);
+    vi.mocked(prisma.linkedMFAMec.findUnique).mockResolvedValue({
+      credentials: { secret: "dGVzdC1zZWNyZXQ=" },
+    } as never);
+    vi.mocked(readDropValidatedBody).mockResolvedValue({ code: "000000" });
+    vi.mocked(totp).mockResolvedValue("654321");
 
-    expect(isValid).toBe(false);
+    const handler = (await import("~/server/api/v1/auth/mfa/totp.post"))
+      .default;
+    await expect(handler({} as never)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+  });
+
+  it("rejects TOTP code with different length via production handler", async () => {
+    const sessionHandler = (await import("~/server/internal/session")).default;
+    const prisma = (await import("~/server/internal/db/database")).default;
+    const { readDropValidatedBody } = await import("~/server/arktype");
+
+    vi.mocked(sessionHandler.getSession).mockResolvedValue({
+      authenticated: {
+        userId: "user-1",
+        level: 10,
+        requiredLevel: 10,
+      },
+    } as never);
+    vi.mocked(prisma.linkedMFAMec.findUnique).mockResolvedValue({
+      credentials: { secret: "dGVzdC1zZWNyZXQ=" },
+    } as never);
+    vi.mocked(readDropValidatedBody).mockResolvedValue({ code: "12345" });
+
+    const handler = (await import("~/server/api/v1/auth/mfa/totp.post"))
+      .default;
+    await expect(handler({} as never)).rejects.toMatchObject({
+      statusCode: 403,
+    });
   });
 });
