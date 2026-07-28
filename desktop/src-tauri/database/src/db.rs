@@ -28,7 +28,7 @@ pub static DATA_ROOT_DIR: LazyLock<Arc<PathBuf>> = LazyLock::new(|| {
 fn encryption_key_impl() -> [u8; 32] {
     let entry = keyring::Entry::new("drop", "database_key").expect("failed to open keyring");
 
-    let secret: Vec<u8> = match entry.get_secret() {
+    let mut secret: Vec<u8> = match entry.get_secret() {
         Ok(s) => s,
         Err(keyring::Error::NoEntry) => {
             // No existing key — generate and persist new one
@@ -53,6 +53,8 @@ fn encryption_key_impl() -> [u8; 32] {
     }
     let mut key = [0u8; 32];
     key.copy_from_slice(&secret);
+    // Zero the heap-allocated secret after copying to stack
+    secret.fill(0);
     key
 }
 

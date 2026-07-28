@@ -17,6 +17,13 @@ async function authenticatePeer(
   const acls = await aclManager.fetchAllACLs(h3);
   if (!acls) return false;
 
+  // Clean up existing session for this peer before re-registering
+  const existingUserId = socketSessions.get(peer.id);
+  if (existingUserId) {
+    notificationSystem.unlisten(existingUserId, peer.id);
+    notificationSystem.unlisten("system", peer.id);
+  }
+
   socketSessions.set(peer.id, userId);
   notificationSystem.listen(userId, acls, peer.id, (notification) => {
     peer.send(JSON.stringify(notification));
@@ -34,10 +41,12 @@ export default defineWebSocketHandler({
       if (!authenticated) {
         logger.warn(`WebSocket auth failed for peer ${peer.id}`);
         peer.send("unauthenticated");
+        peer.close();
       }
     } catch (error) {
       logger.error({ error }, `WebSocket open auth error for peer ${peer.id}`);
       peer.send("unauthenticated");
+      peer.close();
     }
   },
   async message(peer, msg) {
@@ -57,6 +66,7 @@ export default defineWebSocketHandler({
       );
     }
     peer.send("unauthenticated");
+    peer.close();
   },
 
   async close(peer, _details) {
