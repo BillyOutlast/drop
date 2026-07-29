@@ -27,7 +27,8 @@ pub static DATA_ROOT_DIR: LazyLock<Arc<PathBuf>> = LazyLock::new(|| {
 /// In test builds, uses a deterministic non-zero key (no system keyring needed).
 #[cfg(not(test))]
 fn encryption_key_impl() -> [u8; 32] {
-    let entry = keyring::Entry::new("drop", "database_key").expect("failed to open keyring");
+    let entry =
+        keyring::Entry::new("drop_database", "encryption_key").expect("failed to open keyring");
 
     let mut secret: Vec<u8> = match entry.get_secret() {
         Ok(s) => s,

@@ -220,11 +220,12 @@ TOTAL_COMPONENTS=$(echo "$COVERAGE_RESPONSE" | jq -r '.paging.total // 0')
 if [[ "$TOTAL_COMPONENTS" -gt 500 ]]; then
   TOTAL_COV_PAGES=$(( (TOTAL_COMPONENTS + 500 - 1) / 500 ))
   for ((p = 2; p <= TOTAL_COV_PAGES; p++)); do
-    PAGE_RESPONSE=$(curl -sS -f ... "&p=${p}" ...)
-    COVERAGE_RESPONSE=$(echo "$COVERAGE_RESPONSE $PAGE_RESPONSE" | jq -s '{components: [.[].components[]]}')
+    PAGE_RESPONSE=$(curl -sS -f \
+      -H "Authorization: Bearer ${SONAR_TOKEN}" \
+      "https://sonarcloud.io/api/measures/component_tree?component=${SONAR_PROJECT_KEY}&metricKeys=new_coverage,new_uncovered_lines&qualifiers=FIL&ps=500&p=${p}&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"components":[]}')
+    COVERAGE_RESPONSE=$(printf '%s %s' "$COVERAGE_RESPONSE" "$PAGE_RESPONSE" | jq -s '{components: [.[].components[]]}')
   done
 fi
-  "https://sonarcloud.io/api/measures/component_tree?component=${SONAR_PROJECT_KEY}&metricKeys=new_coverage,new_uncovered_lines&qualifiers=FIL&ps=500&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"components":[]}')
 
 # --- Step 4b: Build human-readable coverage gaps table ------------------------
 
@@ -257,14 +258,21 @@ if echo "$UNCOVERED_FILES" | jq -e 'length > 0' >/dev/null 2>&1; then
     FILE_COV=$(echo "$file_entry" | jq -r '.coverage')
     FILE_UNC=$(echo "$file_entry" | jq -r '.uncovered')
 
-    # Stash metadata for ordered processing after parallel fetch
-    printf '%s|%s|%s|%s\n' "${FILE_KEY}" "${FILE_PATH}" "${FILE_COV}" "${FILE_UNC}" > "${TEMP_DIR}/meta_${file_index}"
+    # Stash metadata as JSON line so file paths containing | are safe
+    jq -c -n \
+      --arg key "$FILE_KEY" \
+      --arg path "$FILE_PATH" \
+      --arg cov "$FILE_COV" \
+      --arg unc "$FILE_UNC" \
+      '{key:$key, path:$path, coverage:$cov, uncovered:$unc}' > "${TEMP_DIR}/meta_${file_index}"
+
+    # URL-encode FILE_KEY for the SonarCloud sources/lines API
+    ENCODED_KEY=$(jq -rn --arg k "$FILE_KEY" '$k | @uri')
 
     # Fetch line-level data in background — all files run concurrently
     {
-# Consider documenting in the coverage table when file lines > SONAR_MAX_LINES
-# e.g., by comparing the returned line count against SONAR_MAX_LINES
-    curl -sS -H "Authorization: Bearer ${SONAR_TOKEN}" \
+      curl -sS -f --connect-timeout 10 --max-time 30 \
+        -H "Authorization: Bearer ${SONAR_TOKEN}" \
         "https://sonarcloud.io/api/sources/lines?key=${ENCODED_KEY}&from=1&to=${SONAR_MAX_LINES}&pullRequest=${GITHUB_PR_NUMBER}" \
         2>/dev/null || echo '{"sources":[]}'
     } > "${TEMP_DIR}/lines_${file_index}" &
@@ -277,12 +285,21 @@ if echo "$UNCOVERED_FILES" | jq -e 'length > 0' >/dev/null 2>&1; then
 
   # Process results in order
   for ((i = 0; i < file_index; i++)); do
-    IFS='|' read -r FILE_KEY FILE_PATH FILE_COV FILE_UNC < "${TEMP_DIR}/meta_${i}"
-    LINES_RESPONSE=$(<"${TEMP_DIR}/lines_${i}")
+    META=$(<"${TEMP_DIR}/meta_${i}")
+    FILE_KEY=$(echo "$META" | jq -r '.key')
+    FILE_PATH=$(echo "$META" | jq -r '.path')
+    FILE_COV=$(echo "$META" | jq -r '.coverage')
+    FILE_UNC=$(echo "$META" | jq -r '.uncovered')
+    # shellcheck disable=SC2188
+    LINES_RESPONSE=$(<"${TEMP_DIR}/lines_${i}" 2>/dev/null || echo '{"sources":[]}')
 
-    HAS_SOURCES=$(echo "$LINES_RESPONSE" | jq '(.sources // []) | length')
+    if ! echo "$LINES_RESPONSE" | jq empty 2>/dev/null; then
+      LINES_RESPONSE='{"sources":[]}'
+    fi
+
+    # Dedupe line numbers before sort — SonarCloud may return duplicates
     NEW_LINES=$(echo "$LINES_RESPONSE" | jq -r '
-      [.sources[] | select(.isNew == true and (.lineHits // -1) == 0) | .line] | sort'
+      [.sources[] | select(.isNew == true and (.lineHits // -1) == 0) | .line] | unique | sort'
     )
 
     if echo "$NEW_LINES" | jq -e 'length > 0' >/dev/null 2>&1; then
@@ -302,8 +319,9 @@ if echo "$UNCOVERED_FILES" | jq -e 'length > 0' >/dev/null 2>&1; then
           end
         ) | join(", ")')
 
-SAFE_PATH=$(echo "$FILE_PATH" | sed 's/|/\|/g; s/`/`/g')
-COMMENT_BODY+="| \`${SAFE_PATH}\` | ${FILE_COV}% | ${FILE_UNC} | ${LINE_RANGES} |\n"
+SAFE_PATH="${FILE_PATH//|/\\|}"
+SAFE_RANGES="${LINE_RANGES//|/\\|}"
+COMMENT_BODY+="| \`${SAFE_PATH}\` | ${FILE_COV}% | ${FILE_UNC} | ${SAFE_RANGES} |\n"
     fi
   done
   COMMENT_BODY+="\n"
