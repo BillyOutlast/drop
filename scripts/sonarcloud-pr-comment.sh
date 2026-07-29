@@ -81,13 +81,10 @@ TOTAL_PAGES=$(( (TOTAL + PAGE_SIZE - 1) / PAGE_SIZE ))
 log "Found ${TOTAL} unresolved issues across ${TOTAL_PAGES} page(s) (BLOCKER/CRITICAL/MAJOR)"
 
 if [[ "$TOTAL" -eq 0 ]]; then
-  log "No unresolved issues — posting success comment"
-  COMMENT_BODY="## SonarCloud Analysis ✅\n\nNo BLOCKER, CRITICAL, or MAJOR issues found."
-  echo -e "$COMMENT_BODY" | gh pr comment "$GITHUB_PR_NUMBER" \
-    --repo "$GITHUB_REPOSITORY" \
-    --body-file - 2>/dev/null || log "Failed to post comment"
-  exit 0
-fi
+  log "No unresolved issues — building coverage-only comment"
+  COMMENT_BODY="## SonarCloud Analysis ✅\n\nNo BLOCKER, CRITICAL, or MAJOR issues found.\n\n"
+else
+  COMMENT_BODY="## SonarCloud Analysis\n\n"
 
 # Fetch remaining pages if needed
 if [[ "$TOTAL_PAGES" -gt 1 ]]; then
@@ -199,6 +196,7 @@ if [[ "$MATCHED_COUNT" -gt 0 ]]; then
 else
   COMMENT_BODY+="No existing GitHub issues found for these findings. Run \`./scripts/sonarcloud-sync.sh\` to create tracking issues.\n"
 fi
+fi
 
 COMMENT_BODY+="\n---\n\n"
 COMMENT_BODY+="*Full analysis: [SonarCloud Dashboard](https://sonarcloud.io/project/overview?id=${SONAR_PROJECT_KEY})*\n"
@@ -247,7 +245,7 @@ if echo "$UNCOVERED_FILES" | jq -e 'length > 0' >/dev/null 2>&1; then
     # Collect new-line numbers. When coverage is null (no tests),
     # all new lines are uncovered. Group consecutive lines into ranges.
     NEW_LINES=$(echo "$LINES_RESPONSE" | jq -r '
-      [.sources[] | select(.isNew == true) | .line] | sort'
+      [.sources[] | select(.isNew == true and .coverage != "covered") | .line] | sort'
     )
 
     if [[ "$(echo "$NEW_LINES" | jq 'length')" -gt 0 ]]; then
