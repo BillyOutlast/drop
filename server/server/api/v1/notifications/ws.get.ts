@@ -16,6 +16,7 @@ const authTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 // Track peers currently being authenticated to prevent race between open and message handlers
 const pendingAuth = new Set<string>();
 
+// fallow-ignore-next-line complexity
 async function authenticatePeer(
   peer: { id: string; send: (data: string) => void },
   headers: Headers,
@@ -35,9 +36,14 @@ async function authenticatePeer(
   }
 
   socketSessions.set(peer.id, userId);
-  notificationSystem.listen(userId, acls, peer.id, (notification) => {
-    peer.send(JSON.stringify(notification));
-  });
+  try {
+    notificationSystem.listen(userId, acls, peer.id, (notification) => {
+      peer.send(JSON.stringify(notification));
+    });
+  } catch (_e) {
+    socketSessions.delete(peer.id);
+    throw _e;
+  }
   return true;
 }
 

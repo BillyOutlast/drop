@@ -8,6 +8,8 @@ vi.mock("~/server/internal/acls", () => ({
   default: { allowSystemACL: vi.fn().mockResolvedValue(true) },
 }));
 
+// vi.mock calls must precede the module import for hoisting to work.
+// eslint-disable-next-line import/first
 import { buildFilters } from "~/server/api/v1/admin/library/index.get";
 
 function q(overrides: Record<string, unknown> = {}) {

@@ -266,7 +266,8 @@ jobs:
     needs: sonar
     # The scan uploads findings to SonarCloud API before quality gate check.
     # Run even when quality gate fails — the API still has data to comment.
-    if: github.event_name == 'pull_request' && !cancelled()
+    # always() overrides needs dependency failure; !cancelled() alone does not.
+    if: github.event_name == 'pull_request' && always() && !cancelled()
     permissions:
       contents: read
       pull-requests: write

@@ -142,16 +142,14 @@ impl DatabaseInterface {
             return Ok(None);
         };
         let encrypted = std::fs::read(db_path)?;
-        if encrypted.len() < 32 {
-            anyhow::bail!(
-                "database file too short (min 32 bytes for V2: 4 magic + 12 nonce + 16 GCM)"
-            );
-        }
 
         let magic = &encrypted[..4];
         let payload = &encrypted[4..];
 
         let plaintext = if magic == MAGIC_V2.as_slice() {
+            if payload.len() < 28 {
+                anyhow::bail!("V2 payload too short (min 28 bytes: 12 nonce + 16 GCM)");
+            }
             decrypt_database(&*ENCRYPTION_KEY, payload)
                 .map_err(|e| anyhow::anyhow!("v2 database decryption failed: {e}"))?
         } else {

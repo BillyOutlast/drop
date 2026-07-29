@@ -38,7 +38,10 @@ fn encryption_key_impl() -> [u8; 32] {
                 .set_secret(&buffer)
                 .expect("failed to save new key to keyring");
             log::info!("created new database key");
-            buffer.to_vec()
+            let result = buffer.to_vec();
+            // Zero the stack buffer after persisting to keyring
+            buffer.fill(0);
+            result
         }
         Err(e) => {
             // Keyring failure is fatal — DB is unusable without the encryption key.
@@ -63,35 +66,37 @@ fn encryption_key_impl() -> [u8; 32] {
 #[cfg(test)]
 fn encryption_key_impl() -> [u8; 32] {
     // Deterministic test key (non-zero, no keyring dependency)
-    std::env::var("DATABASE_TEST_KEY")
-        .ok()
-        .map(|hex| {
-            let bytes = hex.as_bytes();
-            if bytes.len() != 64 {
-                panic!(
-                    "DATABASE_TEST_KEY must be 64 hex characters, got {}: {hex}",
-                    bytes.len()
-                )
-            }
-            let mut key = [0u8; 32];
-            for i in 0..32 {
-                let hi = decode_hex_nibble(bytes[2 * i]).unwrap_or_else(|| {
-                    panic!(
-                        "invalid hex character at position {} in DATABASE_TEST_KEY",
-                        2 * i
-                    )
-                });
-                let lo = decode_hex_nibble(bytes[2 * i + 1]).unwrap_or_else(|| {
-                    panic!(
-                        "invalid hex character at position {} in DATABASE_TEST_KEY",
-                        2 * i + 1
-                    )
-                });
-                key[i] = (hi << 4) | lo;
-            }
-            key
-        })
-        .unwrap_or([0xAB; 32])
+    let hex = match std::env::var("DATABASE_TEST_KEY") {
+        Ok(v) => v,
+        Err(std::env::VarError::NotPresent) => return [0xAB; 32],
+        Err(std::env::VarError::NotUnicode(_)) => {
+            panic!("DATABASE_TEST_KEY is not valid Unicode")
+        }
+    };
+    let bytes = hex.as_bytes();
+    if bytes.len() != 64 {
+        panic!(
+            "DATABASE_TEST_KEY must be 64 hex characters, got {}: {hex}",
+            bytes.len()
+        )
+    }
+    let mut key = [0u8; 32];
+    for i in 0..32 {
+        let hi = decode_hex_nibble(bytes[2 * i]).unwrap_or_else(|| {
+            panic!(
+                "invalid hex character at position {} in DATABASE_TEST_KEY",
+                2 * i
+            )
+        });
+        let lo = decode_hex_nibble(bytes[2 * i + 1]).unwrap_or_else(|| {
+            panic!(
+                "invalid hex character at position {} in DATABASE_TEST_KEY",
+                2 * i + 1
+            )
+        });
+        key[i] = (hi << 4) | lo;
+    }
+    key
 }
 
 #[cfg(test)]
