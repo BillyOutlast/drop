@@ -193,14 +193,15 @@ export default defineWebSocketHandler({
         peer.send("unauthenticated");
         // Allow grace period for token-based re-auth, then close
         const authTimeout = setTimeout(() => {
-          if (!socketSessions.has(peer.id) && !pendingAuth.has(peer.id)) {
-            peer.close();
-          }
-          authTimeouts.delete(peer.id);
-        }, AUTH_GRACE_PERIOD_MS);
-        authTimeouts.set(peer.id, authTimeout);
       }
+    }
     } catch (error) {
+      logger.error(
+        { error: (error as Error).message },
+        `WebSocket open auth error for peer ${peer.id}`,
+      );
+      peer.send("unauthenticated");
+      peer.close();
     } finally {
       pendingAuth.delete(peer.id);
       await drainPendingAuthBuffer(peer);
