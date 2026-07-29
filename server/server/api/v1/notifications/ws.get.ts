@@ -91,7 +91,10 @@ export default defineWebSocketHandler({
       const data = JSON.parse(msg.toString());
       if (data.token) {
         if (typeof data.token !== "string" || data.token.length === 0) {
-          logger.warn({ peerId: peer.id }, "WebSocket token auth: invalid token type");
+          logger.warn(
+            { peerId: peer.id },
+            "WebSocket token auth: invalid token type",
+          );
           peer.send("unauthenticated");
           clearAuthTimeoutAndClose(peer);
           return;
