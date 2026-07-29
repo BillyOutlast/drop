@@ -277,10 +277,12 @@
           </div>
 
           <div>
+            <!-- eslint-disable vue/no-v-html -- sanitized via DOMPurify -->
             <div
               class="mt-12 prose prose-invert prose-blue max-w-none"
               v-html="descriptionHTML"
             />
+            <!-- eslint-enable vue/no-v-html -->
           </div>
         </div>
       </div>

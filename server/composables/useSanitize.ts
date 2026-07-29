@@ -66,8 +66,6 @@ function registerHooks(): void {
   }
   hooksRegistered = true;
 
-  DOMPurify.removeAllHooks();
-
   DOMPurify.addHook("afterSanitizeAttributes", (node) => {
     if (!("tagName" in node) || node.tagName !== "A") {
       return;

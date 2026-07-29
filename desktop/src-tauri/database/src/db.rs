@@ -65,7 +65,7 @@ fn encryption_key_impl() -> [u8; 32] {
     // Deterministic test key (non-zero, no keyring dependency)
     std::env::var("DATABASE_TEST_KEY")
         .ok()
-        .and_then(|hex| {
+        .map(|hex| {
             let bytes = hex.as_bytes();
             if bytes.len() != 64 {
                 panic!(
@@ -89,7 +89,7 @@ fn encryption_key_impl() -> [u8; 32] {
                 });
                 key[i] = (hi << 4) | lo;
             }
-            Some(key)
+            key
         })
         .unwrap_or([0xAB; 32])
 }

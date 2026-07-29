@@ -27,14 +27,12 @@ FROM rustlang/rust:nightly-bookworm-slim AS torrential-build
 ## libarchive-dev + pkg-config let libarchive3-sys link libarchive dynamically (glibc).
 ## protobuf-compiler is kept for parity (torrential's build.rs uses a vendored protoc).
 # hadolint ignore=DL3008
-USER root
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libarchive-dev \
     pkg-config \
     protobuf-compiler \
     && rm -rf /var/lib/apt/lists/*
-# hadolint ignore=DL3002
-USER nobody
+# Build stage runs as root — cargo needs write access to /build and its cache
 WORKDIR /build
 COPY . .
 RUN cargo build --locked --release --manifest-path ./torrential/Cargo.toml
@@ -50,6 +48,7 @@ USER root
 RUN apt-get update && apt-get install -y --no-install-recommends git \
     && rm -rf /var/lib/apt/lists/*
 # hadolint ignore=DL3002
+RUN chown -R node:node /app
 USER node
 
 ## copy deps and rest of project files

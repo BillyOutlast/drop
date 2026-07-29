@@ -294,6 +294,7 @@
               />
             </div>
             <!-- result box -->
+            <!-- eslint-disable vue/no-v-html -- sanitized via DOMPurify -->
             <div
               :class="[
                 mobileShowFinalDescription ? 'block' : 'hidden',
@@ -301,6 +302,7 @@
               ]"
               v-html="descriptionHTML"
             />
+            <!-- eslint-enable vue/no-v-html -->
           </div>
         </div>
       </div>

@@ -29,7 +29,8 @@ class AuthManager {
         if (key === AuthMec.Simple) {
           this.authProviders[AuthMec.Simple] = object as boolean;
         } else if (key === AuthMec.OpenID) {
-          this.authProviders[AuthMec.OpenID] = object as OIDCManager | undefined;
+          this.authProviders[AuthMec.OpenID] = object as
+            OIDCManager | undefined;
         }
         logger.info(`enabled auth: ${key}`);
       } catch (e) {

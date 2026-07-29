@@ -214,6 +214,69 @@ COVERAGE_RESPONSE=$(curl -sS -f \
   -H "Authorization: Bearer ${SONAR_TOKEN}" \
   "https://sonarcloud.io/api/measures/component_tree?component=${SONAR_PROJECT_KEY}&metricKeys=new_coverage,new_uncovered_lines&qualifiers=FIL&ps=15&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"components":[]}')
 
+# --- Step 4b: Build human-readable coverage gaps table ------------------------
+
+log "Building coverage gaps table..."
+UNCOVERED_FILES=$(echo "$COVERAGE_RESPONSE" | jq -c '
+  [.components[]? |
+    select((.measures[]? | select(.metric == "new_uncovered_lines") | .value | tonumber > 0))
+    | {
+        key: .key,
+        path: (.path // "unknown"),
+        uncovered: (.measures[]? | select(.metric == "new_uncovered_lines") | .value | tonumber),
+        coverage: (.measures[]? | select(.metric == "new_coverage") | .value // "0.0")
+      }
+  ] | sort_by(.uncovered) | reverse | .[0:5]')
+
+if echo "$UNCOVERED_FILES" | jq -e 'length > 0' >/dev/null 2>&1; then
+  COMMENT_BODY+="### 📊 Lines Needing Coverage\n\n"
+  COMMENT_BODY+="| File | Coverage | Uncovered Lines | Lines Needing Tests |\n"
+  COMMENT_BODY+="|------|----------|----------------|--------------------|\n"
+
+  while read -r file_entry; do
+    FILE_KEY=$(echo "$file_entry" | jq -r '.key')
+    FILE_PATH=$(echo "$file_entry" | jq -r '.path')
+    FILE_COV=$(echo "$file_entry" | jq -r '.coverage')
+    FILE_UNC=$(echo "$file_entry" | jq -r '.uncovered')
+
+    # Fetch line-level data for this file (new lines in the PR)
+    LINES_RESPONSE=$(curl -sS \
+      -H "Authorization: Bearer ${SONAR_TOKEN}" \
+      "https://sonarcloud.io/api/sources/lines?key=${FILE_KEY}&from=1&to=500&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"sources":[]}')
+
+    # Collect new-line numbers. When coverage is null (no tests),
+    # all new lines are uncovered. Group consecutive lines into ranges.
+    NEW_LINES=$(echo "$LINES_RESPONSE" | jq -r '
+      [.sources[] | select(.isNew == true) | .line] | sort'
+    )
+
+    if [[ "$(echo "$NEW_LINES" | jq 'length')" -gt 0 ]]; then
+      LINE_RANGES=$(echo "$NEW_LINES" | jq -r '
+        reduce .[] as $l (
+          {ranges: [], current: null};
+          if .current == null then
+            {ranges: [[$l, $l]], current: [$l, $l]}
+          elif $l == .current[1] + 1 then
+            {ranges: .ranges[: -1] + [[.current[0], $l]], current: [.current[0], $l]}
+          else
+            {ranges: .ranges + [[$l, $l]], current: [$l, $l]}
+          end
+        ) | .ranges | map(
+          if .[0] == .[1] then "\(.[0])"
+          else "\(.[0])-\(.[1])"
+          end
+        ) | join(", ")')
+
+      COMMENT_BODY+="| \`${FILE_PATH}\` | ${FILE_COV}% | ${FILE_UNC} | ${LINE_RANGES} |\n"
+    else
+      COMMENT_BODY+="| \`${FILE_PATH}\` | ${FILE_COV}% | ${FILE_UNC} | *(not yet indexed)* |\n"
+    fi
+  done < <(echo "$UNCOVERED_FILES" | jq -c '.[]')
+  COMMENT_BODY+="\n"
+else
+  COMMENT_BODY+="### 📊 Lines Needing Coverage\n\nNo uncovered lines found in new code.\n\n"
+fi
+
 COMMENT_BODY+="<details>\n<summary>📋 JSON Summary (for AI agents)</summary>\n\n"
 COMMENT_BODY+="\`\`\`json\n"
 

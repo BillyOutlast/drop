@@ -102,10 +102,12 @@
 
           <div class="space-y-6">
             <div class="bg-zinc-800/50 rounded-xl p-6 backdrop-blur-sm">
+              <!-- eslint-disable vue/no-v-html -- sanitized via DOMPurify -->
               <div
                 class="prose prose-invert prose-blue overflow-y-auto custom-scrollbar max-w-none"
                 v-html="descriptionHTML"
               />
+              <!-- eslint-enable vue/no-v-html -->
             </div>
           </div>
         </div>

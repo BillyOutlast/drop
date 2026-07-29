@@ -9,7 +9,7 @@ pnpm --filter drop test:changed
 CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 UPSTREAM="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)"
 REMOTE_BASE="${UPSTREAM}"
-if [ -z "${REMOTE_BASE}" ] || [ "${REMOTE_BASE#origin/}" = "${CURRENT_BRANCH}" ]; then
+if [ -z "${REMOTE_BASE}" ] || [ "${REMOTE_BASE##*/}" = "${CURRENT_BRANCH}" ]; then
   REMOTE_BASE="origin/rebuild"
 fi
 

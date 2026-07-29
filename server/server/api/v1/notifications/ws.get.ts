@@ -80,22 +80,30 @@ export default defineWebSocketHandler({
       if (data.token) {
         // Skip re-authentication if peer is already authenticated
         if (socketSessions.has(peer.id)) return;
-        const headers = new Headers({ Authorization: `Bearer ${data.token}` });
-        const authenticated = await authenticatePeer(peer, headers);
-        if (authenticated) {
-          // Clear the pending auth timeout — peer successfully re-authenticated
-          const timeoutId = authTimeouts.get(peer.id);
-          if (timeoutId) {
-            clearTimeout(timeoutId);
-            authTimeouts.delete(peer.id);
+        // Serialize token auth per peer — prevent concurrent authenticatePeer calls
+        pendingAuth.add(peer.id);
+        try {
+          const headers = new Headers({
+            Authorization: `Bearer ${data.token}`,
+          });
+          const authenticated = await authenticatePeer(peer, headers);
+          if (authenticated) {
+            // Clear the pending auth timeout — peer successfully re-authenticated
+            const timeoutId = authTimeouts.get(peer.id);
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+              authTimeouts.delete(peer.id);
+            }
+            return;
           }
+          // Token auth failed — close connection
+          logger.warn(`WebSocket token auth failed for peer ${peer.id}`);
+          peer.send("unauthenticated");
+          peer.close();
           return;
+        } finally {
+          pendingAuth.delete(peer.id);
         }
-        // Token auth failed — close connection
-        logger.warn(`WebSocket token auth failed for peer ${peer.id}`);
-        peer.send("unauthenticated");
-        peer.close();
-        return;
       }
       // Non-token message from authenticated peer — ignore
       if (socketSessions.has(peer.id)) return;
@@ -112,8 +120,10 @@ export default defineWebSocketHandler({
         { error: (error as Error)?.message },
         `WebSocket message processing error for peer ${peer.id}`,
       );
-      peer.send("unauthenticated");
-      peer.close();
+      if (!socketSessions.has(peer.id)) {
+        peer.send("unauthenticated");
+        peer.close();
+      }
     }
   },
 

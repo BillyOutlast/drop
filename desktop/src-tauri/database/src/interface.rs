@@ -28,7 +28,7 @@ use crate::{
 
 /// Magic bytes for database file format detection.
 const MAGIC_V2: &[u8; 4] = b"DMS2"; // AES-256-GCM (current)
-const MAGIC_V1: &[u8; 4] = b"DMS1"; // Legacy AES-128-CTR
+                                    // MAGIC_V1 (b"DMS1") was never shipped — removed. Pre-PR databases have no magic prefix.
 
 /// Encrypt `plaintext` with AES-256-GCM, returning `[MAGIC_V2][12-byte nonce][ciphertext+tag]`.
 fn encrypt_database(key: &[u8; 32], plaintext: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
@@ -48,11 +48,18 @@ fn encrypt_database(key: &[u8; 32], plaintext: Vec<u8>) -> Result<Vec<u8>, anyho
 }
 
 /// Decrypt data produced by `encrypt_database`.
+/// Takes the nonce+ciphertext slice (magic prefix already stripped by caller).
+/// Requires at least 28 bytes: 12-byte nonce + 16-byte minimum GCM ciphertext+tag.
 fn decrypt_database(key: &[u8; 32], encrypted: &[u8]) -> Result<Vec<u8>, anyhow::Error> {
+    if encrypted.len() < 28 {
+        anyhow::bail!(
+            "encrypted payload too short: {} bytes (min 28: 12 nonce + 16 GCM tag)",
+            encrypted.len()
+        );
+    }
     let key_slice = Key::<Aes256Gcm>::from_slice(key);
     let cipher = Aes256Gcm::new(key_slice);
-    let payload = &encrypted[4..];
-    let (nonce_bytes, ciphertext) = payload.split_at(12);
+    let (nonce_bytes, ciphertext) = encrypted.split_at(12);
     let nonce = Nonce::from_slice(nonce_bytes);
     cipher
         .decrypt(nonce, ciphertext)
@@ -135,8 +142,10 @@ impl DatabaseInterface {
             return Ok(None);
         };
         let encrypted = std::fs::read(db_path)?;
-        if encrypted.len() < 16 {
-            anyhow::bail!("database file too short");
+        if encrypted.len() < 32 {
+            anyhow::bail!(
+                "database file too short (min 32 bytes for V2: 4 magic + 12 nonce + 16 GCM)"
+            );
         }
 
         let magic = &encrypted[..4];
@@ -146,17 +155,8 @@ impl DatabaseInterface {
             decrypt_database(&*ENCRYPTION_KEY, payload)
                 .map_err(|e| anyhow::anyhow!("v2 database decryption failed: {e}"))?
         } else {
-            // Legacy AES-128-CTR format (V1 or pre-versioned).
-            // Pre-PR databases have no magic prefix — decrypt full file.
-            if magic != MAGIC_V1.as_slice() {
-                warn!(
-                    "unknown database magic {:?}, attempting legacy decryption",
-                    magic
-                );
-            }
-            // Pre-migration databases used AES-128-CTR with a dummy zero key
-            // and zero IV. This is backward-compatible decryption only — no
-            // real encryption existed before the AES-256-GCM migration (DMS2).
+            // Pre-PR legacy databases have no magic prefix.
+            // Full file is AES-128-CTR encrypted with dummy zero key/IV.
             let mut legacy_data = encrypted.clone();
             let legacy_key = [0u8; 16];
             let legacy_iv = [0u8; 16];
@@ -321,7 +321,8 @@ mod tests {
         let plaintext = b"Hello, world! This is a test of AES-256-GCM encryption.";
         let encrypted =
             encrypt_database(&key, plaintext.to_vec()).expect("encryption should succeed");
-        let decrypted = decrypt_database(&key, &encrypted).expect("decryption should succeed");
+        let payload = &encrypted[4..]; // strip MAGIC_V2 prefix
+        let decrypted = decrypt_database(&key, payload).expect("decryption should succeed");
         assert_eq!(decrypted, plaintext);
     }
 
@@ -353,7 +354,8 @@ mod tests {
         let plaintext = b"secret data";
         let encrypted =
             encrypt_database(&key, plaintext.to_vec()).expect("encryption should succeed");
-        let result = decrypt_database(&wrong_key, &encrypted);
+        let payload = &encrypted[4..]; // strip MAGIC_V2 prefix
+        let result = decrypt_database(&wrong_key, payload);
         assert!(result.is_err(), "wrong key should fail decryption");
     }
 }

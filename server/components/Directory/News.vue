@@ -99,10 +99,12 @@
           <h3 class="relative text-sm font-medium text-zinc-100">
             {{ article.title }}
           </h3>
+          <!-- eslint-disable vue/no-v-html -- sanitized via DOMPurify -->
           <p
             class="relative mt-1 text-xs text-zinc-400 line-clamp-2"
             v-html="excerptCache.get(article.id) ?? ''"
           />
+          <!-- eslint-enable vue/no-v-html -->
           <div
             class="relative mt-2 flex items-center gap-x-2 text-xs text-zinc-500"
           >

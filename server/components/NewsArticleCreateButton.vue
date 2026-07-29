@@ -95,10 +95,12 @@
                 <div
                   class="flex-1 p-4 rounded-md bg-zinc-900 border border-zinc-700 overflow-y-auto"
                 >
+                  <!-- eslint-disable vue/no-v-html -- sanitized via DOMPurify -->
                   <div
                     class="prose prose-invert prose-sm h-full overflow-y-auto"
                     v-html="markdownPreview"
                   />
+                  <!-- eslint-enable vue/no-v-html -->
                 </div>
               </div>
             </div>
