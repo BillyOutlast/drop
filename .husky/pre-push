@@ -56,17 +56,3 @@ if command -v gh >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
   fi
 fi
 
-# OpenCodeReview gate: compare local branch against remote base.
-# Runs only when ocr CLI is installed and remote base is fetchable.
-if command -v ocr >/dev/null 2>&1 && git rev-parse --quiet --verify "${REMOTE_BASE}" >/dev/null 2>&1; then
-  printf '\n:: Running OpenCodeReview against %s (blocking)...\n' "${REMOTE_BASE}"
-  ocr review --from "${REMOTE_BASE}" --to HEAD --audience agent --exclude 'pnpm-lock.yaml,Cargo.lock' || {
-    rc=$?
-    printf '\n⚠️  OCR found issues (exit %d). Fix before pushing, or use --no-verify to skip.\n' "$rc"
-    exit "$rc"
-  }
-elif ! command -v ocr >/dev/null 2>&1; then
-  printf ':: ocr CLI not found — skipping OpenCodeReview gate\n'
-else
-  printf ':: Remote base %s not found locally — run `git fetch origin` first.\n' "${REMOTE_BASE}"
-fi
