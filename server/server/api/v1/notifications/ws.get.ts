@@ -67,6 +67,15 @@ function clearAuthTimeoutAndClose(peer: {
   peer.close();
 }
 
+function rejectPeer(peer: {
+  id: string;
+  send: (data: string) => void;
+  close: () => void;
+}): void {
+  peer.send("unauthenticated");
+  clearAuthTimeoutAndClose(peer);
+}
+
 // fallow-ignore-next-line complexity
 async function processMessage(
   peer: { id: string; send: (data: string) => void; close: () => void },
@@ -82,8 +91,7 @@ async function processMessage(
       data = JSON.parse(raw);
     } catch {
       logger.warn({ peerId: peer.id }, "WebSocket: invalid JSON message");
-      peer.send("unauthenticated");
-      clearAuthTimeoutAndClose(peer);
+      rejectPeer(peer);
       return;
     }
 
@@ -92,8 +100,7 @@ async function processMessage(
         { peerId: peer.id },
         "WebSocket: non-object message from peer",
       );
-      peer.send("unauthenticated");
-      clearAuthTimeoutAndClose(peer);
+      rejectPeer(peer);
       return;
     }
 
@@ -104,8 +111,7 @@ async function processMessage(
           { peerId: peer.id },
           "WebSocket token auth: invalid token type",
         );
-        peer.send("unauthenticated");
-        clearAuthTimeoutAndClose(peer);
+        rejectPeer(peer);
         return;
       }
       // Skip re-authentication if peer is already authenticated
@@ -128,8 +134,7 @@ async function processMessage(
         }
         // Token auth failed — close connection
         logger.warn(`WebSocket token auth failed for peer ${peer.id}`);
-        peer.send("unauthenticated");
-        clearAuthTimeoutAndClose(peer);
+        rejectPeer(peer);
         return;
       } finally {
         pendingAuth.delete(peer.id);
@@ -140,8 +145,7 @@ async function processMessage(
       { peerId: peer.id },
       "Closing unauthenticated WebSocket: non-token message before auth",
     );
-    peer.send("unauthenticated");
-    clearAuthTimeoutAndClose(peer);
+    rejectPeer(peer);
     return;
   } catch (error) {
     logger.warn(
@@ -149,12 +153,12 @@ async function processMessage(
       `WebSocket message processing error for peer ${peer.id}`,
     );
     if (!socketSessions.has(peer.id)) {
-      peer.send("unauthenticated");
-      clearAuthTimeoutAndClose(peer);
+      rejectPeer(peer);
     }
   }
 }
 
+// fallow-ignore-next-line complexity
 async function drainPendingAuthBuffer(peer: {
   id: string;
   send: (data: string) => void;
@@ -164,6 +168,8 @@ async function drainPendingAuthBuffer(peer: {
   if (!buf) return;
   pendingAuthMessageBuffer.delete(peer.id);
   for (const { msg } of buf) {
+    // Stop if peer was closed by an earlier buffered message
+    if (!socketSessions.has(peer.id) && !pendingAuth.has(peer.id)) break;
     await processMessage(peer, msg);
   }
 }
@@ -190,7 +196,7 @@ export default defineWebSocketHandler({
       }
     } catch (error) {
       logger.error(
-        { error: (error as Error)?.message },
+        { error: (error as Error).message },
         `WebSocket open auth error for peer ${peer.id}`,
       );
       peer.send("unauthenticated");
