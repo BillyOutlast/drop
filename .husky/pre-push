@@ -14,7 +14,7 @@ if [ -z "${REMOTE_BASE}" ] || [ "${REMOTE_BASE##*/}" = "${CURRENT_BRANCH}" ]; th
 fi
 
 # Fetch unresolved PR review comments for agent consumption.
-# Advisorty only — warns but does not block push.
+# Advisory only — warns but does not block push.
 if command -v gh >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
   REPO=$(git remote get-url origin | sed 's|.*github.com[:/]||;s|\.git$||')
   PR_NUMBER=$(gh pr list --repo "${REPO}" --head "${CURRENT_BRANCH}" --state open --json number --jq '.[0].number' 2>/dev/null)
