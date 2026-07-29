@@ -70,11 +70,12 @@
       </div>
 
       <!-- Article content - markdown -->
-      <!-- eslint-disable-next-line vue/no-v-html -- sanitized via DOMPurify -->
+      <!-- eslint-disable vue/no-v-html -- sanitized via DOMPurify -->
       <div
         class="mx-auto prose prose-blue prose-invert prose-lg"
         v-html="renderedContent"
       />
+      <!-- eslint-enable vue/no-v-html -->
     </div>
 
     <ModalDeleteNews v-model="currentlyDeleting" />
@@ -82,6 +83,7 @@
 </template>
 
 <script setup lang="ts">
+// fallow-ignore-file unused-file
 import { ArrowLeftIcon } from "@heroicons/vue/20/solid";
 import { TrashIcon } from "@heroicons/vue/24/outline";
 import { micromark } from "micromark";
