@@ -41,6 +41,15 @@ async function authenticatePeer(
   return true;
 }
 
+function clearAuthTimeoutAndClose(peer: { id: string; close: () => void }): void {
+  const tid = authTimeouts.get(peer.id);
+  if (tid) {
+    clearTimeout(tid);
+    authTimeouts.delete(peer.id);
+  }
+  peer.close();
+}
+
 export default defineWebSocketHandler({
   async open(peer) {
     pendingAuth.add(peer.id);
@@ -99,7 +108,7 @@ export default defineWebSocketHandler({
           // Token auth failed — close connection
           logger.warn(`WebSocket token auth failed for peer ${peer.id}`);
           peer.send("unauthenticated");
-          peer.close();
+          clearAuthTimeoutAndClose(peer);
           return;
         } finally {
           pendingAuth.delete(peer.id);
@@ -113,7 +122,7 @@ export default defineWebSocketHandler({
         "Closing unauthenticated WebSocket: non-token message before auth",
       );
       peer.send("unauthenticated");
-      peer.close();
+      clearAuthTimeoutAndClose(peer);
       return;
     } catch (error) {
       logger.warn(
@@ -122,7 +131,7 @@ export default defineWebSocketHandler({
       );
       if (!socketSessions.has(peer.id)) {
         peer.send("unauthenticated");
-        peer.close();
+        clearAuthTimeoutAndClose(peer);
       }
     }
   },
