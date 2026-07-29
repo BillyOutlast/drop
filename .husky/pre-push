@@ -2,6 +2,23 @@
 # Full suite still runs in CI.
 pnpm --filter drop test:changed
 
+# fallow audit gate: block on 'fail' verdict, tolerate JSON parse errors.
+if command -v fallow >/dev/null 2>&1; then
+  FALLOW_JSON=$(FALLOW_AUDIT_BASE=origin/rebuild fallow audit --format json --quiet --explain --gate-marker agent 2>/dev/null || echo '{"verdict":"error","error":true}')
+  FALLOW_VERDICT=$(echo "${FALLOW_JSON}" | jq -r '.verdict // "error"' 2>/dev/null || echo "error")
+  if [ "${FALLOW_VERDICT}" = "fail" ]; then
+    printf '\n⚠️  fallow audit verdict: fail. Fix findings or use --no-verify.\n'
+    exit 1
+  elif [ "${FALLOW_VERDICT}" = "error" ]; then
+    printf ':: fallow audit returned errors (non-blocking) — continuing\n'
+  fi
+else
+  printf ':: fallow CLI not found — skipping audit gate\n'
+fi
+
+# Full test suite gate: verify no regressions before push.
+pnpm --filter drop test
+
 # OpenCodeReview gate: compare local branch against remote base.
 # Runs only when ocr CLI is installed and remote base is fetchable.
 # Detect base from upstream tracking. If upstream matches current branch
