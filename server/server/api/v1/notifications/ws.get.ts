@@ -195,12 +195,10 @@ export default defineWebSocketHandler({
         authTimeouts.set(peer.id, authTimeout);
       }
     } catch (error) {
-      logger.error(
-        { error: (error as Error).message },
-        `WebSocket open auth error for peer ${peer.id}`,
-      );
-      peer.send("unauthenticated");
-      peer.close();
+    } finally {
+      pendingAuth.delete(peer.id);
+      await drainPendingAuthBuffer(peer);
+    }
     } finally {
       pendingAuth.delete(peer.id);
       while (pendingAuthMessageBuffer.has(peer.id)) {
