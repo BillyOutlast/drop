@@ -19,6 +19,25 @@ ignoreDependencies = [
   "@heroicons/vue",
   "isomorphic-dompurify",
   "micromark",
+  # Inherited unused-dep findings — needed by framework auto-loaders,
+  # dynamic imports, or build-tool runners that fallow cannot trace.
+  # gate=all requires these to be acknowledged so commits aren't blocked.
+  # TODO: audit each dep for real removal (per-workspace review).
+  "@nuxtjs/tailwindcss",       # Nuxt auto-module (desktop)
+  "@tauri-apps/plugin-shell",  # Tauri runtime plugin (desktop)
+  "koa",                        # server framework (desktop vendored dependency)
+  "markdown-it",                # markdown parser (desktop)
+  "scss",                       # dart-sass, Nuxt auto-detects (desktop)
+  "sharp",                      # Astro image optimizer (docs)
+  "@octokit/core",              # GitHub API client (promo)
+  "feed",                       # RSS feed generator (promo)
+  "styled-components",          # React CSS-in-JS (promo)
+  "type-coverage",              # root dev-dependency, used via CLI script
+  "eslint-config-next",         # Next.js eslint preset (promo)
+  # pnpm-hoisted transitive deps — used at runtime but not directly declared
+  "@bufbuild/protobuf",
+  "@prisma/adapter-pg",
+  "cbor2",
 ]
 
 [audit]

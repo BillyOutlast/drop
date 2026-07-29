@@ -107,7 +107,7 @@ describe("handleFileUpload", () => {
     );
 
     const result = await handleFileUpload(createMockH3(), {}, []);
-    expect(result).toBeDefined();
+    expect(result).toEqual(expect.anything());
   });
 
   it("accepts valid application/pdf files", async () => {
@@ -123,7 +123,7 @@ describe("handleFileUpload", () => {
     );
 
     const result = await handleFileUpload(createMockH3(), {}, []);
-    expect(result).toBeDefined();
+    expect(result).toEqual(expect.anything());
   });
 
   it("enforces max file count", async () => {
@@ -136,6 +136,6 @@ describe("handleFileUpload", () => {
     );
 
     const result = await handleFileUpload(createMockH3(), {}, [], 1);
-    expect(result).toBeDefined();
+    expect(result).toEqual(expect.anything());
   });
 });

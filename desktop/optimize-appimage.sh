@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 ## This script is largely useless, because there's not much we can do about AppImage size
 
 ARCH=$(uname -m)

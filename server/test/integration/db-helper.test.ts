@@ -30,7 +30,7 @@ describe.skipIf(!HAS_TEST_DB)("withTestTransaction", () => {
       const found = await tx.applicationSettings.findFirst({
         where: { serverName: marker },
       });
-      expect(found).not.toBeNull();
+      expect(found).toEqual(expect.objectContaining({ serverName: marker }));
     });
 
     // After rollback, the row must NOT exist.

@@ -163,7 +163,6 @@ esac
 
 # ---- Count stats -----------------------------------------------------------
 FILE_COUNT="$(echo "$DIFF_CONTENT" | grep -c '^diff --git' || true)"
-LINE_COUNT="$(echo "$DIFF_CONTENT" | grep -c '^[+-]' || true)"
 ADDED="$(echo "$DIFF_CONTENT" | grep -c '^+' || true)"
 REMOVED="$(echo "$DIFF_CONTENT" | grep -c '^-' || true)"
 

@@ -87,8 +87,8 @@ describe("dependency version pinning", () => {
       desktopMain.dependencies?.["vue-router"] ??
       desktopMain.devDependencies?.["vue-router"];
 
-    expect(serverVersion).toBeDefined();
-    expect(desktopVersion).toBeDefined();
+    expect(serverVersion).toEqual(expect.anything());
+    expect(desktopVersion).toEqual(expect.anything());
     expect(serverVersion).toBe(desktopVersion);
   });
 });
