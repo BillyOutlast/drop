@@ -117,6 +117,7 @@
 </template>
 
 <script setup lang="ts">
+// fallow-ignore-file unused-file
 import { ref, computed } from "vue";
 import { MagnifyingGlassIcon } from "@heroicons/vue/24/solid";
 import { micromark } from "micromark";
