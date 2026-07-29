@@ -90,6 +90,12 @@ export default defineWebSocketHandler({
     try {
       const data = JSON.parse(msg.toString());
       if (data.token) {
+        if (typeof data.token !== "string" || data.token.length === 0) {
+          logger.warn({ peerId: peer.id }, "WebSocket token auth: invalid token type");
+          peer.send("unauthenticated");
+          clearAuthTimeoutAndClose(peer);
+          return;
+        }
         // Skip re-authentication if peer is already authenticated
         if (socketSessions.has(peer.id)) return;
         // Serialize token auth per peer — prevent concurrent authenticatePeer calls
@@ -140,7 +146,8 @@ export default defineWebSocketHandler({
   },
 
   async close(peer, _details) {
-    // Clean up any pending auth timeout
+    // Clean up auth-related state regardless of auth status
+    pendingAuth.delete(peer.id);
     const pendingTimeout = authTimeouts.get(peer.id);
     if (pendingTimeout) {
       clearTimeout(pendingTimeout);

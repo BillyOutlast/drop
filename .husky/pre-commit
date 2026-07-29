@@ -42,13 +42,13 @@ if [ -n "$changed_rs" ]; then
   desktop_rs=$(echo "$changed_rs" | grep '^desktop/' || true)
 
   if [ -n "$torrential_rs" ]; then
-    cargo fmt --manifest-path torrential/Cargo.toml -- $torrential_rs
+    cargo fmt --manifest-path torrential/Cargo.toml -- $torrential_rs || exit 1
   fi
   if [ -n "$cli_rs" ]; then
-    cargo fmt --manifest-path cli/Cargo.toml -- $cli_rs
+    cargo fmt --manifest-path cli/Cargo.toml -- $cli_rs || exit 1
   fi
   if [ -n "$desktop_rs" ]; then
-    cargo fmt --manifest-path desktop/src-tauri/Cargo.toml -- $desktop_rs
+    cargo fmt --manifest-path desktop/src-tauri/Cargo.toml -- $desktop_rs || exit 1
   fi
   # Re-stage formatted files so they're included in the commit
   echo "$changed_rs" | xargs -r git add
