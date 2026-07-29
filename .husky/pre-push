@@ -35,7 +35,11 @@ pnpm --filter drop test
 # Check for PR review threads.
 # Quick count only — use /pull-review-comments skill for full details + resolution.
 if command -v gh >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
-  REPO=$(git remote get-url origin | sed 's|.*github.com[:/]||;s|\.git$||')
+REPO=$(git remote get-url origin | sed -nE 's#.*github.com[:/]([^/]+/[^/.]+)(\.git)?$#\1#p' 2>/dev/null)
+if [ -z "${REPO}" ]; then
+  echo ':: unable to parse GitHub repository from remote URL — skipping review thread check' >&2
+  REPO=''
+fi
   PR_NUMBER=$(gh pr list --repo "${REPO}" --head "${CURRENT_BRANCH}" --state open --json number --jq '.[0].number' 2>/dev/null)
   if [ -n "${PR_NUMBER}" ]; then
     OWNER="${REPO%%/*}"
