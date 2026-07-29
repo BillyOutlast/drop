@@ -289,13 +289,8 @@ if echo "$UNCOVERED_FILES" | jq -e 'length > 0' >/dev/null 2>&1; then
           end
         ) | join(", ")')
 
-      COMMENT_BODY+="| \`${FILE_PATH}\` | ${FILE_COV}% | ${FILE_UNC} | ${LINE_RANGES} |\n"
-    elif [[ "$HAS_SOURCES" -eq 0 ]]; then
-      # sources array is empty — line API returned nothing or failed
-      COMMENT_BODY+="| \`${FILE_PATH}\` | ${FILE_COV}% | ${FILE_UNC} | *(API error)* |\n"
-    else
-      # sources returned but no uncovered new lines found for this file
-      COMMENT_BODY+="| \`${FILE_PATH}\` | ${FILE_COV}% | ${FILE_UNC} | *(not yet indexed)* |\n"
+SAFE_PATH=$(echo "$FILE_PATH" | sed 's/|/\|/g; s/`/`/g')
+COMMENT_BODY+="| \`${SAFE_PATH}\` | ${FILE_COV}% | ${FILE_UNC} | ${LINE_RANGES} |\n"
     fi
   done
   COMMENT_BODY+="\n"
