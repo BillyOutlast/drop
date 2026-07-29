@@ -3,7 +3,6 @@
   "private": true,
   "packageManager": "pnpm@11.17.0",
   "devDependencies": {
-    "@types/dompurify": "^3.2.0",
     "eslint-plugin-vuejs-accessibility": "^2.5.0",
     "fast-check": "^4.9.0",
     "husky": "^9.1.7",
@@ -13,7 +12,5 @@
   "scripts": {
     "prepare": "husky"
   },
-  "dependencies": {
-    "dompurify": "^3.4.12"
-  }
+  "dependencies": {}
 }

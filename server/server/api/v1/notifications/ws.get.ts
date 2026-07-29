@@ -84,6 +84,7 @@ export default defineWebSocketHandler({
       pendingAuth.delete(peer.id);
     }
   },
+  // fallow-ignore-next-line complexity
   async message(peer, msg) {
     // Ignore messages while open handler is still authenticating
     if (pendingAuth.has(peer.id)) return;

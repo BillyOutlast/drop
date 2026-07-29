@@ -15,6 +15,10 @@ ignoreDependencies = [
   "arktype",
   # file-type-mime is used by objectHandler and handleFileUpload
   "file-type-mime",
+  # Workspace-hoisted deps that fallow cannot resolve across pnpm workspaces
+  "@heroicons/vue",
+  "isomorphic-dompurify",
+  "micromark",
 ]
 
 [audit]

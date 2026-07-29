@@ -67,6 +67,7 @@ export function buildFilters(
     : undefined;
 }
 
+// fallow-ignore-next-line unused-export
 export default defineEventHandler(async (h3) => {
   const allowed = await aclManager.allowSystemACL(h3, ["library:read"]);
   if (!allowed) throw createError({ statusCode: 403 });

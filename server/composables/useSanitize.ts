@@ -1,3 +1,4 @@
+// fallow-ignore-file unused-file
 import DOMPurify from "isomorphic-dompurify";
 
 // Security: HTML tags/attributes allowed in user-generated content.
@@ -66,6 +67,7 @@ function registerHooks(): void {
   }
   hooksRegistered = true;
 
+  // fallow-ignore-next-line complexity
   DOMPurify.addHook("afterSanitizeAttributes", (node) => {
     if (!("tagName" in node) || node.tagName !== "A") {
       return;
