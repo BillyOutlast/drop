@@ -14,10 +14,12 @@ fi
 # fallow audit gate: block on 'fail' verdict, tolerate JSON parse errors.
 if command -v fallow >/dev/null 2>&1; then
   FALLOW_JSON=$(FALLOW_AUDIT_BASE="${REMOTE_BASE}" fallow audit --format json --quiet --explain --gate-marker agent 2>/dev/null || echo '{"verdict":"error","error":true}')
-  if command -v jq >/dev/null 2>&1; then
+if command -v jq >/dev/null 2>&1; then
     FALLOW_VERDICT=$(echo "${FALLOW_JSON}" | jq -r '.verdict // "error"' 2>/dev/null || echo "error")
   else
-    FALLOW_VERDICT="error"
+    # jq is required — block on missing to enforce the gate
+    echo "FATAL: jq is required but not installed for fallow audit gate" >&2
+    exit 1
   fi
   if [ "${FALLOW_VERDICT}" = "fail" ]; then
     printf '\n⚠️  fallow audit verdict: fail. Fix findings or use --no-verify.\n'
