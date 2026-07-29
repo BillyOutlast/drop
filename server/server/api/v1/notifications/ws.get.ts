@@ -177,7 +177,7 @@ async function drainPendingAuthBuffer(peer: {
 export default defineWebSocketHandler({
   async open(peer) {
     pendingAuth.add(peer.id);
-    try {
+        logger.warn({ peerId: peer.id }, "WebSocket auth failed");
       const authenticated = await authenticatePeer(
         peer,
         peer.request?.headers ?? new Headers(),
