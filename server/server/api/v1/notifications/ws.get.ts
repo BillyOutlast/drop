@@ -16,6 +16,7 @@ const authTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 // Track peers currently being authenticated to prevent race between open and message handlers
 const pendingAuth = new Set<string>();
 // Buffer for messages arriving while peer is in pendingAuth
+const MAX_BUFFERED_MSGS = 50;
 const pendingAuthMessageBuffer = new Map<
   string,
   Array<{
