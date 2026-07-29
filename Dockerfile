@@ -32,6 +32,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     pkg-config \
     protobuf-compiler \
     && rm -rf /var/lib/apt/lists/*
+# Build stage runs as root — cargo needs write access to /build and its cache
 WORKDIR /build
 COPY . .
 RUN cargo build --locked --release --manifest-path ./torrential/Cargo.toml
@@ -43,8 +44,12 @@ ENV NODE_ENV=production
 ENV NUXT_TELEMETRY_DISABLED=1
 
 ## add git so drop can determine its git ref at build
+USER root
 RUN apt-get update && apt-get install -y --no-install-recommends git \
     && rm -rf /var/lib/apt/lists/*
+# hadolint ignore=DL3002
+RUN chown -R node:node /app
+USER node
 
 ## copy deps and rest of project files
 COPY . .
@@ -71,6 +76,7 @@ ENV NUXT_TELEMETRY_DISABLED=1
 # fails with EACCES. With it gone, resolution falls through to the `torrential`
 # binary installed on PATH (/usr/bin/torrential) below.
 # hadolint ignore=DL3008
+USER root
 RUN rm -rf /app/torrential && \
     apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \

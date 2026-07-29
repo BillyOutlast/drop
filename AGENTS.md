@@ -259,6 +259,18 @@ Usage notes:
 <available_skills>
 
 <skill>
+<name>pr-review-cleanup</name>
+<description>Use when PR has 10+ open review threads from OCR/CodeRabbit/Sourcery that need batch evaluation and resolution, or when pre-push hook shows unresolved threads accumulating.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>ci-format-guard</name>
+<description>Use when pre-commit hooks pass locally but CI fails on formatting (prettier --check, cargo fmt --check), or when adding/modifying git hooks that enforce code style.</description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>generate-test-cases</name>
 <description>"Use when the user asks to analyze code for test coverage, list what test cases are needed, or review testing strategy — WITHOUT generating actual test code."</description>
 <location>project</location>

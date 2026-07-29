@@ -6,7 +6,6 @@ use ring::rand::SystemRandom;
 use ring::signature::{EcdsaKeyPair, VerificationAlgorithm};
 use time::{Duration, OffsetDateTime};
 use x509_parser::parse_x509_certificate;
-use x509_parser::pem::Pem;
 
 pub fn generate_root_ca() -> Result<Vec<String>, rcgen::Error> {
     let mut params = CertificateParams::default();
@@ -64,26 +63,6 @@ pub fn generate_client_certificate(
 
     // Returns certificate, then private key
     Ok(vec![certificate.pem(), key_pair.serialize_pem()])
-}
-
-pub fn verify_client_certificate(client_cert: String, root_ca: String) -> Result<bool, Error> {
-    let root_ca = Pem::iter_from_buffer(root_ca.as_bytes())
-        .next()
-        .unwrap()
-        .unwrap();
-    let root_ca = root_ca.parse_x509().unwrap();
-
-    let client_cert = Pem::iter_from_buffer(client_cert.as_bytes())
-        .next()
-        .unwrap()
-        .unwrap();
-    let client_cert = client_cert.parse_x509().unwrap();
-
-    let valid = root_ca
-        .verify_signature(Some(client_cert.public_key()))
-        .is_ok();
-
-    Ok(valid)
 }
 
 pub fn sign_nonce(private_key: String, nonce: String) -> Result<String, Error> {

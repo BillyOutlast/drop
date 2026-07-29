@@ -99,10 +99,10 @@
           <h3 class="relative text-sm font-medium text-zinc-100">
             {{ article.title }}
           </h3>
-          <!-- eslint-disable vue/no-v-html -->
+          <!-- eslint-disable vue/no-v-html -- sanitized via DOMPurify -->
           <p
             class="relative mt-1 text-xs text-zinc-400 line-clamp-2"
-            v-html="formatExcerpt(article.description)"
+            v-html="excerptCache.get(article.id) ?? ''"
           />
           <!-- eslint-enable vue/no-v-html -->
           <div
@@ -119,6 +119,7 @@
 </template>
 
 <script setup lang="ts">
+// fallow-ignore-file unused-file
 import { ref, computed } from "vue";
 import { MagnifyingGlassIcon } from "@heroicons/vue/24/solid";
 import { micromark } from "micromark";
@@ -152,10 +153,15 @@ const toggleTag = (tag: string) => {
   }
 };
 
-const formatExcerpt = (excerpt: string) => {
-  // Convert markdown to HTML, micromark is safe
-  return micromark(excerpt);
-};
+const { sanitize } = useSanitize();
+const excerptCache = computed(() => {
+  if (!news.value) return new Map<string, string>();
+  const map = new Map<string, string>();
+  for (const article of news.value) {
+    map.set(article.id, sanitize(micromark(article.description)));
+  }
+  return map;
+});
 
 const filteredArticles = computed(() => {
   if (!news.value) return [];

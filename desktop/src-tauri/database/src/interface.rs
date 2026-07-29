@@ -6,21 +6,65 @@ use std::{
     sync::{PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
 
-use aes::cipher::{KeyIvInit as _, StreamCipher as _};
+use aes::cipher::{KeyIvInit, StreamCipher};
+use aes_gcm::{
+    Aes256Gcm, Key, Nonce,
+    aead::{Aead, KeyInit},
+};
+type Aes128Ctr64LE = ctr::Ctr64LE<aes::Aes128>;
 use anyhow::Error;
 use chrono::Utc;
 use log::{debug, error, info, warn};
+use rand::RngCore;
 use url::Url;
 
 use crate::{
-    db::{DATA_ROOT_DIR, DB, KEY_IV},
+    db::{DATA_ROOT_DIR, DB, ENCRYPTION_KEY},
     models::{
         self,
         data::{Database, DatabaseVersionSerializable},
     },
 };
 
-type Aes128Ctr64LE = ctr::Ctr64LE<aes::Aes128>;
+/// Magic bytes for database file format detection.
+const MAGIC_V2: &[u8; 4] = b"DMS2"; // AES-256-GCM (current)
+// MAGIC_V1 (b"DMS1") was never shipped — removed. Pre-PR databases have no magic prefix.
+
+/// Encrypt `plaintext` with AES-256-GCM, returning `[MAGIC_V2][12-byte nonce][ciphertext+tag]`.
+fn encrypt_database(key: &[u8; 32], plaintext: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
+    let key_slice = Key::<Aes256Gcm>::from_slice(key);
+    let cipher = Aes256Gcm::new(key_slice);
+    let mut nonce_bytes = [0u8; 12];
+    rand::rng().fill_bytes(&mut nonce_bytes);
+    let nonce = Nonce::from_slice(&nonce_bytes);
+    let ciphertext = cipher
+        .encrypt(nonce, plaintext.as_ref())
+        .map_err(|e| anyhow::anyhow!("encryption failed: {e}"))?;
+    let mut result = Vec::with_capacity(4 + 12 + ciphertext.len());
+    result.extend_from_slice(MAGIC_V2);
+    result.extend_from_slice(&nonce_bytes);
+    result.extend_from_slice(&ciphertext);
+    Ok(result)
+}
+
+/// Decrypt data produced by `encrypt_database`.
+/// Takes the nonce+ciphertext slice (magic prefix already stripped by caller).
+/// Requires at least 28 bytes: 12-byte nonce + 16-byte minimum GCM ciphertext+tag.
+fn decrypt_database(key: &[u8; 32], encrypted: &[u8]) -> Result<Vec<u8>, anyhow::Error> {
+    if encrypted.len() < 28 {
+        anyhow::bail!(
+            "encrypted payload too short: {} bytes (min 28: 12 nonce + 16 GCM tag)",
+            encrypted.len()
+        );
+    }
+    let key_slice = Key::<Aes256Gcm>::from_slice(key);
+    let cipher = Aes256Gcm::new(key_slice);
+    let (nonce_bytes, ciphertext) = encrypted.split_at(12);
+    let nonce = Nonce::from_slice(nonce_bytes);
+    cipher
+        .decrypt(nonce, ciphertext)
+        .map_err(|e| anyhow::anyhow!("decryption failed: {e}"))
+}
 
 pub struct DatabaseInterface {
     data: RwLock<models::data::Database>,
@@ -97,13 +141,32 @@ impl DatabaseInterface {
         if !db_path.exists() {
             return Ok(None);
         };
-        let mut database_data = std::fs::read(db_path)?;
-        let (key, iv) = *KEY_IV;
-        let mut cipher = Aes128Ctr64LE::new(&key.into(), &iv.into());
-        cipher.apply_keystream(&mut database_data);
+        let encrypted = std::fs::read(db_path)?;
 
-        let database_data = String::from_utf8(database_data)?;
+        if encrypted.len() < 4 {
+            anyhow::bail!("database file too short: {} bytes", encrypted.len());
+        }
+        let magic = &encrypted[..4];
+        let payload = &encrypted[4..];
 
+        let plaintext = if magic == MAGIC_V2.as_slice() {
+            if payload.len() < 28 {
+                anyhow::bail!("V2 payload too short (min 28 bytes: 12 nonce + 16 GCM)");
+            }
+            decrypt_database(&*ENCRYPTION_KEY, payload)
+                .map_err(|e| anyhow::anyhow!("v2 database decryption failed: {e}"))?
+        } else {
+            // Pre-PR legacy databases have no magic prefix.
+            // Full file is AES-128-CTR encrypted with dummy zero key/IV.
+            let mut legacy_data = encrypted.clone();
+            let legacy_key = [0u8; 16];
+            let legacy_iv = [0u8; 16];
+            let mut legacy_cipher = Aes128Ctr64LE::new(&legacy_key.into(), &legacy_iv.into());
+            legacy_cipher.apply_keystream(&mut legacy_data);
+            legacy_data
+        };
+
+        let database_data = String::from_utf8(plaintext)?;
         let database_data: DatabaseVersionSerializable = ron::from_str(&database_data)?;
         Ok(Some(DatabaseInterface {
             data: RwLock::new(database_data.0),
@@ -113,13 +176,12 @@ impl DatabaseInterface {
 
     pub fn create_at_path(db_path: &Path, database: Database) -> Result<DatabaseInterface, Error> {
         let database = DatabaseVersionSerializable(database);
-        let mut database_data = ron::to_string(&database)?.into_bytes();
+        let plaintext = ron::to_string(&database)?.into_bytes();
 
-        let (key, iv) = *KEY_IV;
-        let mut cipher = Aes128Ctr64LE::new(&key.into(), &iv.into());
-        cipher.apply_keystream(&mut database_data);
+        let encrypted = encrypt_database(&*ENCRYPTION_KEY, plaintext)
+            .map_err(|e| anyhow::anyhow!("database encryption failed: {e}"))?;
 
-        std::fs::write(db_path, database_data)?;
+        std::fs::write(db_path, encrypted)?;
         Ok(DatabaseInterface {
             data: RwLock::new(database.0),
             path: db_path.to_path_buf(),
@@ -247,5 +309,54 @@ pub fn borrow_db_mut_checked<'a>() -> DBWrite<'a> {
             error!("database borrow mut failed with error {e}");
             panic!("database borrow mut failed with error {e}");
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_encrypt_decrypt_roundtrip() {
+        let key = *ENCRYPTION_KEY;
+        let plaintext = b"Hello, world! This is a test of AES-256-GCM encryption.";
+        let encrypted =
+            encrypt_database(&key, plaintext.to_vec()).expect("encryption should succeed");
+        let payload = &encrypted[4..]; // strip MAGIC_V2 prefix
+        let decrypted = decrypt_database(&key, payload).expect("decryption should succeed");
+        assert_eq!(decrypted, plaintext);
+    }
+
+    #[test]
+    fn test_encrypt_different_nonce_per_call() {
+        let key = *ENCRYPTION_KEY;
+        let plaintext = b"deterministic plaintext";
+        let mut results = std::collections::HashSet::new();
+        for _ in 0..10 {
+            let encrypted =
+                encrypt_database(&key, plaintext.to_vec()).expect("encryption should succeed");
+            results.insert(encrypted);
+        }
+        assert_eq!(
+            results.len(),
+            10,
+            "each encryption should produce unique ciphertext (different nonce)"
+        );
+    }
+
+    #[test]
+    fn test_decrypt_wrong_key_fails() {
+        let key = *ENCRYPTION_KEY;
+        let wrong_key = {
+            let mut k = key;
+            k[0] ^= 0xFF;
+            k
+        };
+        let plaintext = b"secret data";
+        let encrypted =
+            encrypt_database(&key, plaintext.to_vec()).expect("encryption should succeed");
+        let payload = &encrypted[4..]; // strip MAGIC_V2 prefix
+        let result = decrypt_database(&wrong_key, payload);
+        assert!(result.is_err(), "wrong key should fail decryption");
     }
 }

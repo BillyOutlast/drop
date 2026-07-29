@@ -53,7 +53,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts # NOSONAR
 
       - name: Generate Nuxt and Prisma artifacts
         run: pnpm --filter drop run postinstall

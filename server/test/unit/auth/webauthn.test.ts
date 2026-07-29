@@ -169,9 +169,9 @@ describe("parseAndValidatePasskeyCreation", () => {
       CHALLENGE,
     );
 
-    expect(result).toBeDefined();
+    expect(result).toEqual(expect.anything());
     expect(result.credentialIdStr).toBe(Buffer.alloc(16, 0xab).toString("hex"));
-    expect(result.jwk).toBeDefined();
+    expect(result.jwk).toEqual(expect.anything());
     expect(result.jwk.kty).toBe("EC");
     expect(result.jwk.alg).toBe("ES256");
   });

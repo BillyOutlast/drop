@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/no-v-html -->
 <template>
   <div
     class="mx-auto bg-zinc-950 w-full relative flex flex-col justify-center pt-32 xl:pt-24 z-10 overflow-hidden"
@@ -278,10 +277,12 @@
           </div>
 
           <div>
+            <!-- eslint-disable vue/no-v-html -- sanitized via DOMPurify -->
             <div
               class="mt-12 prose prose-invert prose-blue max-w-none"
               v-html="descriptionHTML"
             />
+            <!-- eslint-enable vue/no-v-html -->
           </div>
         </div>
       </div>
@@ -306,7 +307,8 @@ const { game, rating, sizes, platforms } = await $dropFetch(
 
 const isClient = isClientRequest();
 
-const descriptionHTML = micromark(game.mDescription);
+const { sanitize } = useSanitize();
+const descriptionHTML = sanitize(micromark(game.mDescription));
 
 const averageRating = Math.round((rating._avg.mReviewRating ?? 0) * 5);
 const ratingArray = new Array(5)

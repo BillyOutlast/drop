@@ -224,6 +224,8 @@ class DropletInterfaceManager {
         }
         if (opts.callbackType && callbacks.type !== opts.callbackType)
           return undefined;
+        // Runtime guard validates callbackType above;
+        // Extract<C, {type: CT}> cannot narrow conditional generics
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await opts.run(message, callbacks as any);
         return undefined;

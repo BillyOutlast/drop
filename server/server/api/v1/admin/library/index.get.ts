@@ -29,7 +29,7 @@ export type AdminLibraryGame = SerializeObject<
  * @param query - Validated query parameters containing optional search text and filter tokens
  * @returns Combined Prisma filtering arguments, or `undefined` when no criteria are provided
  */
-function buildFilters(
+export function buildFilters(
   query: typeof Query.infer,
 ): Prisma.GameFindManyArgs | undefined {
   const rawFilters: Array<Prisma.GameFindManyArgs & Prisma.GameCountArgs> = [];
@@ -67,6 +67,7 @@ function buildFilters(
     : undefined;
 }
 
+// fallow-ignore-next-line unused-export
 export default defineEventHandler(async (h3) => {
   const allowed = await aclManager.allowSystemACL(h3, ["library:read"]);
   if (!allowed) throw createError({ statusCode: 403 });
@@ -106,9 +107,9 @@ export default defineEventHandler(async (h3) => {
     ...filters,
   });
 
-  // Safety: the type is defined as a union between the where and count args
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const count = await prisma.game.count({ ...(filters as any) });
+  const count = await prisma.game.count({
+    ...(filters as Prisma.GameCountArgs),
+  });
 
   return { results, count };
 });

@@ -199,7 +199,9 @@ describe("Nitro Plugin Init Order", () => {
 
       for (const [prefix, deps] of Object.entries(depGraph)) {
         const currentFile = files.find((f) => f.startsWith(prefix));
-        expect(currentFile, `Plugin ${prefix} file not found`).toBeDefined();
+        expect(currentFile, `Plugin ${prefix} file not found`).toEqual(
+          expect.anything(),
+        );
         const currentIdx = files.indexOf(currentFile!);
 
         for (const dep of deps) {
@@ -207,7 +209,7 @@ describe("Nitro Plugin Init Order", () => {
           expect(
             depFile,
             `Dependency ${dep} for plugin ${prefix} not found`,
-          ).toBeDefined();
+          ).toEqual(expect.anything());
           const depIdx = files.indexOf(depFile!);
 
           expect(depIdx).toBeLessThan(currentIdx);

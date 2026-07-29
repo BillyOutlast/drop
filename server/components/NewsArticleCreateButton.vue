@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/no-v-html -->
 <template>
   <div class="w-full">
     <!-- Create article button - only show for admin users -->
@@ -96,10 +95,12 @@
                 <div
                   class="flex-1 p-4 rounded-md bg-zinc-900 border border-zinc-700 overflow-y-auto"
                 >
+                  <!-- eslint-disable vue/no-v-html -- sanitized via DOMPurify -->
                   <div
                     class="prose prose-invert prose-sm h-full overflow-y-auto"
                     v-html="markdownPreview"
                   />
+                  <!-- eslint-enable vue/no-v-html -->
                 </div>
               </div>
             </div>
@@ -250,9 +251,10 @@ const isValidArticle = computed(
     newArticle.value.content,
 );
 
+const { sanitize } = useSanitize();
+
 const markdownPreview = computed(() => {
-  // PENDING(sonar): consider adding DOMPurify for HTML sanitization - deferred, micromark output is safe per spec
-  return micromark(newArticle.value.content);
+  return sanitize(micromark(newArticle.value.content));
 });
 
 const file = ref<FileList | undefined>();

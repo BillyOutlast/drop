@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/no-v-html -->
 <template>
   <div>
     <div v-if="article" class="px-4 sm:px-6 lg:px-8">
@@ -71,10 +70,12 @@
       </div>
 
       <!-- Article content - markdown -->
+      <!-- eslint-disable vue/no-v-html -- sanitized via DOMPurify -->
       <div
         class="mx-auto prose prose-blue prose-invert prose-lg"
         v-html="renderedContent"
       />
+      <!-- eslint-enable vue/no-v-html -->
     </div>
 
     <ModalDeleteNews v-model="currentlyDeleting" />
@@ -82,6 +83,7 @@
 </template>
 
 <script setup lang="ts">
+// fallow-ignore-file unused-file
 import { ArrowLeftIcon } from "@heroicons/vue/20/solid";
 import { TrashIcon } from "@heroicons/vue/24/outline";
 import { micromark } from "micromark";
@@ -104,9 +106,11 @@ if (!article.value)
     fatal: true,
   });
 
+const { sanitize } = useSanitize();
+
 // Render markdown content
 const renderedContent = computed(() => {
-  return micromark(article.value?.content ?? "");
+  return sanitize(micromark(article.value?.content ?? ""));
 });
 
 const formatDate = (date: string) => {

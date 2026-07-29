@@ -124,8 +124,7 @@ export class TorrentialService extends Service<unknown> {
         this.setupRead();
         return true;
       },
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
+      // @ts-expect-error — Healthcheck callback type mismatch in Service constructor
       async () => await $fetch(`${INTERNAL_DEPOT_URL.toString()}healthcheck`),
       {},
     );

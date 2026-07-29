@@ -38,7 +38,7 @@ describe("memory session provider", () => {
       });
       await provider.setSession("abc", session);
       const got = await provider.getSession<SessionWithToken>("abc");
-      expect(got).toBeDefined();
+      expect(got).toEqual(expect.anything());
       expect(got?.token).toBe("abc");
       expect(got?.data.foo).toBe("bar");
       expect(got?.authenticated?.userId).toBe("u-1");
@@ -105,7 +105,7 @@ describe("memory session provider", () => {
         makeSession({ token: "expired", expiresAt: pastDate() }),
       );
       await provider.cleanupSessions();
-      expect(await provider.getSession("active")).toBeDefined();
+      expect(await provider.getSession("active")).toEqual(expect.anything());
       expect(await provider.getSession("expired")).toBeUndefined();
     });
   });

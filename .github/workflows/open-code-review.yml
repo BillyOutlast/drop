@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: alibaba/open-code-review@0ced7165718725e15223c3e5a506df7b7e9de51f # v1.7.17
+      - uses: alibaba/open-code-review@0ced7165718725e15223c3e5a506df7b7e9de51f # v1.7.17 # NOSONAR
         with:
           # Configure in GitHub repo settings → Secrets and variables → Actions
           llm_url: ${{ secrets.OCR_LLM_URL }}

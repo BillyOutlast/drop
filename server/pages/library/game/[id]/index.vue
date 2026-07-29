@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/no-v-html -->
 <template>
   <div
     class="mx-auto w-full relative flex flex-col justify-center pt-72 overflow-hidden"
@@ -103,10 +102,12 @@
 
           <div class="space-y-6">
             <div class="bg-zinc-800/50 rounded-xl p-6 backdrop-blur-sm">
+              <!-- eslint-disable vue/no-v-html -- sanitized via DOMPurify -->
               <div
                 class="prose prose-invert prose-blue overflow-y-auto custom-scrollbar max-w-none"
                 v-html="descriptionHTML"
               />
+              <!-- eslint-enable vue/no-v-html -->
             </div>
           </div>
         </div>
@@ -136,9 +137,11 @@ const game = computed(() => {
   return rawGame;
 });
 
+const { sanitize } = useSanitize();
+
 // Convert markdown to HTML
 const descriptionHTML = computed(() =>
-  micromark(game.value.mDescription ?? ""),
+  sanitize(micromark(game.value.mDescription ?? "")),
 );
 </script>
 

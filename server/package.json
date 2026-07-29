@@ -55,6 +55,7 @@
     "dotenv": "^17.2.3",
     "fast-fuzzy": "^1.12.0",
     "file-type-mime": "^0.4.3",
+    "isomorphic-dompurify": "^3.19.0",
     "jdenticon": "^3.3.0",
     "jose": "^6.1.3",
     "kjua": "^0.10.0",

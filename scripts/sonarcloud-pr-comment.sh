@@ -13,6 +13,7 @@
 #   SONAR_TOKEN          Required. SonarCloud API token
 #   GH_TOKEN             GitHub API token (falls back to GITHUB_TOKEN)
 #   SONAR_PROJECT_KEY    SonarCloud project key (default: BillyOutlast_drop)
+#   SONAR_MAX_LINES      Max lines to fetch per file for line-level data (default: 10000)
 #   GITHUB_REPOSITORY    GitHub repo (default: BillyOutlast/drop)
 #   GITHUB_PR_NUMBER     PR number (auto-detected from GitHub context)
 # ==============================================================================
@@ -22,6 +23,8 @@ set -euo pipefail
 # ---- Configuration -----------------------------------------------------------
 
 SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-BillyOutlast_drop}"
+SONAR_MAX_LINES="${SONAR_MAX_LINES:-10000}"
+log "Using SONAR_MAX_LINES=${SONAR_MAX_LINES} — files exceeding this limit may have incomplete line data"
 GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-BillyOutlast/drop}"
 GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
 
@@ -81,13 +84,10 @@ TOTAL_PAGES=$(( (TOTAL + PAGE_SIZE - 1) / PAGE_SIZE ))
 log "Found ${TOTAL} unresolved issues across ${TOTAL_PAGES} page(s) (BLOCKER/CRITICAL/MAJOR)"
 
 if [[ "$TOTAL" -eq 0 ]]; then
-  log "No unresolved issues — posting success comment"
-  COMMENT_BODY="## SonarCloud Analysis ✅\n\nNo BLOCKER, CRITICAL, or MAJOR issues found."
-  echo -e "$COMMENT_BODY" | gh pr comment "$GITHUB_PR_NUMBER" \
-    --repo "$GITHUB_REPOSITORY" \
-    --body-file - 2>/dev/null || log "Failed to post comment"
-  exit 0
-fi
+  log "No unresolved issues — building coverage-only comment"
+  COMMENT_BODY="## SonarCloud Analysis ✅\n\nNo BLOCKER, CRITICAL, or MAJOR issues found.\n\n"
+else
+  COMMENT_BODY="## SonarCloud Analysis\n\n"
 
 # Fetch remaining pages if needed
 if [[ "$TOTAL_PAGES" -gt 1 ]]; then
@@ -199,6 +199,7 @@ if [[ "$MATCHED_COUNT" -gt 0 ]]; then
 else
   COMMENT_BODY+="No existing GitHub issues found for these findings. Run \`./scripts/sonarcloud-sync.sh\` to create tracking issues.\n"
 fi
+fi
 
 COMMENT_BODY+="\n---\n\n"
 COMMENT_BODY+="*Full analysis: [SonarCloud Dashboard](https://sonarcloud.io/project/overview?id=${SONAR_PROJECT_KEY})*\n"
@@ -212,7 +213,121 @@ QG_RESPONSE=$(curl -sS -f \
 log "Fetching files needing coverage..."
 COVERAGE_RESPONSE=$(curl -sS -f \
   -H "Authorization: Bearer ${SONAR_TOKEN}" \
-  "https://sonarcloud.io/api/measures/component_tree?component=${SONAR_PROJECT_KEY}&metricKeys=new_coverage,new_uncovered_lines&qualifiers=FIL&ps=15&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"components":[]}')
+  "https://sonarcloud.io/api/measures/component_tree?component=${SONAR_PROJECT_KEY}&metricKeys=new_coverage,new_uncovered_lines&qualifiers=FIL&ps=500&p=1&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"components":[]}')
+
+# Check for more pages and fetch them
+TOTAL_COMPONENTS=$(echo "$COVERAGE_RESPONSE" | jq -r '.paging.total // 0')
+if [[ "$TOTAL_COMPONENTS" -gt 500 ]]; then
+  TOTAL_COV_PAGES=$(( (TOTAL_COMPONENTS + 500 - 1) / 500 ))
+  for ((p = 2; p <= TOTAL_COV_PAGES; p++)); do
+    PAGE_RESPONSE=$(curl -sS -f \
+      -H "Authorization: Bearer ${SONAR_TOKEN}" \
+      "https://sonarcloud.io/api/measures/component_tree?component=${SONAR_PROJECT_KEY}&metricKeys=new_coverage,new_uncovered_lines&qualifiers=FIL&ps=500&p=${p}&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"components":[]}')
+    COVERAGE_RESPONSE=$(printf '%s %s' "$COVERAGE_RESPONSE" "$PAGE_RESPONSE" | jq -s '{components: [.[].components[]]}')
+  done
+fi
+
+# --- Step 4b: Build human-readable coverage gaps table ------------------------
+
+log "Building coverage gaps table..."
+# PR-scoped measures nest values under .periods[0].value (branch analyses use .value)
+UNCOVERED_FILES=$(echo "$COVERAGE_RESPONSE" | jq -c '
+  [.components[]?
+    | {
+        key: .key,
+        path: (.path // "unknown"),
+        uncovered: (((.measures[]? | select(.metric == "new_uncovered_lines") | .periods[0].value // .value) // "0") | tonumber),
+        coverage: (((.measures[]? | select(.metric == "new_coverage") | .periods[0].value // .value)) // "0.0")
+      }
+    | select(.uncovered > 0)
+  ] | sort_by(.uncovered) | reverse | .[0:5]')
+
+if echo "$UNCOVERED_FILES" | jq -e 'length > 0' >/dev/null 2>&1; then
+  COMMENT_BODY+="### 📊 Lines Needing Coverage\n\n"
+  COMMENT_BODY+="| File | Coverage | Uncovered Lines | Lines Needing Tests |\n"
+  COMMENT_BODY+="|------|----------|----------------|--------------------|\n"
+
+  TEMP_DIR=$(mktemp -d)
+  # shellcheck disable=SC2064
+  trap 'rm -rf "$TEMP_DIR"' EXIT
+
+  file_index=0
+  while read -r file_entry; do
+    FILE_KEY=$(echo "$file_entry" | jq -r '.key')
+    FILE_PATH=$(echo "$file_entry" | jq -r '.path')
+    FILE_COV=$(echo "$file_entry" | jq -r '.coverage')
+    FILE_UNC=$(echo "$file_entry" | jq -r '.uncovered')
+
+    # Stash metadata as JSON line so file paths containing | are safe
+    jq -c -n \
+      --arg key "$FILE_KEY" \
+      --arg path "$FILE_PATH" \
+      --arg cov "$FILE_COV" \
+      --arg unc "$FILE_UNC" \
+      '{key:$key, path:$path, coverage:$cov, uncovered:$unc}' > "${TEMP_DIR}/meta_${file_index}"
+
+    # URL-encode FILE_KEY for the SonarCloud sources/lines API
+    ENCODED_KEY=$(jq -rn --arg k "$FILE_KEY" '$k | @uri')
+
+    # Fetch line-level data in background — all files run concurrently
+    {
+      curl -sS -f --connect-timeout 10 --max-time 30 \
+        -H "Authorization: Bearer ${SONAR_TOKEN}" \
+        "https://sonarcloud.io/api/sources/lines?key=${ENCODED_KEY}&from=1&to=${SONAR_MAX_LINES}&pullRequest=${GITHUB_PR_NUMBER}" \
+        2>/dev/null || echo '{"sources":[]}'
+    } > "${TEMP_DIR}/lines_${file_index}" &
+
+    file_index=$((file_index + 1))
+  done < <(echo "$UNCOVERED_FILES" | jq -c '.[]')
+
+  # Wait for all background fetches to complete
+  wait
+
+  # Process results in order
+  for ((i = 0; i < file_index; i++)); do
+    META=$(<"${TEMP_DIR}/meta_${i}")
+    FILE_KEY=$(echo "$META" | jq -r '.key')
+    FILE_PATH=$(echo "$META" | jq -r '.path')
+    FILE_COV=$(echo "$META" | jq -r '.coverage')
+    FILE_UNC=$(echo "$META" | jq -r '.uncovered')
+    # shellcheck disable=SC2188
+    LINES_RESPONSE=$(<"${TEMP_DIR}/lines_${i}" 2>/dev/null || echo '{"sources":[]}')
+
+    if ! echo "$LINES_RESPONSE" | jq empty 2>/dev/null; then
+      LINES_RESPONSE='{"sources":[]}'
+    fi
+
+    # Dedupe line numbers before sort — SonarCloud may return duplicates
+    NEW_LINES=$(echo "$LINES_RESPONSE" | jq -r '
+      [.sources[] | select(.isNew == true and (.lineHits // -1) == 0) | .line] | unique | sort'
+    )
+
+    if echo "$NEW_LINES" | jq -e 'length > 0' >/dev/null 2>&1; then
+      LINE_RANGES=$(echo "$NEW_LINES" | jq -r '
+        reduce .[] as $l (
+          {ranges: [], current: null};
+          if .current == null then
+            {ranges: [[$l, $l]], current: [$l, $l]}
+          elif $l == .current[1] + 1 then
+            {ranges: .ranges[:-1] + [[.current[0], $l]], current: [.current[0], $l]}
+          else
+            {ranges: .ranges + [[$l, $l]], current: [$l, $l]}
+          end
+        ) | .ranges | map(
+          if .[0] == .[1] then "\(.[0])"
+          else "\(.[0])-\(.[1])"
+          end
+        ) | join(", ")')
+
+SAFE_PATH="${FILE_PATH//|/\\|}"
+SAFE_RANGES="${LINE_RANGES//|/\\|}"
+COMMENT_BODY+="| \`${SAFE_PATH}\` | ${FILE_COV}% | ${FILE_UNC} | ${SAFE_RANGES} |\n"
+    fi
+  done
+  COMMENT_BODY+="\n"
+else
+  COMMENT_BODY+="### 📊 Lines Needing Coverage\n\nNo uncovered lines found in new code.\n\n"
+fi
 
 COMMENT_BODY+="<details>\n<summary>📋 JSON Summary (for AI agents)</summary>\n\n"
 COMMENT_BODY+="\`\`\`json\n"
@@ -221,7 +336,7 @@ JSON_SUMMARY=$(echo "$SONAR_RESPONSE" | jq \
   --arg project "$SONAR_PROJECT_KEY" \
   --arg pr "$GITHUB_PR_NUMBER" \
   --argjson qg "$(echo "$QG_RESPONSE" | jq '{gateStatus: .projectStatus.status, failedConditions: [.projectStatus.conditions[]? | select(.status == "ERROR") | {metric: .metricKey, actual: .actualValue, threshold: .errorThreshold}]}')" \
-  --argjson coverage "$(echo "$COVERAGE_RESPONSE" | jq '[.components[]? | {file: (.path // .name), coverage: (.measures[]? | select(.metric == "new_coverage") | .value // "0.0"), uncovered: (.measures[]? | select(.metric == "new_uncovered_lines") | .value // "0")}]')" \
+  --argjson coverage "$(echo "$COVERAGE_RESPONSE" | jq '[.components[]? | {file: (.path // .name), coverage: (((.measures[]? | select(.metric == "new_coverage") | .periods[0].value // .value)) // null), uncovered: (((.measures[]? | select(.metric == "new_uncovered_lines") | .periods[0].value // .value) // "0") | tonumber)} | select(.uncovered > 0 or .coverage != null)] | sort_by(.uncovered) | reverse')" \
   '{
   project: $project,
   pullRequest: ($pr | tonumber),

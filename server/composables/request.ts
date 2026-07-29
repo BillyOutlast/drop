@@ -18,8 +18,7 @@ interface DropFetch<
     request: R,
     opts?: O & { failTitle?: string; params?: { [key: string]: string } },
   ): Promise<
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+    // @ts-expect-error — TS depth limit on conditional typed response from nitropack
     TypedInternalResponse<
       R,
       T,
@@ -49,8 +48,7 @@ export const $dropFetch: DropFetch = async (rawRequest, opts) => {
   // If not in setup
   if (!getCurrentInstance()?.proxy) {
     try {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore Excessive stack depth comparing types
+      // @ts-expect-error — Excessive stack depth comparing types
       return await $fetch(request, opts);
     } catch (e) {
       if (import.meta.client && opts?.failTitle) {

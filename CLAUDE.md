@@ -81,4 +81,48 @@ If a file is repeatedly auto-formatted by linters, the file has a deeper issue. 
 - Generated Prisma client (`server/prisma/client/`)
 - Lockfiles (`pnpm-lock.yaml`, `Cargo.lock`) — only update via `pnpm install` / `cargo update`
 
+## PR review thread management
+
+After every push to a branch with an open PR, automated review bots (OCR, CodeRabbit, Sourcery) fire and create new review threads. These accumulate rapidly. **Clean threads before each push** — do not let them grow exponentially.
+
+**Check unresolved threads:**
+```bash
+bash .husky/pre-push 2>&1 | grep -A999 "PR_REVIEW_THREADS_START" | grep -B999 "PR_REVIEW_THREADS_END"
+```
+
+**Resolve threads**: Use MCP `resolve_thread` with the `PRRT_xxx` GraphQL node ID.
+
+**Categories for disposition:**
+- Bug/security/functional → fix in code, resolve
+- OCR false positive (Nitro auto-imports like `$fetch`) → skip, resolve
+- Nitpick/cosmetic → skip with brief reason, resolve
+- Duplicate from multiple scans → resolve
+- Positive feedback → acknowledge, resolve
+
+**Post a summary comment** on the PR explaining disposition of all threads before resolving. See `pr-review-cleanup` skill for full workflow.
+
+## Pre-commit format guards
+
+The pre-commit hook must auto-fix formatting issues, not just detect them. CI should never be the first formatting failure.
+
+- `cargo fmt` (auto-fixes), not `cargo fmt -- --check` (only checks)
+- Always re-stage auto-fixed files with `git add`
+- Keep `|| exit 1` for unfixable errors (missing toolchain, malformed syntax)
+
+## jq defensive patterns
+
+In CI scripts, `.value | tonumber` crashes on null. Always guard:
+```bash
+(.value // "0") | tonumber
+```
+
+In shell scripts, `echo | while` runs the loop in a subshell — variable mutations are lost. Use process substitution:
+```bash
+while read -r item; do ... done < <(echo "$data" | jq ...)
+```
+
+## SonarCloud coverage
+
+When `new_uncovered_lines` = 0 but `new_coverage` = 0%: changed lines aren't classified as "coverable" but still drag the metric. Include both filters when building coverage gap tables.
+
 Note: `.husky/pre-commit` may be modified to add audit gates (e.g., fallow). See `AGENTS.md` for fallow integration.
