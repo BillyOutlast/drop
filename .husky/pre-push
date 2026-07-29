@@ -30,87 +30,27 @@ if [ -z "${REMOTE_BASE}" ] || [ "${REMOTE_BASE##*/}" = "${CURRENT_BRANCH}" ]; th
   REMOTE_BASE="origin/rebuild"
 fi
 
-# Fetch unresolved PR review comments for agent consumption.
-# Advisory only — warns but does not block push.
+# Check for unresolved PR review threads.
+# Quick count only — use /pull-review-comments skill for full details + resolution.
 if command -v gh >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
   REPO=$(git remote get-url origin | sed 's|.*github.com[:/]||;s|\.git$||')
   PR_NUMBER=$(gh pr list --repo "${REPO}" --head "${CURRENT_BRANCH}" --state open --json number --jq '.[0].number' 2>/dev/null)
   if [ -n "${PR_NUMBER}" ]; then
     OWNER="${REPO%%/*}"
     REPO_NAME="${REPO##*/}"
-    # Fetch unresolved review threads across all pages (cursor-paginated).
-    # Accumulates into a JSON array; exits loop when hasNextPage is false.
-    ALL_UNRESOLVED='[]'
-    CURSOR=''
-    HAS_NEXT='true'
-    while [ "${HAS_NEXT}" = 'true' ]; do
-      if [ -z "${CURSOR}" ]; then
-        PAGE_JSON=$(gh api graphql -f query='
-          query($owner:String!, $repo:String!, $pr:Int!) {
-            repository(owner:$owner, name:$repo) {
-              pullRequest(number:$pr) {
-                reviewThreads(first:100) {
-                  nodes {
-                    id isResolved isOutdated
-                    comments(first:1) {
-                      nodes { author { login } body path line }
-                    }
-                  }
-                  pageInfo { hasNextPage endCursor }
-                }
-              }
+    COUNT=$(gh api graphql -f query='
+      query($owner:String!, $repo:String!, $pr:Int!) {
+        repository(owner:$owner, name:$repo) {
+          pullRequest(number:$pr) {
+            reviewThreads(first:100) {
+              nodes { isResolved }
+              totalCount
             }
-          }' -F owner="${OWNER}" -F repo="${REPO_NAME}" -F pr="${PR_NUMBER}" 2>&1) || {
-          printf ':: Warning: gh API call failed (exit %d) — cannot check unresolved review threads.\n' "$?" >&2
-          ALL_UNRESOLVED='error'
-          break
+          }
         }
-      else
-        PAGE_JSON=$(gh api graphql -f query='
-          query($owner:String!, $repo:String!, $pr:Int!, $cursor:String!) {
-            repository(owner:$owner, name:$repo) {
-              pullRequest(number:$pr) {
-                reviewThreads(first:100, after:$cursor) {
-                  nodes {
-                    id isResolved isOutdated
-                    comments(first:1) {
-                      nodes { author { login } body path line }
-                    }
-                  }
-                  pageInfo { hasNextPage endCursor }
-                }
-              }
-            }
-          }' -F owner="${OWNER}" -F repo="${REPO_NAME}" -F pr="${PR_NUMBER}" -F cursor="${CURSOR}" 2>&1) || {
-          printf ':: Warning: gh API call failed on page (exit %d) — results may be incomplete.\n' "$?" >&2
-          break
-        }
-      fi
-
-      PAGE_UNRESOLVED=$(echo "${PAGE_JSON}" | jq -c '
-        .data.repository.pullRequest.reviewThreads.nodes
-        | map(select(.isResolved == false))
-        | map({
-            thread_id: .id,
-            file: .comments.nodes[0].path,
-            line: .comments.nodes[0].line,
-            author: .comments.nodes[0].author.login,
-            body_preview: (.comments.nodes[0].body | .[0:120]),
-            is_outdated: .isOutdated
-          })')
-      ALL_UNRESOLVED=$(echo "${ALL_UNRESOLVED}" | jq -c ". + ${PAGE_UNRESOLVED}")
-      HAS_NEXT=$(echo "${PAGE_JSON}" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.hasNextPage')
-      CURSOR=$(echo "${PAGE_JSON}" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.endCursor')
-    done
-
-    if [ "${ALL_UNRESOLVED}" != 'error' ]; then
-      UNRESOLVED_COUNT=$(echo "${ALL_UNRESOLVED}" | jq 'length')
-      if [ "${UNRESOLVED_COUNT}" -gt 0 ]; then
-        printf '\n⚠️  PR #%s has %s unresolved review thread(s). Address before push or use --no-verify.\n' \
-          "${PR_NUMBER}" "${UNRESOLVED_COUNT}"
-        # Output structured JSON for agent processing (line count is self-describing)
-        printf '## PR_REVIEW_THREADS_START\n%s\n## PR_REVIEW_THREADS_END\n' "${ALL_UNRESOLVED}"
-      fi
+      }' -F owner="${OWNER}" -F repo="${REPO_NAME}" -F pr="${PR_NUMBER}" 2>/dev/null | jq '[.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false)] | length' 2>/dev/null || echo "?")
+    if [ "${COUNT}" != "0" ] && [ "${COUNT}" != "?" ]; then
+      printf '\n⚠️  PR #%s has unresolved review threads. Run /pull-review-comments.\n' "${PR_NUMBER}"
     fi
   fi
 fi
