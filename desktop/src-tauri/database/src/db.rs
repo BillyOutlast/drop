@@ -52,6 +52,7 @@ fn encryption_key_impl() -> [u8; 32] {
     };
 
     if secret.len() != 32 {
+        secret.zeroize();
         panic!(
             "keyring returned secret of length {}, expected 32",
             secret.len()
