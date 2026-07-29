@@ -209,10 +209,8 @@ export default defineWebSocketHandler({
     }
   },
   async message(peer, msg) {
-    if (pendingAuth.has(peer.id)) {
-      const buf = pendingAuthMessageBuffer.get(peer.id) ?? [];
-      buf.push({ peer, msg });
-      pendingAuthMessageBuffer.set(peer.id, buf);
+    await processMessage(peer, msg);
+    await drainPendingAuthBuffer(peer);
       return;
     }
     await processMessage(peer, msg);
