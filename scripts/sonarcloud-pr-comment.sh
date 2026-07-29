@@ -208,26 +208,24 @@ QG_RESPONSE=$(curl -sS -f \
   "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${SONAR_PROJECT_KEY}&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"projectStatus":{"status":"UNKNOWN","conditions":[]}}')
 
 log "Fetching files needing coverage..."
+# metricSort/metricSortFilter return empty results for new_* metrics on PRs — fetch all, filter client-side
 COVERAGE_RESPONSE=$(curl -sS -f \
   -H "Authorization: Bearer ${SONAR_TOKEN}" \
-  "https://sonarcloud.io/api/measures/component_tree?component=${SONAR_PROJECT_KEY}&metricKeys=new_coverage,new_uncovered_lines&qualifiers=FIL&ps=15&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"components":[]}')
+  "https://sonarcloud.io/api/measures/component_tree?component=${SONAR_PROJECT_KEY}&metricKeys=new_coverage,new_uncovered_lines&qualifiers=FIL&ps=500&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"components":[]}')
 
 # --- Step 4b: Build human-readable coverage gaps table ------------------------
 
 log "Building coverage gaps table..."
+# PR-scoped measures nest values under .periods[0].value (branch analyses use .value)
 UNCOVERED_FILES=$(echo "$COVERAGE_RESPONSE" | jq -c '
-  [.components[]? |
-    select(
-      (.measures[]? | select(.metric == "new_uncovered_lines") | (.value // "0") | tonumber > 0)
-      or
-      (.measures[]? | select(.metric == "new_coverage") | .value // "100") == "0.0"
-    )
+  [.components[]?
     | {
         key: .key,
         path: (.path // "unknown"),
-        uncovered: (.measures[]? | select(.metric == "new_uncovered_lines") | (.value // "0") | tonumber),
-        coverage: (.measures[]? | select(.metric == "new_coverage") | .value // "0.0")
+        uncovered: (((.measures[]? | select(.metric == "new_uncovered_lines") | .periods[0].value // .value) // "0") | tonumber),
+        coverage: (((.measures[]? | select(.metric == "new_coverage") | .periods[0].value // .value)) // "0.0")
       }
+    | select(.uncovered > 0)
   ] | sort_by(.uncovered) | reverse | .[0:5]')
 
 if echo "$UNCOVERED_FILES" | jq -e 'length > 0' >/dev/null 2>&1; then
@@ -244,12 +242,11 @@ if echo "$UNCOVERED_FILES" | jq -e 'length > 0' >/dev/null 2>&1; then
     # Fetch line-level data for this file (new lines in the PR)
     LINES_RESPONSE=$(curl -sS \
       -H "Authorization: Bearer ${SONAR_TOKEN}" \
-      "https://sonarcloud.io/api/sources/lines?key=${FILE_KEY}&from=1&to=500&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"sources":[]}')
+      "https://sonarcloud.io/api/sources/lines?key=${FILE_KEY}&from=1&to=1000&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"sources":[]}')
 
-    # Collect new-line numbers. When coverage is null (no tests),
-    # all new lines are uncovered. Group consecutive lines into ranges.
+    # lineHits == 0 = executable and uncovered; lineHits null = non-executable (comments, blanks)
     NEW_LINES=$(echo "$LINES_RESPONSE" | jq -r '
-      [.sources[] | select(.isNew == true and .coverage != "covered") | .line] | sort'
+      [.sources[] | select(.isNew == true and (.lineHits // -1) == 0) | .line] | sort'
     )
 
     if [[ "$(echo "$NEW_LINES" | jq 'length')" -gt 0 ]]; then
@@ -286,7 +283,7 @@ JSON_SUMMARY=$(echo "$SONAR_RESPONSE" | jq \
   --arg project "$SONAR_PROJECT_KEY" \
   --arg pr "$GITHUB_PR_NUMBER" \
   --argjson qg "$(echo "$QG_RESPONSE" | jq '{gateStatus: .projectStatus.status, failedConditions: [.projectStatus.conditions[]? | select(.status == "ERROR") | {metric: .metricKey, actual: .actualValue, threshold: .errorThreshold}]}')" \
-  --argjson coverage "$(echo "$COVERAGE_RESPONSE" | jq '[.components[]? | {file: (.path // .name), coverage: (.measures[]? | select(.metric == "new_coverage") | .value // "0.0"), uncovered: (.measures[]? | select(.metric == "new_uncovered_lines") | .value // "0")}]')" \
+  --argjson coverage "$(echo "$COVERAGE_RESPONSE" | jq '[.components[]? | {file: (.path // .name), coverage: (((.measures[]? | select(.metric == "new_coverage") | .periods[0].value // .value)) // null), uncovered: (((.measures[]? | select(.metric == "new_uncovered_lines") | .periods[0].value // .value) // "0") | tonumber)} | select(.uncovered > 0 or .coverage != null)] | sort_by(.uncovered) | reverse')" \
   '{
   project: $project,
   pullRequest: ($pr | tonumber),
