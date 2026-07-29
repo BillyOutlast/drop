@@ -211,9 +211,19 @@ QG_RESPONSE=$(curl -sS -f \
   "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${SONAR_PROJECT_KEY}&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"projectStatus":{"status":"UNKNOWN","conditions":[]}}')
 
 log "Fetching files needing coverage..."
-# metricSort/metricSortFilter return empty results for new_* metrics on PRs — fetch all, filter client-side
 COVERAGE_RESPONSE=$(curl -sS -f \
   -H "Authorization: Bearer ${SONAR_TOKEN}" \
+  "https://sonarcloud.io/api/measures/component_tree?component=${SONAR_PROJECT_KEY}&metricKeys=new_coverage,new_uncovered_lines&qualifiers=FIL&ps=500&p=1&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"components":[]}')
+
+# Check for more pages and fetch them
+TOTAL_COMPONENTS=$(echo "$COVERAGE_RESPONSE" | jq -r '.paging.total // 0')
+if [[ "$TOTAL_COMPONENTS" -gt 500 ]]; then
+  TOTAL_COV_PAGES=$(( (TOTAL_COMPONENTS + 500 - 1) / 500 ))
+  for ((p = 2; p <= TOTAL_COV_PAGES; p++)); do
+    PAGE_RESPONSE=$(curl -sS -f ... "&p=${p}" ...)
+    COVERAGE_RESPONSE=$(echo "$COVERAGE_RESPONSE $PAGE_RESPONSE" | jq -s '{components: [.[].components[]]}')
+  done
+fi
   "https://sonarcloud.io/api/measures/component_tree?component=${SONAR_PROJECT_KEY}&metricKeys=new_coverage,new_uncovered_lines&qualifiers=FIL&ps=500&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"components":[]}')
 
 # --- Step 4b: Build human-readable coverage gaps table ------------------------
