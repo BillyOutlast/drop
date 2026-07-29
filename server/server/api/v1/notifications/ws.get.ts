@@ -41,7 +41,10 @@ async function authenticatePeer(
   return true;
 }
 
-function clearAuthTimeoutAndClose(peer: { id: string; close: () => void }): void {
+function clearAuthTimeoutAndClose(peer: {
+  id: string;
+  close: () => void;
+}): void {
   const tid = authTimeouts.get(peer.id);
   if (tid) {
     clearTimeout(tid);

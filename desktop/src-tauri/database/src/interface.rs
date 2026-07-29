@@ -8,8 +8,8 @@ use std::{
 
 use aes::cipher::{KeyIvInit, StreamCipher};
 use aes_gcm::{
-    aead::{Aead, KeyInit},
     Aes256Gcm, Key, Nonce,
+    aead::{Aead, KeyInit},
 };
 type Aes128Ctr64LE = ctr::Ctr64LE<aes::Aes128>;
 use anyhow::Error;
@@ -28,7 +28,7 @@ use crate::{
 
 /// Magic bytes for database file format detection.
 const MAGIC_V2: &[u8; 4] = b"DMS2"; // AES-256-GCM (current)
-                                    // MAGIC_V1 (b"DMS1") was never shipped — removed. Pre-PR databases have no magic prefix.
+// MAGIC_V1 (b"DMS1") was never shipped — removed. Pre-PR databases have no magic prefix.
 
 /// Encrypt `plaintext` with AES-256-GCM, returning `[MAGIC_V2][12-byte nonce][ciphertext+tag]`.
 fn encrypt_database(key: &[u8; 32], plaintext: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {

@@ -34,7 +34,7 @@ if [ -n "$changed_sh" ]; then
   fi
 fi
 
-# Check Rust formatting on changed .rs files, filtered by workspace
+# Format changed .rs files, filtered by workspace
 changed_rs=$(git diff --cached --name-only --diff-filter=ACM -- '*.rs')
 if [ -n "$changed_rs" ]; then
   torrential_rs=$(echo "$changed_rs" | grep '^torrential/' || true)
@@ -42,12 +42,14 @@ if [ -n "$changed_rs" ]; then
   desktop_rs=$(echo "$changed_rs" | grep '^desktop/' || true)
 
   if [ -n "$torrential_rs" ]; then
-    cargo fmt --manifest-path torrential/Cargo.toml -- --check $torrential_rs || exit 1
+    cargo fmt --manifest-path torrential/Cargo.toml -- $torrential_rs
   fi
   if [ -n "$cli_rs" ]; then
-    cargo fmt --manifest-path cli/Cargo.toml -- --check $cli_rs || exit 1
+    cargo fmt --manifest-path cli/Cargo.toml -- $cli_rs
   fi
   if [ -n "$desktop_rs" ]; then
-    cargo fmt --manifest-path desktop/src-tauri/Cargo.toml -- --check $desktop_rs || exit 1
+    cargo fmt --manifest-path desktop/src-tauri/Cargo.toml -- $desktop_rs
   fi
+  # Re-stage formatted files so they're included in the commit
+  echo "$changed_rs" | xargs -r git add
 fi
