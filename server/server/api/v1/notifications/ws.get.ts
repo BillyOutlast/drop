@@ -210,8 +210,8 @@ export default defineWebSocketHandler({
       // Re-add to pendingAuth before draining to prevent concurrent message processing
       while (pendingAuthMessageBuffer.has(peer.id)) {
         await drainPendingAuthBuffer(peer);
-      }
-      pendingAuth.delete(peer.id);
+    if (pendingAuthMessageBuffer.has(peer.id)) {
+      await drainPendingAuthBuffer(peer);
     }
   async message(peer, msg) {
     await processMessage(peer, msg);
