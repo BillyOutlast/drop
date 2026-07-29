@@ -24,24 +24,27 @@ hook warns (advisory) → agent reads JSON → batch evaluate → resolve all
 | Resolve thread | `gh api --method PATCH repos/:owner/:repo/pulls/:pr/comments/:id -f state=CLOSED` (or use MCP `resolve_thread` with PRRT_xxx ID) |
 | Post summary | `gh pr comment N --body "All N threads evaluated: ..."` |
 
-## GraphQL Query (get PRRT_xxx IDs)
+## GraphQL Query (get PRRT_xxx IDs — cursor-paginated)
 
 ```graphql
-query($owner:String!, $repo:String!, $pr:Int!) {
+query($owner:String!, $repo:String!, $pr:Int!, $cursor:String) {
   repository(owner:$owner, name:$repo) {
     pullRequest(number:$pr) {
-      reviewThreads(first:100) {
+      reviewThreads(first:100, after:$cursor) {
         nodes {
           id isResolved isOutdated
           comments(first:1) {
             nodes { author { login } body path line }
           }
         }
+        pageInfo { hasNextPage endCursor }
       }
     }
   }
 }
 ```
+
+Loop until `hasNextPage` is false. The `first:100` cap silently drops threads on large PRs; cursor pagination is mandatory.
 
 The returned `id` is the PRRT_xxx GraphQL node ID used for resolution.
 

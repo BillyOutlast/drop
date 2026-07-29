@@ -40,8 +40,8 @@ jq in CI scripts crashes on null/non-numeric values. Always guard:
 # ❌ BAD: crashes on null
 .value | tonumber > 0
 
-# ✅ GOOD: fallback to "0" before conversion
-(.value // "0") | tonumber > 0
+# ✅ GOOD: fallback + try/catch guards against non-numeric
+(.value // "0") | (try tonumber catch 0) > 0
 ```
 
 ## Bash Pipeline Traps
@@ -72,7 +72,7 @@ select(
 
 ## Pre-commit Hook Structure
 
-```
+```text
 1. lint-staged (prettier --write, eslint --fix) → auto-fixes JS/TS/Vue → re-stages
 2. cargo fmt → auto-fixes Rust → re-stages
 3. typecheck → validates (read-only, no fixes)

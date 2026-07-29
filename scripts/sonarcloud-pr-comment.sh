@@ -242,7 +242,7 @@ if echo "$UNCOVERED_FILES" | jq -e 'length > 0' >/dev/null 2>&1; then
     # Fetch line-level data for this file (new lines in the PR)
     LINES_RESPONSE=$(curl -sS \
       -H "Authorization: Bearer ${SONAR_TOKEN}" \
-      "https://sonarcloud.io/api/sources/lines?key=${FILE_KEY}&from=1&to=1000&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"sources":[]}')
+      "https://sonarcloud.io/api/sources/lines?key=${FILE_KEY}&from=1&to=5000&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"sources":[]}')
 
     # lineHits == 0 = executable and uncovered; lineHits null = non-executable (comments, blanks)
     NEW_LINES=$(echo "$LINES_RESPONSE" | jq -r '
@@ -250,6 +250,8 @@ if echo "$UNCOVERED_FILES" | jq -e 'length > 0' >/dev/null 2>&1; then
     )
 
     if [[ "$(echo "$NEW_LINES" | jq 'length')" -gt 0 ]]; then
+      # Group consecutive line numbers into compact ranges (e.g., [1,2,3,5] → "1-3, 5").
+      # The reduce iterator builds ranges by comparing each line against the previous.
       LINE_RANGES=$(echo "$NEW_LINES" | jq -r '
         reduce .[] as $l (
           {ranges: [], current: null};
