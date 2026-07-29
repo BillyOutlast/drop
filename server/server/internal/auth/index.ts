@@ -26,12 +26,18 @@ class AuthManager {
       try {
         const object = await init();
         if (!object) break;
-        if (key === AuthMec.Simple) {
-          this.authProviders[AuthMec.Simple] = object as boolean;
-        } else if (key === AuthMec.OpenID) {
-          this.authProviders[AuthMec.OpenID] = object as
-            OIDCManager | undefined;
-        }
+for (const [key, init] of Object.entries(this.initFuncs)) {
+  try {
+    const object = await init();
+    if (!object) break;
+    this.authProviders[key as keyof typeof this.authProviders] = object as never;
+    logger.info(`enabled auth: ${key}`);
+  } catch (e) {
+    logger.warn(
+      `failed to enable auth ${key}: ${(e as string).toString()}`,
+    );
+  }
+}
         logger.info(`enabled auth: ${key}`);
       } catch (e) {
         logger.warn(
