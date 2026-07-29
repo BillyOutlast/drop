@@ -38,24 +38,56 @@ if command -v gh >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
   if [ -n "${PR_NUMBER}" ]; then
     OWNER="${REPO%%/*}"
     REPO_NAME="${REPO##*/}"
-    REVIEW_JSON=$(gh api graphql -f query='
-      query($owner:String!, $repo:String!, $pr:Int!) {
-        repository(owner:$owner, name:$repo) {
-          pullRequest(number:$pr) {
-            reviewThreads(first:100) {
-              nodes {
-                id isResolved isOutdated
-                comments(first:1) {
-                  nodes { author { login } body path line }
+    # Fetch unresolved review threads across all pages (cursor-paginated).
+    # Accumulates into a JSON array; exits loop when hasNextPage is false.
+    ALL_UNRESOLVED='[]'
+    CURSOR=''
+    HAS_NEXT='true'
+    while [ "${HAS_NEXT}" = 'true' ]; do
+      if [ -z "${CURSOR}" ]; then
+        PAGE_JSON=$(gh api graphql -f query='
+          query($owner:String!, $repo:String!, $pr:Int!) {
+            repository(owner:$owner, name:$repo) {
+              pullRequest(number:$pr) {
+                reviewThreads(first:100) {
+                  nodes {
+                    id isResolved isOutdated
+                    comments(first:1) {
+                      nodes { author { login } body path line }
+                    }
+                  }
+                  pageInfo { hasNextPage endCursor }
                 }
               }
             }
-          }
+          }' -F owner="${OWNER}" -F repo="${REPO_NAME}" -F pr="${PR_NUMBER}" 2>&1) || {
+          printf ':: Warning: gh API call failed (exit %d) — cannot check unresolved review threads.\n' "$?" >&2
+          ALL_UNRESOLVED='error'
+          break
         }
-      }' -F owner="${OWNER}" -F repo="${REPO_NAME}" -F pr="${PR_NUMBER}" 2>/dev/null)
+      else
+        PAGE_JSON=$(gh api graphql -f query='
+          query($owner:String!, $repo:String!, $pr:Int!, $cursor:String!) {
+            repository(owner:$owner, name:$repo) {
+              pullRequest(number:$pr) {
+                reviewThreads(first:100, after:$cursor) {
+                  nodes {
+                    id isResolved isOutdated
+                    comments(first:1) {
+                      nodes { author { login } body path line }
+                    }
+                  }
+                  pageInfo { hasNextPage endCursor }
+                }
+              }
+            }
+          }' -F owner="${OWNER}" -F repo="${REPO_NAME}" -F pr="${PR_NUMBER}" -F cursor="${CURSOR}" 2>&1) || {
+          printf ':: Warning: gh API call failed on page (exit %d) — results may be incomplete.\n' "$?" >&2
+          break
+        }
+      fi
 
-    if [ -n "${REVIEW_JSON}" ]; then
-      UNRESOLVED=$(echo "${REVIEW_JSON}" | jq -c '
+      PAGE_UNRESOLVED=$(echo "${PAGE_JSON}" | jq -c '
         .data.repository.pullRequest.reviewThreads.nodes
         | map(select(.isResolved == false))
         | map({
@@ -66,12 +98,18 @@ if command -v gh >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
             body_preview: (.comments.nodes[0].body | .[0:120]),
             is_outdated: .isOutdated
           })')
-      UNRESOLVED_COUNT=$(echo "${UNRESOLVED}" | jq 'length')
+      ALL_UNRESOLVED=$(echo "${ALL_UNRESOLVED}" | jq -c ". + ${PAGE_UNRESOLVED}")
+      HAS_NEXT=$(echo "${PAGE_JSON}" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.hasNextPage')
+      CURSOR=$(echo "${PAGE_JSON}" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.endCursor')
+    done
+
+    if [ "${ALL_UNRESOLVED}" != 'error' ]; then
+      UNRESOLVED_COUNT=$(echo "${ALL_UNRESOLVED}" | jq 'length')
       if [ "${UNRESOLVED_COUNT}" -gt 0 ]; then
         printf '\n⚠️  PR #%s has %s unresolved review thread(s). Address before push or use --no-verify.\n' \
           "${PR_NUMBER}" "${UNRESOLVED_COUNT}"
         # Output structured JSON for agent processing (line count is self-describing)
-        printf '## PR_REVIEW_THREADS_START\n%s\n## PR_REVIEW_THREADS_END\n' "${UNRESOLVED}"
+        printf '## PR_REVIEW_THREADS_START\n%s\n## PR_REVIEW_THREADS_END\n' "${ALL_UNRESOLVED}"
       fi
     fi
   fi
