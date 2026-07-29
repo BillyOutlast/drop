@@ -252,8 +252,9 @@ if echo "$UNCOVERED_FILES" | jq -e 'length > 0' >/dev/null 2>&1; then
 
     # Fetch line-level data in background — all files run concurrently
     {
-      curl -sS -H "Authorization: Bearer ${SONAR_TOKEN}" \
-        "https://sonarcloud.io/api/sources/lines?key=${FILE_KEY}&from=1&to=${SONAR_MAX_LINES}&pullRequest=${GITHUB_PR_NUMBER}" \
+ENCODED_KEY=$(printf '%s' "$FILE_KEY" | jq -sRr @uri)
+    curl -sS -H "Authorization: Bearer ${SONAR_TOKEN}" \
+        "https://sonarcloud.io/api/sources/lines?key=${ENCODED_KEY}&from=1&to=${SONAR_MAX_LINES}&pullRequest=${GITHUB_PR_NUMBER}" \
         2>/dev/null || echo '{"sources":[]}'
     } > "${TEMP_DIR}/lines_${file_index}" &
 
