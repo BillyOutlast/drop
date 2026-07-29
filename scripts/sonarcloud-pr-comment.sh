@@ -217,7 +217,11 @@ COVERAGE_RESPONSE=$(curl -sS -f \
 log "Building coverage gaps table..."
 UNCOVERED_FILES=$(echo "$COVERAGE_RESPONSE" | jq -c '
   [.components[]? |
-    select((.measures[]? | select(.metric == "new_uncovered_lines") | (.value // "0") | tonumber > 0))
+    select(
+      (.measures[]? | select(.metric == "new_uncovered_lines") | (.value // "0") | tonumber > 0)
+      or
+      (.measures[]? | select(.metric == "new_coverage") | .value // "100") == "0.0"
+    )
     | {
         key: .key,
         path: (.path // "unknown"),
