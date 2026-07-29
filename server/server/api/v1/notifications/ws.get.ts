@@ -106,11 +106,16 @@ async function processMessage(
     }
 
     const msgData = data as Record<string, unknown>;
-    if (msgData.token) {
-      if (typeof msgData.token !== "string" || msgData.token.length === 0) {
-        logger.warn(
-          { peerId: peer.id },
-          "WebSocket token auth: invalid token type",
+      if (typeof msgData.token !== "string") {
+        logger.warn({ peerId: peer.id }, "WebSocket token auth: token is not a string");
+        rejectPeer(peer);
+        return;
+      }
+      if (msgData.token.length === 0) {
+        logger.warn({ peerId: peer.id }, "WebSocket token auth: token is empty");
+        rejectPeer(peer);
+        return;
+      }
         );
         rejectPeer(peer);
         return;
