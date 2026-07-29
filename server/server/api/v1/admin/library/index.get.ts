@@ -29,7 +29,7 @@ export type AdminLibraryGame = SerializeObject<
  * @param query - Validated query parameters containing optional search text and filter tokens
  * @returns Combined Prisma filtering arguments, or `undefined` when no criteria are provided
  */
-function buildFilters(
+export function buildFilters(
   query: typeof Query.infer,
 ): Prisma.GameFindManyArgs | undefined {
   const rawFilters: Array<Prisma.GameFindManyArgs & Prisma.GameCountArgs> = [];
