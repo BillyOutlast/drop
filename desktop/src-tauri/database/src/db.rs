@@ -4,6 +4,7 @@ use std::{
 };
 
 use rand::RngCore;
+use zeroize::Zeroize;
 
 use crate::interface::DatabaseInterface;
 
@@ -33,14 +34,16 @@ fn encryption_key_impl() -> [u8; 32] {
         Err(keyring::Error::NoEntry) => {
             // No existing key — generate and persist new one
             let mut buffer = [0u8; 32];
-            rand::rng().fill_bytes(&mut buffer);
+            rand::rng()
+                .fill_bytes(&mut buffer)
+                .expect("failed to generate random database encryption key");
             entry
                 .set_secret(&buffer)
                 .expect("failed to save new key to keyring");
             log::info!("created new database key");
             let result = buffer.to_vec();
             // Zero the stack buffer after persisting to keyring
-            buffer.fill(0);
+            buffer.zeroize();
             result
         }
         Err(e) => {
@@ -59,7 +62,7 @@ fn encryption_key_impl() -> [u8; 32] {
     let mut key = [0u8; 32];
     key.copy_from_slice(&secret);
     // Zero the heap-allocated secret after copying to stack
-    secret.fill(0);
+    secret.zeroize();
     key
 }
 
