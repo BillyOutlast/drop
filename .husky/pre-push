@@ -38,25 +38,9 @@ if command -v gh >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
 REPO=$(git remote get-url origin | sed -nE 's#.*github.com[:/]([^/]+/[^/.]+)(\.git)?$#\1#p' 2>/dev/null)
 if [ -z "${REPO}" ]; then
   echo ':: unable to parse GitHub repository from remote URL — skipping review thread check' >&2
-  REPO=''
-fi
-  PR_NUMBER=$(gh pr list --repo "${REPO}" --head "${CURRENT_BRANCH}" --state open --json number --jq '.[0].number' 2>/dev/null)
-  if [ -n "${PR_NUMBER}" ]; then
-    OWNER="${REPO%%/*}"
-    REPO_NAME="${REPO##*/}"
-    COUNT=$(gh api graphql -f query='
-      query($owner:String!, $repo:String!, $pr:Int!) {
-        repository(owner:$owner, name:$repo) {
-          pullRequest(number:$pr) {
-            reviewThreads(first:1) {
-              totalCount
-            }
-          }
-        }
-      }' -F owner="${OWNER}" -F repo="${REPO_NAME}" -F pr="${PR_NUMBER}" 2>/dev/null | jq -r '.data.repository.pullRequest.reviewThreads.totalCount // 0' 2>/dev/null || echo "?")
-    if [ "${COUNT}" != "0" ] && [ "${COUNT}" != "?" ]; then
-      printf '\n⚠️  PR #%s has review threads. Run /pull-review-comments.\n' "${PR_NUMBER}"
-    fi
-  fi
+if command -v gh >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+  ...
+else
+  printf ':: gh or jq not found — skipping review thread check\n' >&2
 fi
 
