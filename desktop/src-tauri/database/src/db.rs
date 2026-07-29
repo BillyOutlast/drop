@@ -34,9 +34,7 @@ fn encryption_key_impl() -> [u8; 32] {
         Err(keyring::Error::NoEntry) => {
             // No existing key — generate and persist new one
             let mut buffer = [0u8; 32];
-            rand::rng()
-                .fill_bytes(&mut buffer)
-                .expect("failed to generate random database encryption key");
+            rand::rng().fill_bytes(&mut buffer);
             entry
                 .set_secret(&buffer)
                 .expect("failed to save new key to keyring");
