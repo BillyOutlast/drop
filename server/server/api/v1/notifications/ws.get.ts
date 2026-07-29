@@ -15,6 +15,14 @@ const AUTH_GRACE_PERIOD_MS = Number.parseInt(
 const authTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 // Track peers currently being authenticated to prevent race between open and message handlers
 const pendingAuth = new Set<string>();
+// Buffer for messages arriving while peer is in pendingAuth
+const pendingAuthMessageBuffer = new Map<
+  string,
+  Array<{
+    peer: { id: string; send: (data: string) => void; close: () => void };
+    msg: { toString(): string };
+  }>
+>();
 
 // fallow-ignore-next-line complexity
 async function authenticatePeer(
@@ -59,6 +67,107 @@ function clearAuthTimeoutAndClose(peer: {
   peer.close();
 }
 
+// fallow-ignore-next-line complexity
+async function processMessage(
+  peer: { id: string; send: (data: string) => void; close: () => void },
+  msg: { toString(): string },
+): Promise<void> {
+  try {
+    // Fast-path: skip JSON.parse for already authenticated peers
+    if (socketSessions.has(peer.id)) return;
+
+    const raw = msg.toString();
+    let data: unknown;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      logger.warn({ peerId: peer.id }, "WebSocket: invalid JSON message");
+      peer.send("unauthenticated");
+      clearAuthTimeoutAndClose(peer);
+      return;
+    }
+
+    if (typeof data !== "object" || data === null) {
+      logger.warn(
+        { peerId: peer.id },
+        "WebSocket: non-object message from peer",
+      );
+      peer.send("unauthenticated");
+      clearAuthTimeoutAndClose(peer);
+      return;
+    }
+
+    const msgData = data as Record<string, unknown>;
+    if (msgData.token) {
+      if (typeof msgData.token !== "string" || msgData.token.length === 0) {
+        logger.warn(
+          { peerId: peer.id },
+          "WebSocket token auth: invalid token type",
+        );
+        peer.send("unauthenticated");
+        clearAuthTimeoutAndClose(peer);
+        return;
+      }
+      // Skip re-authentication if peer is already authenticated
+      if (socketSessions.has(peer.id)) return;
+      // Serialize token auth per peer — prevent concurrent authenticatePeer calls
+      pendingAuth.add(peer.id);
+      try {
+        const headers = new Headers({
+          Authorization: `Bearer ${msgData.token}`,
+        });
+        const authenticated = await authenticatePeer(peer, headers);
+        if (authenticated) {
+          // Clear the pending auth timeout — peer successfully re-authenticated
+          const timeoutId = authTimeouts.get(peer.id);
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            authTimeouts.delete(peer.id);
+          }
+          return;
+        }
+        // Token auth failed — close connection
+        logger.warn(`WebSocket token auth failed for peer ${peer.id}`);
+        peer.send("unauthenticated");
+        clearAuthTimeoutAndClose(peer);
+        return;
+      } finally {
+        pendingAuth.delete(peer.id);
+      }
+    }
+    // Non-token message from unauthenticated peer — close
+    logger.warn(
+      { peerId: peer.id },
+      "Closing unauthenticated WebSocket: non-token message before auth",
+    );
+    peer.send("unauthenticated");
+    clearAuthTimeoutAndClose(peer);
+    return;
+  } catch (error) {
+    logger.warn(
+      { error: (error as Error)?.message },
+      `WebSocket message processing error for peer ${peer.id}`,
+    );
+    if (!socketSessions.has(peer.id)) {
+      peer.send("unauthenticated");
+      clearAuthTimeoutAndClose(peer);
+    }
+  }
+}
+
+async function drainPendingAuthBuffer(peer: {
+  id: string;
+  send: (data: string) => void;
+  close: () => void;
+}): Promise<void> {
+  const buf = pendingAuthMessageBuffer.get(peer.id);
+  if (!buf) return;
+  pendingAuthMessageBuffer.delete(peer.id);
+  for (const { msg } of buf) {
+    await processMessage(peer, msg);
+  }
+}
+
 export default defineWebSocketHandler({
   async open(peer) {
     pendingAuth.add(peer.id);
@@ -72,7 +181,7 @@ export default defineWebSocketHandler({
         peer.send("unauthenticated");
         // Allow grace period for token-based re-auth, then close
         const authTimeout = setTimeout(() => {
-          if (!socketSessions.has(peer.id)) {
+          if (!socketSessions.has(peer.id) && !pendingAuth.has(peer.id)) {
             peer.close();
           }
           authTimeouts.delete(peer.id);
@@ -88,76 +197,28 @@ export default defineWebSocketHandler({
       peer.close();
     } finally {
       pendingAuth.delete(peer.id);
+      while (pendingAuthMessageBuffer.has(peer.id)) {
+        await drainPendingAuthBuffer(peer);
+      }
     }
   },
-  // fallow-ignore-next-line complexity
   async message(peer, msg) {
-    // Ignore messages while open handler is still authenticating
-    if (pendingAuth.has(peer.id)) return;
-    try {
-      const data = JSON.parse(msg.toString());
-      if (data.token) {
-        if (typeof data.token !== "string" || data.token.length === 0) {
-          logger.warn(
-            { peerId: peer.id },
-            "WebSocket token auth: invalid token type",
-          );
-          peer.send("unauthenticated");
-          clearAuthTimeoutAndClose(peer);
-          return;
-        }
-        // Skip re-authentication if peer is already authenticated
-        if (socketSessions.has(peer.id)) return;
-        // Serialize token auth per peer — prevent concurrent authenticatePeer calls
-        pendingAuth.add(peer.id);
-        try {
-          const headers = new Headers({
-            Authorization: `Bearer ${data.token}`,
-          });
-          const authenticated = await authenticatePeer(peer, headers);
-          if (authenticated) {
-            // Clear the pending auth timeout — peer successfully re-authenticated
-            const timeoutId = authTimeouts.get(peer.id);
-            if (timeoutId) {
-              clearTimeout(timeoutId);
-              authTimeouts.delete(peer.id);
-            }
-            return;
-          }
-          // Token auth failed — close connection
-          logger.warn(`WebSocket token auth failed for peer ${peer.id}`);
-          peer.send("unauthenticated");
-          clearAuthTimeoutAndClose(peer);
-          return;
-        } finally {
-          pendingAuth.delete(peer.id);
-        }
-      }
-      // Non-token message from authenticated peer — ignore
-      if (socketSessions.has(peer.id)) return;
-      // Non-token message from unauthenticated peer — close
-      logger.warn(
-        { peerId: peer.id },
-        "Closing unauthenticated WebSocket: non-token message before auth",
-      );
-      peer.send("unauthenticated");
-      clearAuthTimeoutAndClose(peer);
+    if (pendingAuth.has(peer.id)) {
+      const buf = pendingAuthMessageBuffer.get(peer.id) ?? [];
+      buf.push({ peer, msg });
+      pendingAuthMessageBuffer.set(peer.id, buf);
       return;
-    } catch (error) {
-      logger.warn(
-        { error: (error as Error)?.message },
-        `WebSocket message processing error for peer ${peer.id}`,
-      );
-      if (!socketSessions.has(peer.id)) {
-        peer.send("unauthenticated");
-        clearAuthTimeoutAndClose(peer);
-      }
+    }
+    await processMessage(peer, msg);
+    while (pendingAuthMessageBuffer.has(peer.id)) {
+      await drainPendingAuthBuffer(peer);
     }
   },
 
   async close(peer, _details) {
     // Clean up auth-related state regardless of auth status
     pendingAuth.delete(peer.id);
+    pendingAuthMessageBuffer.delete(peer.id);
     const pendingTimeout = authTimeouts.get(peer.id);
     if (pendingTimeout) {
       clearTimeout(pendingTimeout);

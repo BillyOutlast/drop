@@ -13,6 +13,7 @@
 #   SONAR_TOKEN          Required. SonarCloud API token
 #   GH_TOKEN             GitHub API token (falls back to GITHUB_TOKEN)
 #   SONAR_PROJECT_KEY    SonarCloud project key (default: BillyOutlast_drop)
+#   SONAR_MAX_LINES      Max lines to fetch per file for line-level data (default: 10000)
 #   GITHUB_REPOSITORY    GitHub repo (default: BillyOutlast/drop)
 #   GITHUB_PR_NUMBER     PR number (auto-detected from GitHub context)
 # ==============================================================================
@@ -22,6 +23,7 @@ set -euo pipefail
 # ---- Configuration -----------------------------------------------------------
 
 SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-BillyOutlast_drop}"
+SONAR_MAX_LINES="${SONAR_MAX_LINES:-10000}"
 GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-BillyOutlast/drop}"
 GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
 
@@ -233,32 +235,51 @@ if echo "$UNCOVERED_FILES" | jq -e 'length > 0' >/dev/null 2>&1; then
   COMMENT_BODY+="| File | Coverage | Uncovered Lines | Lines Needing Tests |\n"
   COMMENT_BODY+="|------|----------|----------------|--------------------|\n"
 
+  TEMP_DIR=$(mktemp -d)
+  # shellcheck disable=SC2064
+  trap 'rm -rf "$TEMP_DIR"' EXIT
+
+  file_index=0
   while read -r file_entry; do
     FILE_KEY=$(echo "$file_entry" | jq -r '.key')
     FILE_PATH=$(echo "$file_entry" | jq -r '.path')
     FILE_COV=$(echo "$file_entry" | jq -r '.coverage')
     FILE_UNC=$(echo "$file_entry" | jq -r '.uncovered')
 
-    # Fetch line-level data for this file (new lines in the PR)
-    LINES_RESPONSE=$(curl -sS \
-      -H "Authorization: Bearer ${SONAR_TOKEN}" \
-      "https://sonarcloud.io/api/sources/lines?key=${FILE_KEY}&from=1&to=5000&pullRequest=${GITHUB_PR_NUMBER}" 2>/dev/null || echo '{"sources":[]}')
+    # Stash metadata for ordered processing after parallel fetch
+    printf '%s|%s|%s|%s\n' "${FILE_KEY}" "${FILE_PATH}" "${FILE_COV}" "${FILE_UNC}" > "${TEMP_DIR}/meta_${file_index}"
 
-    # lineHits == 0 = executable and uncovered; lineHits null = non-executable (comments, blanks)
+    # Fetch line-level data in background — all files run concurrently
+    {
+      curl -sS -H "Authorization: Bearer ${SONAR_TOKEN}" \
+        "https://sonarcloud.io/api/sources/lines?key=${FILE_KEY}&from=1&to=${SONAR_MAX_LINES}&pullRequest=${GITHUB_PR_NUMBER}" \
+        2>/dev/null || echo '{"sources":[]}'
+    } > "${TEMP_DIR}/lines_${file_index}" &
+
+    file_index=$((file_index + 1))
+  done < <(echo "$UNCOVERED_FILES" | jq -c '.[]')
+
+  # Wait for all background fetches to complete
+  wait
+
+  # Process results in order
+  for ((i = 0; i < file_index; i++)); do
+    IFS='|' read -r FILE_KEY FILE_PATH FILE_COV FILE_UNC < "${TEMP_DIR}/meta_${i}"
+    LINES_RESPONSE=$(<"${TEMP_DIR}/lines_${i}")
+
+    HAS_SOURCES=$(echo "$LINES_RESPONSE" | jq '(.sources // []) | length')
     NEW_LINES=$(echo "$LINES_RESPONSE" | jq -r '
       [.sources[] | select(.isNew == true and (.lineHits // -1) == 0) | .line] | sort'
     )
 
-    if [[ "$(echo "$NEW_LINES" | jq 'length')" -gt 0 ]]; then
-      # Group consecutive line numbers into compact ranges (e.g., [1,2,3,5] → "1-3, 5").
-      # The reduce iterator builds ranges by comparing each line against the previous.
+    if echo "$NEW_LINES" | jq -e 'length > 0' >/dev/null 2>&1; then
       LINE_RANGES=$(echo "$NEW_LINES" | jq -r '
         reduce .[] as $l (
           {ranges: [], current: null};
           if .current == null then
             {ranges: [[$l, $l]], current: [$l, $l]}
           elif $l == .current[1] + 1 then
-            {ranges: .ranges[: -1] + [[.current[0], $l]], current: [.current[0], $l]}
+            {ranges: .ranges[:-1] + [[.current[0], $l]], current: [.current[0], $l]}
           else
             {ranges: .ranges + [[$l, $l]], current: [$l, $l]}
           end
@@ -269,10 +290,14 @@ if echo "$UNCOVERED_FILES" | jq -e 'length > 0' >/dev/null 2>&1; then
         ) | join(", ")')
 
       COMMENT_BODY+="| \`${FILE_PATH}\` | ${FILE_COV}% | ${FILE_UNC} | ${LINE_RANGES} |\n"
+    elif [[ "$HAS_SOURCES" -eq 0 ]]; then
+      # sources array is empty — line API returned nothing or failed
+      COMMENT_BODY+="| \`${FILE_PATH}\` | ${FILE_COV}% | ${FILE_UNC} | *(API error)* |\n"
     else
+      # sources returned but no uncovered new lines found for this file
       COMMENT_BODY+="| \`${FILE_PATH}\` | ${FILE_COV}% | ${FILE_UNC} | *(not yet indexed)* |\n"
     fi
-  done < <(echo "$UNCOVERED_FILES" | jq -c '.[]')
+  done
   COMMENT_BODY+="\n"
 else
   COMMENT_BODY+="### 📊 Lines Needing Coverage\n\nNo uncovered lines found in new code.\n\n"

@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import authManager from "~/server/internal/auth/index";
+
 vi.mock("~/server/internal/logging", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
@@ -7,11 +9,8 @@ vi.mock("~/server/internal/auth/oidc", () => ({
   OIDCManager: { create: vi.fn() },
 }));
 
-import authManager from "~/server/internal/auth/index";
-
 describe("AuthManager", () => {
   it("is a singleton instance", () => {
-    expect(authManager).toBeDefined();
     expect(typeof authManager.init).toBe("function");
   });
 

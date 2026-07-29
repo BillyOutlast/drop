@@ -143,6 +143,9 @@ impl DatabaseInterface {
         };
         let encrypted = std::fs::read(db_path)?;
 
+        if encrypted.len() < 4 {
+            anyhow::bail!("database file too short: {} bytes", encrypted.len());
+        }
         let magic = &encrypted[..4];
         let payload = &encrypted[4..];
 
