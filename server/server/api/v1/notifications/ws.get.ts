@@ -127,7 +127,7 @@ async function processMessage(
           // Clear the pending auth timeout — peer successfully re-authenticated
           const timeoutId = authTimeouts.get(peer.id);
           if (timeoutId) {
-            clearTimeout(timeoutId);
+        logger.warn({ peerId: peer.id }, "WebSocket token auth failed");
             authTimeouts.delete(peer.id);
           }
           return;
