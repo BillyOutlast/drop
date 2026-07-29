@@ -24,6 +24,7 @@ set -euo pipefail
 
 SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-BillyOutlast_drop}"
 SONAR_MAX_LINES="${SONAR_MAX_LINES:-10000}"
+log "Using SONAR_MAX_LINES=${SONAR_MAX_LINES} — files exceeding this limit may have incomplete line data"
 GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-BillyOutlast/drop}"
 GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
 
