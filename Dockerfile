@@ -102,4 +102,7 @@ ENV NGINX_CONFIG="/nginx.conf"
 # Nuxt's port
 ENV PORT=4000
 
+# Run as non-root user for security
+USER node
+
 CMD ["sh", "/app/startup/launch.sh"]

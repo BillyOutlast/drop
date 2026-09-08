@@ -1,4 +1,5 @@
 import type { SessionProvider, SessionWithToken } from "./types";
+import { sessionMatchesFilter } from "./filter";
 
 export default function createMemorySessionHandler() {
   const sessions = new Map<string, SessionWithToken>();
@@ -41,36 +42,7 @@ export default function createMemorySessionHandler() {
     async findSessions(options) {
       const results: SessionWithToken[] = [];
       for (const session of sessions.values()) {
-        let match = true;
-        if (
-          options.userId &&
-          session.authenticated &&
-          session.authenticated.userId !== options.userId
-        ) {
-          match = false;
-        }
-        if (options.oidc && session.oidc) {
-          for (const [key, value] of Object.entries(options.oidc)) {
-            // stringify to do deep comparison
-            if (
-              JSON.stringify(
-                (session.oidc as unknown as Record<string, unknown>)[key],
-              ) !== JSON.stringify(value)
-            ) {
-              match = false;
-              break;
-            }
-          }
-        }
-
-        for (const [key, value] of Object.entries(options.data || {})) {
-          // stringify to do deep comparison
-          if (JSON.stringify(session.data[key]) !== JSON.stringify(value)) {
-            match = false;
-            break;
-          }
-        }
-        if (match) {
+        if (sessionMatchesFilter(session, options)) {
           results.push(session);
         }
       }
